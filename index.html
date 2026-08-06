@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo de Conciliación, Plazos Reales y Predicción de Cobranzas</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- SheetJS para lectura de Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Chart.js para tableros visuales -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="h-full text-slate-800 bg-slate-50 flex flex-col font-sans">
+    <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo & Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-brand-600 rounded-lg shadow font-bold text-white text-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-base font-bold leading-tight">Conciliación, Plazos Reales & Cash Flow</h1>
+                        <p class="text-xs text-slate-400">Administración y Finanzas & Control de Crédito</p>
+                    </div>
+                </div>
+
+                <!-- Control Actions -->
+                <div class="flex items-center space-x-3">
+                    <!-- Period Filter -->
+                    <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs">
+                        <span class="text-slate-400 mr-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            Período:
+                        </span>
+                        <select id="global-period-select" onchange="changeActivePeriod(this.value)" class="bg-transparent text-amber-300 font-semibold focus:outline-none cursor-pointer">
+                            <option value="ALL" class="bg-slate-900 text-white">Todos los Meses (Histórico Acumulado)</option>
+                        </select>
+                    </div>
+
+                    <!-- Client Terms Modal Button -->
+                    <button onclick="openTermsModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium shadow transition flex items-center">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Plazos Pactados
+                    </button>
+
+                    <!-- Demo Data Load -->
+                    <button onclick="loadDemoDataset()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium shadow transition flex items-center">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Cargar Demo (Julio)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-slate-800/80 border-t border-slate-700/60 overflow-x-auto custom-scrollbar">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 py-1">
+                <button onclick="switchTab('tab-upload')" id="nav-tab-upload" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-white bg-slate-700 shadow-sm flex items-center">
+                    <svg class="w-4 h-4 mr-1.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    1. Cargar Archivos
+                </button>
+                <button onclick="switchTab('tab-executive')" id="nav-tab-executive" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center">
+                    <svg class="w-4 h-4 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 30.555A9.001 9.001 0 1020 12h-9v8.555z"></path></svg>
+                    2. Resumen Ejecutivo
+                </button>
+                <button onclick="switchTab('tab-terms')" id="nav-tab-terms" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center">
+                    <svg class="w-4 h-4 mr-1.5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    3. Plazos Reales vs Pactados
+                </button>
+                <button onclick="switchTab('tab-imputation')" id="nav-tab-imputation" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center">
+                    <svg class="w-4 h-4 mr-1.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    4. Detalle Imputación
+                </button>
+                <button onclick="switchTab('tab-alerts')" id="nav-tab-alerts" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center">
+                    <svg class="w-4 h-4 mr-1.5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    5. Alertas & Ranking
+                </button>
+                <button onclick="switchTab('tab-forecast')" id="nav-tab-forecast" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center">
+                    <svg class="w-4 h-4 mr-1.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    6. Predicción & Cash Flow
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        <!-- Toast Notification Area -->
+        <div id="toast-container" class="fixed top-20 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+        <!-- TAB 1: UPLOAD & MULTI-PERIOD -->
+        <section id="tab-upload" class="space-y-6">
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            Importación de Archivos (Facturación vs. Cobranzas)
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-1">Cargue los archivos de Ventas y Cobranzas de cada mes para alimentar el historial acumulado.</p>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3 bg-slate-50 p-2 rounded-lg border border-slate-200">
+                        <label class="text-xs font-semibold text-slate-600">Asignar a Período:</label>
+                        <input type="month" id="upload-period-input" value="2026-07" class="bg-white border border-slate-300 text-xs rounded-md px-2 py-1 font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Invoices Drop Area -->
+                    <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-brand-500 transition-colors bg-slate-50/50 flex flex-col items-center justify-center min-h-[180px]" id="drop-zone-sales">
+                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-slate-800 mb-1">Facturas de Venta</h3>
+                        <p class="text-xs text-slate-500 mb-4 max-w-xs">Comprobantes emitidos (Cliente, Factura, Fecha Emisión, Vendedor, Importe)</p>
+                        <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium px-4 py-2 border border-slate-300 rounded-lg shadow-sm transition">
+                            <span id="sales-filename">Seleccionar "Facturas de venta"</span>
+                            <input type="file" id="sales-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleSalesFile(event)">
+                        </label>
+                        <div id="sales-status" class="mt-3 text-xs text-emerald-600 font-medium hidden"></div>
+                    </div>
+
+                    <!-- Receipts Drop Area -->
+                    <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-emerald-500 transition-colors bg-slate-50/50 flex flex-col items-center justify-center min-h-[180px]" id="drop-zone-real">
+                        <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-slate-800 mb-1">Cobranzas Recibidas</h3>
+                        <p class="text-xs text-slate-500 mb-4 max-w-xs">Recibos de ERP / Banco (Cliente, Recibo, Fecha Cobro, Importe Cobrado)</p>
+                        <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium px-4 py-2 border border-slate-300 rounded-lg shadow-sm transition">
+                            <span id="real-filename">Seleccionar "Cobranzas"</span>
+                            <input type="file" id="real-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleRealFile(event)">
+                        </label>
+                        <div id="real-status" class="mt-3 text-xs text-emerald-600 font-medium hidden"></div>
+                    </div>
+                </div>
+
+                <!-- Run Process Button & History Badges -->
+                <div class="mt-6 pt-6 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-500 block mb-2">Historial de Períodos Cargados:</span>
+                        <div id="period-badges-container" class="flex flex-wrap gap-2">
+                            <span class="text-xs text-slate-400 italic">No hay períodos guardados aún.</span>
+                        </div>
+                    </div>
+
+                    <button onclick="processAndSavePeriod()" class="w-full md:w-auto px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <span>Guardar Período & Procesar Conciliación</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-executive" class="space-y-6 hidden">
+            <!-- Top KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Facturado</p>
+                        <h3 id="kpi-facturado" class="text-2xl font-black text-slate-800 mt-1">$ 0</h3>
+                        <p id="kpi-facturas-count" class="text-xs text-slate-500 mt-1">0 Facturas emitidas</p>
+                    </div>
+                    <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Cobrado</p>
+                        <h3 id="kpi-cobrado" class="text-2xl font-black text-emerald-600 mt-1">$ 0</h3>
+                        <p id="kpi-recibos-count" class="text-xs text-emerald-700 mt-1">0 Recibos aplicados</p>
+                    </div>
+                    <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Monto Pendiente</p>
+                        <h3 id="kpi-pendiente" class="text-2xl font-black text-rose-600 mt-1">$ 0</h3>
+                        <p id="kpi-recupero-pct" class="text-xs text-slate-500 mt-1">Recuperación: 0%</p>
+                    </div>
+                    <div class="p-3 bg-rose-50 text-rose-600 rounded-xl">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Plazo Medio Real</p>
+                        <h3 id="kpi-plazo-promedio" class="text-2xl font-black text-indigo-600 mt-1">0 días</h3>
+                        <p id="kpi-desvio-promedio" class="text-xs text-indigo-700 mt-1">Pactado: 30d promedio</p>
+                    </div>
+                    <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4">Estado de Imputación de Facturas</h3>
+                    <div class="h-64 relative">
+                        <canvas id="chart-status"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4">Facturado vs Cobrado por Vendedor</h3>
+                    <div class="h-64 relative">
+                        <canvas id="chart-sellers"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-terms" class="space-y-6 hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">Comportamiento por Cliente: Plazo Real vs Pactado</h3>
+                        <p class="text-xs text-slate-500">Mide si los clientes abonan en el plazo contractual acordado o presentan desvíos sistemáticos.</p>
+                    </div>
+                    <input type="text" id="search-client-terms" oninput="renderTermsTable()" placeholder="Buscar cliente..." class="text-xs border border-slate-300 rounded-lg px-3 py-2 w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 font-semibold text-slate-600 uppercase tracking-wider">
+                                <th class="py-3 px-4">Cliente</th>
+                                <th class="py-3 px-4 text-right">Proyectado</th>
+                                <th class="py-3 px-4 text-right">Cobrado</th>
+                                <th class="py-3 px-4 text-center">Plazo Pactado</th>
+                                <th class="py-3 px-4 text-center">Plazo Real Prom.</th>
+                                <th class="py-3 px-4 text-center">Desvío (Días)</th>
+                                <th class="py-3 px-4 text-center">Cumplimiento</th>
+                                <th class="py-3 px-4 text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-client-terms" class="divide-y divide-slate-100 font-medium">
+                            <!-- Dynamic Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-imputation" class="space-y-6 hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">Detalle Completo de Imputación de Facturas</h3>
+                        <p class="text-xs text-slate-500">Cruce individual factura por factura con los recibos cobrados.</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <select id="filter-status" onchange="renderImputationTable()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            <option value="ALL">Todos los Estados</option>
+                            <option value="Pagada">Pagadas</option>
+                            <option value="Pago parcial">Pago Parcial</option>
+                            <option value="Sin pago">Sin Pago</option>
+                            <option value="Pago agrupado">Pago Agrupado</option>
+                        </select>
+                        <input type="text" id="search-imputation" oninput="renderImputationTable()" placeholder="Buscar factura / cliente..." class="text-xs border border-slate-300 rounded-lg px-3 py-2 w-48 sm:w-64 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 font-semibold text-slate-600 uppercase tracking-wider">
+                                <th class="py-3 px-4">Cliente</th>
+                                <th class="py-3 px-4">Factura</th>
+                                <th class="py-3 px-4 text-center">F. Emisión</th>
+                                <th class="py-3 px-4 text-center">F. Vencimiento</th>
+                                <th class="py-3 px-4 text-right">Importe Orig.</th>
+                                <th class="py-3 px-4 text-right">Cobrado</th>
+                                <th class="py-3 px-4 text-right">Saldo</th>
+                                <th class="py-3 px-4 text-center">Estado</th>
+                                <th class="py-3 px-4">Recibo / Obs</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-imputation" class="divide-y divide-slate-100 font-medium">
+                            <!-- Dynamic Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-alerts" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Smart Alerts List -->
+                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center text-rose-600">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        Alertas Automáticas de Riesgo de Crédito
+                    </h3>
+                    <div id="alerts-container" class="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
+                        <!-- Dynamic Alerts -->
+                    </div>
+                </div>
+
+                <!-- Best & Worst Payers Ranking -->
+                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center text-indigo-600">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        Ranking de Cumplimiento de Pago
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="text-xs font-bold text-emerald-700 uppercase mb-2">Mejores Pagadores (Menor desvío)</h4>
+                            <div id="ranking-top" class="space-y-2"></div>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100">
+                            <h4 class="text-xs font-bold text-rose-700 uppercase mb-2">Clientes con Mayor Demora Habitual</h4>
+                            <div id="ranking-worst" class="space-y-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-forecast" class="space-y-6 hidden">
+            <!-- Forecast Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gradient-to-br from-emerald-500 to-teal-700 text-white rounded-xl p-5 shadow">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-emerald-100">Pronóstico Esta Semana</span>
+                    <h3 id="pred-this-week-amount" class="text-2xl font-black mt-1">$ 0</h3>
+                    <p id="pred-this-week-count" class="text-xs text-emerald-100 mt-2">0 Facturas esperadas</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-xl p-5 shadow">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-blue-100">Pronóstico Próxima Semana</span>
+                    <h3 id="pred-next-week-amount" class="text-2xl font-black mt-1">$ 0</h3>
+                    <p id="pred-next-week-count" class="text-xs text-blue-100 mt-2">0 Facturas esperadas</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-xl p-5 shadow">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-amber-100">Posteriores / En Riesgo</span>
+                    <h3 id="pred-later-amount" class="text-2xl font-black mt-1">$ 0</h3>
+                    <p id="pred-later-count" class="text-xs text-amber-100 mt-2">0 Facturas esperadas</p>
+                </div>
+            </div>
+
+            <!-- Detailed Predictive Agenda -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">Agenda de Cobranzas Proyectadas (Basada en Plazo Real del Cliente)</h3>
+                        <p class="text-xs text-slate-500">Calcula la fecha probable de pago: <code class="bg-slate-100 px-1 py-0.5 rounded text-indigo-600">Fecha Emisión + Plazo Promedio Real del Cliente</code>.</p>
+                    </div>
+                    <select id="filter-pred-week" onchange="renderPredictionModule()" class="text-xs border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <option value="ALL">Todas las Facturas Pendientes</option>
+                        <option value="THIS_WEEK">Esta Semana</option>
+                        <option value="NEXT_WEEK">Próxima Semana</option>
+                        <option value="LATER">Posteriores / En Riesgo</option>
+                    </select>
+                </div>
+
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 font-semibold text-slate-600 uppercase tracking-wider">
+                                <th class="py-3 px-4">Cliente</th>
+                                <th class="py-3 px-4">Factura</th>
+                                <th class="py-3 px-4 text-right">Saldo Pendiente</th>
+                                <th class="py-3 px-4 text-center">Plazo Pactado (Real)</th>
+                                <th class="py-3 px-4 text-center">Fecha Probable Pago</th>
+                                <th class="py-3 px-4 text-center">Ventana</th>
+                                <th class="py-3 px-4 text-center">Probabilidad</th>
+                                <th class="py-3 px-4">Acción Recomendada</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-predictions" class="divide-y divide-slate-100 font-medium">
+                            <!-- Dynamic Forecast Content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="modal-terms" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-xl mx-4 overflow-hidden">
+            <div class="p-5 bg-slate-900 text-white flex items-center justify-between">
+                <h3 class="text-sm font-bold flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Maestro de Plazos Pactados por Cliente
+                </h3>
+                <button onclick="closeTermsModal()" class="text-slate-400 hover:text-white">&times;</button>
+            </div>
+
+            <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                <!-- File Upload box for terms -->
+                <div class="border-2 border-dashed border-indigo-200 bg-indigo-50/50 rounded-lg p-4 text-center">
+                    <p class="text-xs text-indigo-900 font-semibold mb-2">Cargar archivo <code class="bg-white px-1 py-0.5 rounded border">Condición de pago por cliente.xlsx</code></p>
+                    <input type="file" id="terms-file-input" accept=".xlsx, .xls, .csv" class="text-xs text-slate-600 cursor-pointer" onchange="handleTermsFileSelect(event)">
+                </div>
+
+                <!-- Manual add client term -->
+                <div class="flex space-x-2 pt-2 border-t border-slate-100">
+                    <input type="text" id="manual-term-client" placeholder="Nombre de Cliente..." class="flex-1 text-xs border border-slate-300 rounded-lg px-3 py-2">
+                    <input type="number" id="manual-term-days" placeholder="Días pactados" class="w-28 text-xs border border-slate-300 rounded-lg px-3 py-2">
+                    <button onclick="addManualTerm()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition">Guardar</button>
+                </div>
+
+                <!-- Terms Table -->
+                <div class="mt-4 border border-slate-200 rounded-lg overflow-hidden">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-slate-50 font-semibold text-slate-600">
+                            <tr>
+                                <th class="p-2.5">Cliente</th>
+                                <th class="p-2.5 text-center">Plazo Pactado (Días)</th>
+                                <th class="p-2.5 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-master-terms" class="divide-y divide-slate-100">
+                            <!-- Terms list -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+                <button onclick="closeTermsModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // GLOBAL STATE
+        window.rawSales = [];
+        window.rawReal = [];
+        window.clientMasterTerms = {}; 
+        window.historicalBatches = {}; 
+        window.activePeriod = 'ALL';
+        window.reconciliationResult = null;
+
+        // Chart instances
+        let chartStatusInstance = null;
+        let chartSellersInstance = null;
+
+        // High-Performance Hash Map for Agreed Days lookup (O(1))
+        function getClientAgreedDays(clientName) {
+            if (!clientName) return 30;
+            const targetRaw = String(clientName).trim();
+            if (window.clientMasterTerms[targetRaw] !== undefined) {
+                return window.clientMasterTerms[targetRaw];
+            }
+            const cleanTarget = targetRaw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (!cleanTarget) return 30;
+
+            for (let k in window.clientMasterTerms) {
+                const cleanK = String(k).toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (cleanK === cleanTarget || (cleanK.length > 3 && cleanTarget.includes(cleanK))) {
+                    return window.clientMasterTerms[k];
+                }
+            }
+            return 30;
+        }
+
+        // Initialize App
+        window.onload = function() {
+            loadTermsFromStorage();
+            loadHistoricalBatchesFromStorage();
+            loadDemoDataset();
+        };
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-rose-600' : 'bg-slate-800';
+            toast.className = `${bgClass} text-white px-4 py-3 rounded-lg shadow-lg text-xs font-semibold flex items-center transition transform translate-x-4 pointer-events-auto`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function parseMoney(val) {
+            if (val === null || val === undefined || val === '') return 0;
+            if (typeof val === 'number') return isNaN(val) ? 0 : val;
+            let str = String(val).trim().replace(/[$]/g, '');
+            if (str.includes(',') && str.includes('.')) {
+                if (str.indexOf('.') < str.indexOf(',')) {
+                    str = str.replace(/\./g, '').replace(',', '.');
+                } else {
+                    str = str.replace(/,/g, '');
+                }
+            } else if (str.includes(',')) {
+                str = str.replace(',', '.');
+            }
+            const num = parseFloat(str);
+            return isNaN(num) ? 0 : num;
+        }
+
+        function parseExcelDate(val) {
+            if (!val) return new Date();
+            if (val instanceof Date) return val;
+            if (typeof val === 'number') {
+                return new Date(Math.round((val - 25569) * 86400 * 1000));
+            }
+            const str = String(val).trim();
+            const parts = str.split(/[-/.]/);
+            if (parts.length === 3) {
+                if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]);
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            const parsed = new Date(str);
+            return isNaN(parsed.getTime()) ? new Date() : parsed;
+        }
+
+        function extractSellerFromDocument(docStr) {
+            if (!docStr) return 'Vendedor General';
+            const str = String(docStr).trim();
+            if (str.includes('-')) {
+                const parts = str.split('-');
+                return parts[0].trim();
+            }
+            return str || 'Vendedor General';
+        }
+
+        function handleSalesFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            document.getElementById('sales-filename').textContent = file.name;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+                    window.rawSales = json.map(r => {
+                        const keys = Object.keys(r);
+                        const findVal = (terms) => {
+                            const k = keys.find(key => terms.some(t => key.toLowerCase().includes(t)));
+                            return k ? r[k] : '';
+                        };
+
+                        const client = findVal(['cliente', 'razon', 'nombre', 'empresa', 'comprador']);
+                        const inv = findVal(['factura', 'comprobante', 'nro', 'numero', 'doc']);
+                        const docCol = findVal(['documento', 'tipo', 'concepto']);
+                        const dEmis = findVal(['emision', 'fecha_emision', 'f_emision', 'fecha']);
+                        const dVto = findVal(['vencimiento', 'vto', 'f_vto']);
+                        const amount = findVal(['importe', 'monto', 'total', 'saldo', 'debe']);
+
+                        return {
+                            cliente: String(client || 'CLIENTE S/D').trim(),
+                            factura: String(inv || 'F-000').trim(),
+                            documento: String(docCol || ''),
+                            vendedor: extractSellerFromDocument(docCol),
+                            dEmision: parseExcelDate(dEmis),
+                            dVto: parseExcelDate(dVto),
+                            importe: parseMoney(amount)
+                        };
+                    });
+
+                    document.getElementById('sales-status').textContent = `✓ ${window.rawSales.length} facturas leídas.`;
+                    document.getElementById('sales-status').classList.remove('hidden');
+                    showToast(`Se cargaron ${window.rawSales.length} facturas de venta.`, 'success');
+                } catch (err) {
+                    console.error(err);
+                    showToast('Error al leer archivo de Facturas.', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function handleRealFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            document.getElementById('real-filename').textContent = file.name;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+                    window.rawReal = json.map(r => {
+                        const keys = Object.keys(r);
+                        const findVal = (terms) => {
+                            const k = keys.find(key => terms.some(t => key.toLowerCase().includes(t)));
+                            return k ? r[k] : '';
+                        };
+
+                        const client = findVal(['cliente', 'razon', 'nombre', 'empresa']);
+                        const dPay = findVal(['cobro', 'fecha', 'pago']);
+                        const amount = findVal(['importe', 'cobrado', 'monto', 'haber']);
+                        const receipt = findVal(['recibo', 'comprobante', 'nro']);
+
+                        return {
+                            cliente: String(client || 'CLIENTE S/D').trim(),
+                            fechaCobro: parseExcelDate(dPay),
+                            importeCobrado: parseMoney(amount),
+                            recibo: String(receipt || 'REC-000').trim()
+                        };
+                    });
+
+                    document.getElementById('real-status').textContent = `✓ ${window.rawReal.length} recibos leídos.`;
+                    document.getElementById('real-status').classList.remove('hidden');
+                    showToast(`Se cargaron ${window.rawReal.length} recibos de cobranza.`, 'success');
+                } catch (err) {
+                    console.error(err);
+                    showToast('Error al leer archivo de Cobranzas.', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function runReconciliation() {
+            let salesToProcess = [];
+            let realToProcess = [];
+
+            if (window.activePeriod === 'ALL') {
+                Object.values(window.historicalBatches).forEach(b => {
+                    salesToProcess = salesToProcess.concat(b.sales || []);
+                    realToProcess = realToProcess.concat(b.real || []);
+                });
+            } else if (window.historicalBatches[window.activePeriod]) {
+                salesToProcess = window.historicalBatches[window.activePeriod].sales || [];
+                realToProcess = window.historicalBatches[window.activePeriod].real || [];
+            }
+
+            // Group by client
+            const clientsMap = {};
+            salesToProcess.forEach(s => {
+                if (!clientsMap[s.cliente]) clientsMap[s.cliente] = { sales: [], real: [] };
+                clientsMap[s.cliente].sales.push({ ...s, saldo: s.importe, estado: 'Sin pago', reciboAplicado: '' });
+            });
+            realToProcess.forEach(r => {
+                if (!clientsMap[r.cliente]) clientsMap[r.cliente] = { sales: [], real: [] };
+                clientsMap[r.cliente].real.push({ ...r, saldoPorAplicar: r.importeCobrado });
+            });
+
+            const invoiceDetails = [];
+            const clientSummaries = [];
+
+            // Fast FIFO & Exact Imputation
+            Object.keys(clientsMap).forEach(clientName => {
+                const group = clientsMap[clientName];
+                const agreedDays = getClientAgreedDays(clientName);
+
+                let totalSales = group.sales.reduce((sum, i) => sum + i.importe, 0);
+                let totalReal = group.real.reduce((sum, r) => sum + r.importeCobrado, 0);
+
+                let realPayDaysSum = 0;
+                let realPayCount = 0;
+
+                // FIFO Imputation
+                group.real.forEach(rec => {
+                    let amountToApply = rec.importeCobrado;
+
+                    // Level 1: Exact Match search
+                    const exactMatch = group.sales.find(s => s.saldo > 0 && Math.abs(s.saldo - amountToApply) < 0.01);
+                    if (exactMatch) {
+                        exactMatch.saldo = 0;
+                        exactMatch.estado = 'Pagada';
+                        exactMatch.reciboAplicado = rec.recibo;
+                        exactMatch.fechaCobro = rec.fechaCobro;
+
+                        const diffDays = Math.round((rec.fechaCobro - exactMatch.dEmision) / (86400 * 1000));
+                        if (diffDays >= 0) { realPayDaysSum += diffDays; realPayCount++; }
+                        amountToApply = 0;
+                    } else {
+                        // Level 3: FIFO Partial Payment
+                        for (let s of group.sales) {
+                            if (s.saldo <= 0) continue;
+                            if (amountToApply <= 0) break;
+
+                            if (amountToApply >= s.saldo) {
+                                amountToApply -= s.saldo;
+                                s.saldo = 0;
+                                s.estado = 'Pagada';
+                                s.reciboAplicado = rec.recibo;
+                                s.fechaCobro = rec.fechaCobro;
+
+                                const diffDays = Math.round((rec.fechaCobro - s.dEmision) / (86400 * 1000));
+                                if (diffDays >= 0) { realPayDaysSum += diffDays; realPayCount++; }
+                            } else {
+                                s.saldo -= amountToApply;
+                                s.estado = 'Pago parcial';
+                                s.reciboAplicado = rec.recibo;
+                                s.fechaCobro = rec.fechaCobro;
+                                amountToApply = 0;
+                            }
+                        }
+                    }
+                });
+
+                const avgRealDays = realPayCount > 0 ? Math.round(realPayDaysSum / realPayCount) : agreedDays;
+                const compliancePct = totalSales > 0 ? Math.min(100, Math.round((totalReal / totalSales) * 100)) : 100;
+
+                clientSummaries.push({
+                    cliente: clientName,
+                    proyectado: totalSales,
+                    cobrado: totalReal,
+                    diferencia: totalSales - totalReal,
+                    plazoPactado: agreedDays,
+                    plazoPromedioReal: avgRealDays,
+                    desvioDias: avgRealDays - agreedDays,
+                    cumplimientoPct: compliancePct
+                });
+
+                group.sales.forEach(s => invoiceDetails.push(s));
+            });
+
+            window.reconciliationResult = { invoiceDetails, clientSummaries };
+
+            // Render all UI tabs
+            renderKPIs();
+            renderCharts();
+            renderTermsTable();
+            renderImputationTable();
+            renderAlertsAndRankings();
+            renderPredictionModule();
+        }
+
+        function processAndSavePeriod() {
+            const periodInput = document.getElementById('upload-period-input').value || '2026-07';
+            if (window.rawSales.length === 0 && window.rawReal.length === 0) {
+                showToast('Seleccione al menos un archivo antes de procesar.', 'error');
+                return;
+            }
+
+            window.historicalBatches[periodInput] = {
+                sales: [...window.rawSales],
+                real: [...window.rawReal]
+            };
+
+            saveHistoricalBatchesToStorage();
+            updatePeriodSelectors(periodInput);
+            window.activePeriod = periodInput;
+            runReconciliation();
+            showToast(`Período ${periodInput} guardado e integrado con éxito.`, 'success');
+        }
+
+        function updatePeriodSelectors(selectedPeriod) {
+            const select = document.getElementById('global-period-select');
+            select.innerHTML = '<option value="ALL">Todos los Meses (Histórico Acumulado)</option>';
+            
+            const badges = document.getElementById('period-badges-container');
+            badges.innerHTML = '';
+
+            Object.keys(window.historicalBatches).forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = `Período ${p}`;
+                if (p === selectedPeriod) opt.selected = true;
+                select.appendChild(opt);
+
+                const badge = document.createElement('span');
+                badge.className = 'inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200';
+                badge.innerHTML = `${p} <span class="ml-1 text-[10px] text-brand-500">(${window.historicalBatches[p].sales.length} FC / ${window.historicalBatches[p].real.length} REC)</span>`;
+                badges.appendChild(badge);
+            });
+        }
+
+        function changeActivePeriod(period) {
+            window.activePeriod = period;
+            runReconciliation();
+        }
+
+        function switchTab(tabId) {
+            ['tab-upload', 'tab-executive', 'tab-terms', 'tab-imputation', 'tab-alerts', 'tab-forecast'].forEach(id => {
+                const sec = document.getElementById(id);
+                const btn = document.getElementById('nav-' + id);
+                if (id === tabId) {
+                    sec.classList.remove('hidden');
+                    btn.className = 'px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-white bg-slate-700 shadow-sm flex items-center';
+                } else {
+                    sec.classList.add('hidden');
+                    btn.className = 'px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center';
+                }
+            });
+        }
+
+        function formatMoney(num) {
+            return '$ ' + Math.round(num).toLocaleString('es-AR');
+        }
+        function formatDate(d) {
+            if (!(d instanceof Date) || isNaN(d.getTime())) return '-';
+            return d.toLocaleDateString('es-AR');
+        }
+
+        function renderKPIs() {
+            if (!window.reconciliationResult) return;
+            const { invoiceDetails, clientSummaries } = window.reconciliationResult;
+
+            const totalFacturado = invoiceDetails.reduce((sum, i) => sum + i.importe, 0);
+            const totalPendiente = invoiceDetails.reduce((sum, i) => sum + i.saldo, 0);
+            const totalCobrado = totalFacturado - totalPendiente;
+            const recuperoPct = totalFacturado > 0 ? Math.round((totalCobrado / totalFacturado) * 100) : 0;
+
+            const avgDays = clientSummaries.length > 0 ? Math.round(clientSummaries.reduce((s, c) => s + c.plazoPromedioReal, 0) / clientSummaries.length) : 30;
+
+            document.getElementById('kpi-facturado').textContent = formatMoney(totalFacturado);
+            document.getElementById('kpi-facturas-count').textContent = `${invoiceDetails.length} Facturas emitidas`;
+
+            document.getElementById('kpi-cobrado').textContent = formatMoney(totalCobrado);
+            document.getElementById('kpi-pendiente').textContent = formatMoney(totalPendiente);
+            document.getElementById('kpi-recupero-pct').textContent = `Recuperación: ${recuperoPct}%`;
+
+            document.getElementById('kpi-plazo-promedio').textContent = `${avgDays} días`;
+        }
+
+        function renderCharts() {
+            if (!window.reconciliationResult) return;
+            const { invoiceDetails } = window.reconciliationResult;
+
+            // Status Chart
+            const statusCounts = { 'Pagada': 0, 'Pago parcial': 0, 'Sin pago': 0 };
+            invoiceDetails.forEach(i => {
+                statusCounts[i.estado] = (statusCounts[i.estado] || 0) + 1;
+            });
+
+            const ctxStatus = document.getElementById('chart-status').getContext('2d');
+            if (chartStatusInstance) chartStatusInstance.destroy();
+            chartStatusInstance = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        data: Object.values(statusCounts),
+                        backgroundColor: ['#10b981', '#f59e0b', '#f43f5e']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Seller Chart
+            const sellerMap = {};
+            invoiceDetails.forEach(i => {
+                const v = i.vendedor || 'General';
+                if (!sellerMap[v]) sellerMap[v] = { facturado: 0, cobrado: 0 };
+                sellerMap[v].facturado += i.importe;
+                sellerMap[v].cobrado += (i.importe - i.saldo);
+            });
+
+            const sellers = Object.keys(sellerMap).slice(0, 6);
+            const ctxSellers = document.getElementById('chart-sellers').getContext('2d');
+            if (chartSellersInstance) chartSellersInstance.destroy();
+            chartSellersInstance = new Chart(ctxSellers, {
+                type: 'bar',
+                data: {
+                    labels: sellers,
+                    datasets: [
+                        { label: 'Facturado', data: sellers.map(s => sellerMap[s].facturado), backgroundColor: '#3b82f6' },
+                        { label: 'Cobrado', data: sellers.map(s => sellerMap[s].cobrado), backgroundColor: '#10b981' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function renderTermsTable() {
+            if (!window.reconciliationResult) return;
+            const { clientSummaries } = window.reconciliationResult;
+            const tbody = document.getElementById('tbody-client-terms');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const search = (document.getElementById('search-client-terms').value || '').toLowerCase();
+            const filtered = clientSummaries.filter(c => c.cliente.toLowerCase().includes(search));
+
+            filtered.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50';
+                
+                const badgeClass = c.desvioDias <= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800';
+                const statusLabel = c.desvioDias <= 0 ? 'En Plazo' : `+${c.desvioDias}d Atraso`;
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-bold text-slate-800">${c.cliente}</td>
+                    <td class="py-3 px-4 text-right">${formatMoney(c.proyectado)}</td>
+                    <td class="py-3 px-4 text-right font-bold text-emerald-600">${formatMoney(c.cobrado)}</td>
+                    <td class="py-3 px-4 text-center font-semibold text-indigo-600">${c.plazoPactado} días</td>
+                    <td class="py-3 px-4 text-center font-bold">${c.plazoPromedioReal} días</td>
+                    <td class="py-3 px-4 text-center font-bold ${c.desvioDias > 0 ? 'text-rose-600' : 'text-emerald-600'}">${c.desvioDias > 0 ? '+' : ''}${c.desvioDias}d</td>
+                    <td class="py-3 px-4 text-center font-bold">${c.cumplimientoPct}%</td>
+                    <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">${statusLabel}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderImputationTable() {
+            if (!window.reconciliationResult) return;
+            const { invoiceDetails } = window.reconciliationResult;
+            const tbody = document.getElementById('tbody-imputation');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const statusFilter = document.getElementById('filter-status').value;
+            const search = (document.getElementById('search-imputation').value || '').toLowerCase();
+
+            const filtered = invoiceDetails.filter(i => {
+                const matchStatus = statusFilter === 'ALL' || i.estado === statusFilter;
+                const matchSearch = i.cliente.toLowerCase().includes(search) || i.factura.toLowerCase().includes(search);
+                return matchStatus && matchSearch;
+            });
+
+            filtered.slice(0, 200).forEach(i => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50';
+                const stClass = i.estado === 'Pagada' ? 'bg-emerald-100 text-emerald-800' : i.estado === 'Pago parcial' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-4 font-medium">${i.cliente}</td>
+                    <td class="py-2.5 px-4 font-mono text-brand-600">${i.factura}</td>
+                    <td class="py-2.5 px-4 text-center">${formatDate(i.dEmision)}</td>
+                    <td class="py-2.5 px-4 text-center">${formatDate(i.dVto)}</td>
+                    <td class="py-2.5 px-4 text-right">${formatMoney(i.importe)}</td>
+                    <td class="py-2.5 px-4 text-right text-emerald-600 font-bold">${formatMoney(i.importe - i.saldo)}</td>
+                    <td class="py-2.5 px-4 text-right text-rose-600 font-bold">${formatMoney(i.saldo)}</td>
+                    <td class="py-2.5 px-4 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${stClass}">${i.estado}</span></td>
+                    <td class="py-2.5 px-4 text-slate-500 font-mono text-[11px]">${i.reciboAplicado || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderAlertsAndRankings() {
+            if (!window.reconciliationResult) return;
+            const { clientSummaries } = window.reconciliationResult;
+
+            const alertsContainer = document.getElementById('alerts-container');
+            alertsContainer.innerHTML = '';
+
+            const delayed = clientSummaries.filter(c => c.desvioDias > 7);
+            delayed.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'p-3 bg-rose-50 border-l-4 border-rose-500 rounded-r-lg text-xs';
+                div.innerHTML = `<p class="font-bold text-rose-900">${c.cliente}</p><p class="text-rose-700">Demora habitual de ${c.plazoPromedioReal} días (${c.desvioDias} días por encima del plazo pactado).</p>`;
+                alertsContainer.appendChild(div);
+            });
+
+            if (delayed.length === 0) {
+                alertsContainer.innerHTML = '<p class="text-xs text-slate-400 italic">No hay alertas de desvío crítico activas.</p>';
+            }
+
+            // Rankings
+            const topPayers = [...clientSummaries].sort((a,b) => a.desvioDias - b.desvioDias).slice(0, 3);
+            const worstPayers = [...clientSummaries].sort((a,b) => b.desvioDias - a.desvioDias).slice(0, 3);
+
+            const topDiv = document.getElementById('ranking-top');
+            topDiv.innerHTML = topPayers.map(c => `<div class="flex justify-between text-xs font-semibold p-2 bg-emerald-50 rounded"><span>${c.cliente}</span><span class="text-emerald-700">${c.plazoPromedioReal}d promedio</span></div>`).join('');
+
+            const worstDiv = document.getElementById('ranking-worst');
+            worstDiv.innerHTML = worstPayers.map(c => `<div class="flex justify-between text-xs font-semibold p-2 bg-rose-50 rounded"><span>${c.cliente}</span><span class="text-rose-700">+${c.desvioDias}d de demora</span></div>`).join('');
+        }
+
+        function renderPredictionModule() {
+            if (!window.reconciliationResult) return;
+            const { invoiceDetails, clientSummaries } = window.reconciliationResult;
+
+            const openInvoices = invoiceDetails.filter(i => i.saldo > 0);
+            const today = new Date();
+
+            let thisWeekAmt = 0, thisWeekCnt = 0;
+            let nextWeekAmt = 0, nextWeekCnt = 0;
+            let laterAmt = 0, laterCnt = 0;
+
+            const predictions = [];
+
+            openInvoices.forEach(inv => {
+                const clientSum = clientSummaries.find(c => c.cliente === inv.cliente);
+                const agreedDays = getClientAgreedDays(inv.cliente);
+                const daysReal = clientSum ? clientSum.plazoPromedioReal : agreedDays;
+
+                const estPayDate = new Date(inv.dEmision.getTime() + daysReal * 86400 * 1000);
+                const daysDiff = Math.round((estPayDate - today) / (86400 * 1000));
+
+                let bucket = 'LATER';
+                let action = 'Realizar seguimiento de crédito.';
+
+                if (daysDiff <= 7) {
+                    bucket = 'THIS_WEEK';
+                    thisWeekAmt += inv.saldo;
+                    thisWeekCnt++;
+                    action = 'Enviar recordatorio / Contactar esta semana.';
+                } else if (daysDiff <= 14) {
+                    bucket = 'NEXT_WEEK';
+                    nextWeekAmt += inv.saldo;
+                    nextWeekCnt++;
+                    action = 'Confirmar fecha pactada para próxima semana.';
+                } else {
+                    laterAmt += inv.saldo;
+                    laterCnt++;
+                }
+
+                predictions.push({
+                    cliente: inv.cliente,
+                    factura: inv.factura,
+                    saldo: inv.saldo,
+                    plazoReal: daysReal,
+                    plazoPactado: agreedDays,
+                    fechaProbable: formatDate(estPayDate),
+                    bucket,
+                    accion: action
+                });
+            });
+
+            document.getElementById('pred-this-week-amount').textContent = formatMoney(thisWeekAmt);
+            document.getElementById('pred-this-week-count').textContent = `${thisWeekCnt} Facturas esperadas`;
+
+            document.getElementById('pred-next-week-amount').textContent = formatMoney(nextWeekAmt);
+            document.getElementById('pred-next-week-count').textContent = `${nextWeekCnt} Facturas esperadas`;
+
+            document.getElementById('pred-later-amount').textContent = formatMoney(laterAmt);
+            document.getElementById('pred-later-count').textContent = `${laterCnt} Facturas esperadas`;
+
+            const tbody = document.getElementById('tbody-predictions');
+            tbody.innerHTML = '';
+            const filter = document.getElementById('filter-pred-week').value;
+            const filtered = predictions.filter(p => filter === 'ALL' || p.bucket === filter);
+
+            filtered.slice(0, 150).forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-4 font-bold">${p.cliente}</td>
+                    <td class="py-2.5 px-4 font-mono text-brand-600">${p.factura}</td>
+                    <td class="py-2.5 px-4 text-right font-bold text-rose-600">${formatMoney(p.saldo)}</td>
+                    <td class="py-2.5 px-4 text-center font-medium">${p.plazoPactado}d pactados (${p.plazoReal}d real)</td>
+                    <td class="py-2.5 px-4 text-center font-bold text-emerald-600">${p.fechaProbable}</td>
+                    <td class="py-2.5 px-4 text-center font-bold text-slate-700">${p.bucket === 'THIS_WEEK' ? 'Esta Semana' : p.bucket === 'NEXT_WEEK' ? 'Próxima Semana' : 'Posterior'}</td>
+                    <td class="py-2.5 px-4 text-center font-bold text-brand-600">85%</td>
+                    <td class="py-2.5 px-4 text-slate-600">${p.accion}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openTermsModal() {
+            renderMasterTermsTable();
+            document.getElementById('modal-terms').classList.remove('hidden');
+        }
+        function closeTermsModal() {
+            document.getElementById('modal-terms').classList.add('hidden');
+        }
+
+        function handleTermsFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+                    let count = 0;
+                    json.forEach(r => {
+                        const keys = Object.keys(r);
+                        const findVal = (terms) => {
+                            const k = keys.find(key => terms.some(t => key.toLowerCase().includes(t)));
+                            return k ? r[k] : '';
+                        };
+                        const client = findVal(['cliente', 'razon', 'nombre', 'empresa']);
+                        const termRaw = findVal(['condicion', 'plazo', 'dias', 'pago']);
+                        
+                        let days = 30;
+                        if (termRaw !== undefined && termRaw !== '') {
+                            const str = String(termRaw).toLowerCase().trim();
+                            if (str.includes('contado')) days = 0;
+                            else {
+                                const m = str.match(/\d+/);
+                                if (m) days = parseInt(m[0]);
+                            }
+                        }
+                        if (client) {
+                            window.clientMasterTerms[String(client).trim()] = days;
+                            count++;
+                        }
+                    });
+
+                    saveTermsToStorage();
+                    renderMasterTermsTable();
+                    runReconciliation();
+                    showToast(`Se importaron ${count} plazos pactados por cliente.`, 'success');
+                } catch (err) {
+                    console.error(err);
+                    showToast('Error al procesar condiciones comerciales.', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function addManualTerm() {
+            const client = document.getElementById('manual-term-client').value.trim();
+            const days = parseInt(document.getElementById('manual-term-days').value) || 30;
+            if (!client) return;
+
+            window.clientMasterTerms[client] = days;
+            saveTermsToStorage();
+            renderMasterTermsTable();
+            runReconciliation();
+            document.getElementById('manual-term-client').value = '';
+            document.getElementById('manual-term-days').value = '';
+        }
+
+        function renderMasterTermsTable() {
+            const tbody = document.getElementById('tbody-master-terms');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            Object.keys(window.clientMasterTerms).forEach(c => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-2.5 font-bold">${c}</td>
+                    <td class="p-2.5 text-center font-semibold text-indigo-600">${window.clientMasterTerms[c]} días</td>
+                    <td class="p-2.5 text-right"><button onclick="deleteTerm('${c}')" class="text-rose-600 font-bold hover:underline">Eliminar</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deleteTerm(client) {
+            delete window.clientMasterTerms[client];
+            saveTermsToStorage();
+            renderMasterTermsTable();
+            runReconciliation();
+        }
+
+        function saveTermsToStorage() {
+            try { localStorage.setItem('clientMasterTerms', JSON.stringify(window.clientMasterTerms)); } catch(e){}
+        }
+        function loadTermsFromStorage() {
+            try {
+                const saved = localStorage.getItem('clientMasterTerms');
+                if (saved) window.clientMasterTerms = JSON.parse(saved);
+            } catch(e){}
+        }
+
+        function saveHistoricalBatchesToStorage() {
+            try { localStorage.setItem('historicalBatches', JSON.stringify(window.historicalBatches)); } catch(e){}
+        }
+        function loadHistoricalBatchesFromStorage() {
+            try {
+                const saved = localStorage.getItem('historicalBatches');
+                if (saved) {
+                    window.historicalBatches = JSON.parse(saved);
+                    updatePeriodSelectors(Object.keys(window.historicalBatches)[0]);
+                }
+            } catch(e){}
+        }
+
+        function loadDemoDataset() {
+            const demoSales = [
+                { cliente: 'SUPERMERCADOS SUR S.A.', factura: 'FC-001-1001', documento: 'JUAN PEREZ - Factura B', dEmision: new Date(2026, 6, 1), dVto: new Date(2026, 6, 31), importe: 520000 },
+                { cliente: 'DISTRIBUIDORA NORTE', factura: 'FC-001-1002', documento: 'MARIA LOPEZ - Factura B', dEmision: new Date(2026, 6, 3), dVto: new Date(2026, 7, 2), importe: 340000 },
+                { cliente: 'COMERCIAL CENTRO SRL', factura: 'FC-001-1003', documento: 'CARLOS GOMEZ - Factura B', dEmision: new Date(2026, 6, 5), dVto: new Date(2026, 7, 4), importe: 420000 }
+            ];
+            const demoReal = [
+                { cliente: 'SUPERMERCADOS SUR S.A.', fechaCobro: new Date(2026, 6, 28), importeCobrado: 520000, recibo: 'REC-9001' },
+                { cliente: 'DISTRIBUIDORA NORTE', fechaCobro: new Date(2026, 6, 30), importeCobrado: 180000, recibo: 'REC-9002' }
+            ];
+
+            window.historicalBatches['2026-07'] = { sales: demoSales, real: demoReal };
+            window.clientMasterTerms['SUPERMERCADOS SUR S.A.'] = 30;
+            window.clientMasterTerms['DISTRIBUIDORA NORTE'] = 30;
+            window.clientMasterTerms['COMERCIAL CENTRO SRL'] = 45;
+
+            updatePeriodSelectors('2026-07');
+            window.activePeriod = '2026-07';
+            runReconciliation();
+            showToast('Datos de demo (Julio) cargados correctamente.', 'success');
+        }
+    </script>
+</body>
+</html>
