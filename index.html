@@ -151,7 +151,7 @@
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         </div>
                         <h3 class="text-sm font-semibold text-slate-800 mb-1">Cobranzas Recibidas (Finnegans)</h3>
-                        <p class="text-xs text-slate-500 mb-4 max-w-xs">Informe de Cobranzas / Recibos (Columna <code class="bg-slate-100 px-1 py-0.5 text-indigo-700 font-bold">T. cta. cte.</code>)</p>
+                        <p class="text-xs text-slate-500 mb-4 max-w-xs">Informe de Cobranzas / Recibos (Lee columna <code class="bg-slate-100 px-1 py-0.5 text-indigo-700 font-bold">T. cta. cte.</code>)</p>
                         <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium px-4 py-2 border border-slate-300 rounded-lg shadow-sm transition">
                             <span id="real-filename">Seleccionar "Cobranzas"</span>
                             <input type="file" id="real-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleRealFile(event)">
@@ -513,25 +513,51 @@
         }
 
         /**
+         * Priority-based Column Searcher
+         * Searches for terms in priority order first to avoid grabbing earlier "Total" columns by mistake
+         */
+        function findRowValue(row, terms) {
+            if (!row) return '';
+            const keys = Object.keys(row);
+            for (const term of terms) {
+                const cleanT = String(term).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+                const matchedKey = keys.find(k => {
+                    const cleanK = String(k).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+                    return cleanK === cleanT || cleanK.includes(cleanT);
+                });
+                if (matchedKey && row[matchedKey] !== undefined && row[matchedKey] !== '') {
+                    return row[matchedKey];
+                }
+            }
+            return '';
+        }
+
+        /**
          * Smart Finnegans Excel Sheet Reader
-         * Automatically locates the real header row even if Finnegans added title rows at top
+         * Scans top 25 rows to find the best header row (maximizing matching keywords)
          */
         function parseExcelSheet(sheet) {
             const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
             if (!rows || rows.length === 0) return [];
 
             let headerRowIndex = 0;
-            const headerKeywords = ['cliente', 'razon', 'comprobante', 'fecha', 't. cta', 'cta. cte', 'importe', 'monto', 'recibo', 'total', 'organizacion', 'haber'];
+            const headerKeywords = [
+                'cliente', 'razon', 'comprobante', 'fecha', 't. cta', 'cta. cte', 
+                't.cta.cte', 'importe', 'monto', 'recibo', 'total', 'organizacion', 
+                'haber', 'cuenta', 'vendedor', 'emision', 'vencimiento'
+            ];
 
-            for (let i = 0; i < Math.min(rows.length, 15); i++) {
+            let maxMatchCount = 0;
+            for (let i = 0; i < Math.min(rows.length, 25); i++) {
+                if (!Array.isArray(rows[i])) continue;
                 const rowStr = rows[i].map(c => String(c).toLowerCase()).join(' ');
                 let matchCount = 0;
                 headerKeywords.forEach(kw => {
                     if (rowStr.includes(kw)) matchCount++;
                 });
-                if (matchCount >= 2) {
+                if (matchCount > maxMatchCount && matchCount >= 2) {
+                    maxMatchCount = matchCount;
                     headerRowIndex = i;
-                    break;
                 }
             }
 
@@ -541,18 +567,6 @@
             const clonedSheet = { ...sheet, '!ref': newRef };
             
             return XLSX.utils.sheet_to_json(clonedSheet, { defval: '' });
-        }
-
-        function findRowValue(row, terms) {
-            const keys = Object.keys(row);
-            const key = keys.find(k => {
-                const cleanK = String(k).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-                return terms.some(t => {
-                    const cleanT = String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-                    return cleanK.includes(cleanT);
-                });
-            });
-            return key ? row[key] : '';
         }
 
         window.onload = function() {
@@ -582,7 +596,7 @@
         function parseMoney(val) {
             if (val === null || val === undefined || val === '') return 0;
             if (typeof val === 'number') return isNaN(val) ? 0 : val;
-            let str = String(val).trim().replace(/[$]/g, '');
+            let str = String(val).trim().replace(/[$]/g, '').trim();
             let isNegative = false;
             if (str.startsWith('(') && str.endsWith(')')) {
                 isNegative = true;
@@ -592,6 +606,7 @@
                 isNegative = true;
                 str = str.replace(/-/g, '');
             }
+            str = str.trim();
             if (str.includes(',') && str.includes('.')) {
                 if (str.indexOf('.') < str.indexOf(',')) {
                     str = str.replace(/\./g, '').replace(',', '.');
@@ -647,12 +662,12 @@
 
                     let totalSum = 0;
                     window.rawSales = json.map(r => {
-                        const client = findRowValue(r, ['cliente', 'razon', 'nombre', 'empresa', 'organizacion', 'comprador', 'social']);
-                        const inv = findRowValue(r, ['factura', 'comprobante', 'nro', 'numero', 'doc']);
-                        const docCol = findRowValue(r, ['documento', 'tipo', 'concepto', 'vendedor']);
-                        const dEmis = findRowValue(r, ['emision', 'fecha_emision', 'f_emision', 'fecha']);
-                        const dVto = findRowValue(r, ['vencimiento', 'vto', 'f_vto']);
-                        const amount = findRowValue(r, ['t. cta. cte', 'cta. cte', 'importe', 'monto', 'total', 'saldo', 'debe', 'iva']);
+                        const client = findRowValue(r, ['razon social', 'razon', 'cliente', 'organizacion', 'nombre', 'empresa', 'cuenta', 'comprador']);
+                        const inv = findRowValue(r, ['nro. comprobante', 'comprobante', 'factura', 'nro', 'numero', 'doc']);
+                        const docCol = findRowValue(r, ['documento', 'vendedor', 'concepto', 'tipo']);
+                        const dEmis = findRowValue(r, ['fecha de emision', 'fecha emision', 'emision', 'f. emision', 'fecha']);
+                        const dVto = findRowValue(r, ['fecha de vencimiento', 'fecha vencimiento', 'vencimiento', 'vto', 'f. vto']);
+                        const amount = findRowValue(r, ['t. cta. cte', 't.cta.cte', 'cta. cte', 'cta cte', 'importe con iva', 'importe', 'monto', 'total con iva', 'total', 'debe']);
 
                         const parsedAmount = Math.abs(parseMoney(amount));
                         totalSum += parsedAmount;
@@ -694,11 +709,11 @@
 
                     let totalSum = 0;
                     window.rawReal = json.map(r => {
-                        const client = findRowValue(r, ['cliente', 'razon', 'nombre', 'empresa', 'organizacion', 'cuenta']);
-                        const dPay = findRowValue(r, ['cobro', 'fecha', 'pago', 'emision']);
-                        // Finnegans explicit column matcher for 'T. cta. cte.'
-                        const amount = findRowValue(r, ['t. cta. cte', 'cta. cte', 'cta cte', 't.cta.cte', 'total cta', 'importe', 'cobrado', 'monto', 'haber', 'total']);
-                        const receipt = findRowValue(r, ['recibo', 'comprobante', 'nro', 'numero', 'doc', 'transaccion']);
+                        const client = findRowValue(r, ['razon social', 'razon', 'cliente', 'organizacion', 'cuenta', 'nombre', 'empresa']);
+                        const dPay = findRowValue(r, ['fecha de cobro', 'fecha cobro', 'fecha emision', 'fecha', 'cobro', 'pago']);
+                        // Finnegans explicit column matcher prioritizes 'T. cta. cte.'
+                        const amount = findRowValue(r, ['t. cta. cte', 't.cta.cte', 'cta. cte', 'cta cte', 'total cta', 'importe cobrado', 'importe', 'cobrado', 'monto', 'haber', 'total']);
+                        const receipt = findRowValue(r, ['nro. recibo', 'nro. comprobante', 'recibo', 'comprobante', 'nro', 'numero', 'doc', 'transaccion']);
 
                         const parsedAmount = Math.abs(parseMoney(amount));
                         totalSum += parsedAmount;
@@ -711,7 +726,7 @@
                         };
                     });
 
-                    document.getElementById('real-status').textContent = `✓ ${window.rawReal.length} recibos leídos (Monto Total: ${formatMoney(totalSum)})`;
+                    document.getElementById('real-status').textContent = `✓ ${window.rawReal.length} recibos leídos (Monto Total T. cta. cte.: ${formatMoney(totalSum)})`;
                     document.getElementById('real-status').classList.remove('hidden');
                     showToast(`Se cargaron ${window.rawReal.length} recibos de cobranza (${formatMoney(totalSum)}).`, 'success');
                 } catch (err) {
@@ -944,7 +959,10 @@
                     (b.real || []).forEach(r => { totalCobrado += (r.importeCobrado || 0); realCount++; });
                 });
             } else if (window.historicalBatches[window.activePeriod]) {
-                (window.historicalBatches[window.activePeriod].real || []).forEach(r => { totalCobrado += (r.importeCobrado || 0); realCount++; });
+                (window.historicalBatches[window.activePeriod].real || []).forEach(r => { 
+                    totalCobrado += (r.importeCobrado || 0); 
+                    realCount++; 
+                });
             }
 
             const recuperoPct = totalFacturado > 0 ? Math.round((totalCobrado / totalFacturado) * 100) : 0;
