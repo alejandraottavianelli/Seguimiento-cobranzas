@@ -76,6 +76,7 @@
             </div>
         </div>
 
+        <!-- Navigation Tabs -->
         <div class="bg-slate-800/80 border-t border-slate-700/60 overflow-x-auto custom-scrollbar">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 py-1">
                 <button onclick="switchTab('tab-upload')" id="nav-tab-upload" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-white bg-slate-700 shadow-sm flex items-center">
@@ -480,25 +481,20 @@
         let chartSellersInstance = null;
 
         /**
-         * Smart Client Normalization Engine
-         * Strips accents, punctuation, legal suffixes (S.A., SRL, etc.), extra spaces
-         * so Finnegans Sales & Receipt files match seamlessly.
+         * Normalizes Client Names to guarantee exact matching
+         * Strips diacritics, punctuation, legal terms (S.A., SRL, etc.), extra whitespace
          */
         function normalizeClientName(str) {
             if (!str) return '';
             let s = String(str).toLowerCase().trim();
-            // Remove diacritics / accents
             s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            // Strip punctuation marks
             s = s.replace(/[^a-z0-9\s]/g, ' ');
-            // Remove legal suffixes
             s = s.replace(/\b(s\s*a|s\s*r\s*l|s\s*h|s\s*a\s*c\s*i\s*f|sociedad\s*anonima)\b/g, '');
-            // Collapse multiple spaces
             s = s.replace(/\s+/g, ' ').trim();
             return s;
         }
 
-        // High-Performance Hash Map for Agreed Days lookup (O(1))
+        // Fast Hash Map for Agreed Days lookup (O(1))
         function getClientAgreedDays(clientName) {
             if (!clientName) return 30;
             const cleanTarget = normalizeClientName(clientName);
@@ -585,6 +581,37 @@
             return str || 'Vendedor General';
         }
 
+        /**
+         * Smart Sheet Parser: Auto-detects the header row dynamically
+         * Handles Excel files with title banners or empty top rows from Finnegans
+         */
+        function sheetToRowObjects(sheet) {
+            const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+            if (!rawRows || rawRows.length === 0) return [];
+            
+            let headerIdx = 0;
+            for (let i = 0; i < Math.min(rawRows.length, 12); i++) {
+                const rowStr = rawRows[i].map(c => String(c).toLowerCase()).join(' ');
+                if (rowStr.includes('cliente') || rowStr.includes('razon') || rowStr.includes('comprobante') || rowStr.includes('factura') || rowStr.includes('recibo') || rowStr.includes('importe') || rowStr.includes('cobro')) {
+                    headerIdx = i;
+                    break;
+                }
+            }
+            
+            const headers = rawRows[headerIdx].map(h => String(h).trim());
+            const objects = [];
+            for (let i = headerIdx + 1; i < rawRows.length; i++) {
+                const row = rawRows[i];
+                if (!row || row.every(cell => cell === '' || cell === null || cell === undefined)) continue;
+                const obj = {};
+                headers.forEach((h, colIdx) => {
+                    if (h) obj[h] = row[colIdx] !== undefined ? row[colIdx] : '';
+                });
+                objects.push(obj);
+            }
+            return objects;
+        }
+
         function handleSalesFile(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -596,7 +623,9 @@
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                    const json = sheetToRowObjects(sheet);
+
+                    let totalImporteSum = 0;
 
                     window.rawSales = json.map(r => {
                         const keys = Object.keys(r);
@@ -610,7 +639,10 @@
                         const docCol = findVal(['documento', 'tipo', 'concepto', 'vendedor']);
                         const dEmis = findVal(['emision', 'fecha_emision', 'f_emision', 'fecha', 'comprobante']);
                         const dVto = findVal(['vencimiento', 'vto', 'f_vto']);
-                        const amount = findVal(['importe', 'monto', 'total', 'saldo', 'debe', 'iva']);
+                        const amount = findVal(['importe', 'monto', 'total', 'saldo', 'debe', 'iva', 'neto']);
+
+                        const parsedAmt = parseMoney(amount);
+                        totalImporteSum += parsedAmt;
 
                         return {
                             cliente: String(client || 'CLIENTE S/D').trim(),
@@ -619,13 +651,13 @@
                             vendedor: extractSellerFromDocument(docCol),
                             dEmision: parseExcelDate(dEmis),
                             dVto: parseExcelDate(dVto),
-                            importe: parseMoney(amount)
+                            importe: parsedAmt
                         };
                     });
 
-                    document.getElementById('sales-status').textContent = `✓ ${window.rawSales.length} facturas leídas.`;
+                    document.getElementById('sales-status').textContent = `✓ ${window.rawSales.length} facturas leídas ($ ${Math.round(totalImporteSum).toLocaleString('es-AR')}).`;
                     document.getElementById('sales-status').classList.remove('hidden');
-                    showToast(`Se cargaron ${window.rawSales.length} facturas de venta.`, 'success');
+                    showToast(`Se cargaron ${window.rawSales.length} facturas por $ ${Math.round(totalImporteSum).toLocaleString('es-AR')}.`, 'success');
                 } catch (err) {
                     console.error(err);
                     showToast('Error al leer archivo de Facturas.', 'error');
@@ -645,7 +677,9 @@
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                    const json = sheetToRowObjects(sheet);
+
+                    let totalCobradoSum = 0;
 
                     window.rawReal = json.map(r => {
                         const keys = Object.keys(r);
@@ -656,20 +690,23 @@
 
                         const client = findVal(['cliente', 'razon', 'nombre', 'empresa', 'social']);
                         const dPay = findVal(['cobro', 'fecha', 'pago']);
-                        const amount = findVal(['importe', 'cobrado', 'monto', 'haber', 'total']);
+                        const amount = findVal(['importe', 'cobrado', 'monto', 'haber', 'total', 'neto']);
                         const receipt = findVal(['recibo', 'comprobante', 'nro', 'numero']);
+
+                        const parsedAmt = parseMoney(amount);
+                        totalCobradoSum += parsedAmt;
 
                         return {
                             cliente: String(client || 'CLIENTE S/D').trim(),
                             fechaCobro: parseExcelDate(dPay),
-                            importeCobrado: parseMoney(amount),
+                            importeCobrado: parsedAmt,
                             recibo: String(receipt || 'REC-000').trim()
                         };
                     });
 
-                    document.getElementById('real-status').textContent = `✓ ${window.rawReal.length} recibos leídos.`;
+                    document.getElementById('real-status').textContent = `✓ ${window.rawReal.length} recibos leídos ($ ${Math.round(totalCobradoSum).toLocaleString('es-AR')}).`;
                     document.getElementById('real-status').classList.remove('hidden');
-                    showToast(`Se cargaron ${window.rawReal.length} recibos de cobranza.`, 'success');
+                    showToast(`Se cargaron ${window.rawReal.length} recibos por $ ${Math.round(totalCobradoSum).toLocaleString('es-AR')}.`, 'success');
                 } catch (err) {
                     console.error(err);
                     showToast('Error al leer archivo de Cobranzas.', 'error');
@@ -784,7 +821,7 @@
                 group.sales.forEach(s => invoiceDetails.push(s));
             });
 
-            window.reconciliationResult = { invoiceDetails, clientSummaries };
+            window.reconciliationResult = { invoiceDetails, clientSummaries, rawRealProcessed: realToProcess };
 
             // Render all UI tabs
             renderKPIs();
@@ -892,13 +929,13 @@
 
         function renderKPIs() {
             if (!window.reconciliationResult) return;
-            const { invoiceDetails, clientSummaries } = window.reconciliationResult;
+            const { invoiceDetails, clientSummaries, rawRealProcessed } = window.reconciliationResult;
 
             const totalFacturado = invoiceDetails.reduce((sum, i) => sum + i.importe, 0);
             const totalPendiente = invoiceDetails.reduce((sum, i) => sum + i.saldo, 0);
             
-            // Calculate total collections across all clients for the period
-            const totalCobrado = clientSummaries.reduce((sum, c) => sum + c.cobrado, 0);
+            // Calculate total collections across all receipts loaded
+            const totalCobrado = (rawRealProcessed || []).reduce((sum, r) => sum + r.importeCobrado, 0);
             const recuperoPct = totalFacturado > 0 ? Math.round((totalCobrado / totalFacturado) * 100) : 0;
 
             const avgDays = clientSummaries.length > 0 ? Math.round(clientSummaries.reduce((s, c) => s + c.plazoPromedioReal, 0) / clientSummaries.length) : 30;
@@ -907,7 +944,7 @@
             document.getElementById('kpi-facturas-count').textContent = `${invoiceDetails.length} Facturas emitidas`;
 
             document.getElementById('kpi-cobrado').textContent = formatMoney(totalCobrado);
-            document.getElementById('kpi-recibos-count').textContent = `${clientSummaries.filter(c => c.cobrado > 0).length} Clientes con pagos`;
+            document.getElementById('kpi-recibos-count').textContent = `${(rawRealProcessed || []).length} Recibos aplicados`;
 
             document.getElementById('kpi-pendiente').textContent = formatMoney(totalPendiente);
             document.getElementById('kpi-recupero-pct').textContent = `Recuperación: ${recuperoPct}%`;
@@ -1159,7 +1196,7 @@
                     const data = new Uint8Array(evt.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                    const json = sheetToRowObjects(sheet);
 
                     let count = 0;
                     json.forEach(r => {
