@@ -44,7 +44,7 @@
                     </div>
                     <div>
                         <h1 class="text-base font-bold leading-tight">Conciliación, Plazos Reales & Cash Flow</h1>
-                        <p class="text-xs text-slate-400">Administración y Finanzas & Control de Crédito</p>
+                        <p class="text-xs text-slate-400">Administración, Finanzas & Control de Crédito</p>
                     </div>
                 </div>
 
@@ -54,7 +54,7 @@
                     <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs">
                         <span class="text-slate-400 mr-2 flex items-center">
                             <svg class="w-4 h-4 mr-1 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            Ver Período:
+                            Período:
                         </span>
                         <select id="global-period-select" onchange="changeActivePeriod(this.value)" class="bg-transparent text-amber-300 font-semibold focus:outline-none cursor-pointer">
                             <option value="ALL" class="bg-slate-900 text-white">Todos los Meses (Histórico Acumulado)</option>
@@ -76,7 +76,6 @@
             </div>
         </div>
 
-        <!-- Navigation Tabs -->
         <div class="bg-slate-800/80 border-t border-slate-700/60 overflow-x-auto custom-scrollbar">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 py-1">
                 <button onclick="switchTab('tab-upload')" id="nav-tab-upload" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-white bg-slate-700 shadow-sm flex items-center">
@@ -112,6 +111,7 @@
         <!-- Toast Notification Area -->
         <div id="toast-container" class="fixed top-20 right-5 z-50 space-y-2 pointer-events-none"></div>
 
+        <!-- TAB 1: UPLOAD & MULTI-PERIOD -->
         <section id="tab-upload" class="space-y-6">
             <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-6">
@@ -125,7 +125,7 @@
                     
                     <div class="flex items-center space-x-3 bg-slate-50 p-2 rounded-lg border border-slate-200">
                         <label class="text-xs font-semibold text-slate-600">Asignar a Período:</label>
-                        <input type="month" id="upload-period-input" value="2026-07" class="bg-white border border-slate-300 text-xs rounded-md px-2 py-1 font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <input type="month" id="upload-period-input" value="2026-08" class="bg-white border border-slate-300 text-xs rounded-md px-2 py-1 font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
                     </div>
                 </div>
 
@@ -179,6 +179,7 @@
             </div>
         </section>
 
+        <!-- TAB 2: EXECUTIVE SUMMARY -->
         <section id="tab-executive" class="space-y-6 hidden">
             <!-- Top KPI Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -245,6 +246,7 @@
             </div>
         </section>
 
+        <!-- TAB 3: CLIENT REAL VS AGREED TERMS -->
         <section id="tab-terms" class="space-y-6 hidden">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -277,6 +279,7 @@
             </div>
         </section>
 
+        <!-- TAB 4: DETAILED IMPUTATION -->
         <section id="tab-imputation" class="space-y-6 hidden">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -319,6 +322,7 @@
             </div>
         </section>
 
+        <!-- TAB 5: ALERTS & BEHAVIORAL RANKINGS -->
         <section id="tab-alerts" class="space-y-6 hidden">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Smart Alerts List -->
@@ -352,6 +356,7 @@
             </div>
         </section>
 
+        <!-- TAB 6: PREDICTIVE FORECAST & CASH FLOW AGENDA -->
         <section id="tab-forecast" class="space-y-6 hidden">
             <!-- Forecast Summary Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -413,6 +418,7 @@
 
     </main>
 
+    <!-- TERMS MASTER MODAL -->
     <div id="modal-terms" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-xl mx-4 overflow-hidden">
             <div class="p-5 bg-slate-900 text-white flex items-center justify-between">
@@ -473,24 +479,45 @@
         let chartStatusInstance = null;
         let chartSellersInstance = null;
 
+        /**
+         * Smart Client Normalization Engine
+         * Strips accents, punctuation, legal suffixes (S.A., SRL, etc.), extra spaces
+         * so Finnegans Sales & Receipt files match seamlessly.
+         */
+        function normalizeClientName(str) {
+            if (!str) return '';
+            let s = String(str).toLowerCase().trim();
+            // Remove diacritics / accents
+            s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            // Strip punctuation marks
+            s = s.replace(/[^a-z0-9\s]/g, ' ');
+            // Remove legal suffixes
+            s = s.replace(/\b(s\s*a|s\s*r\s*l|s\s*h|s\s*a\s*c\s*i\s*f|sociedad\s*anonima)\b/g, '');
+            // Collapse multiple spaces
+            s = s.replace(/\s+/g, ' ').trim();
+            return s;
+        }
+
+        // High-Performance Hash Map for Agreed Days lookup (O(1))
         function getClientAgreedDays(clientName) {
             if (!clientName) return 30;
-            const targetRaw = String(clientName).trim();
-            if (window.clientMasterTerms[targetRaw] !== undefined) {
-                return window.clientMasterTerms[targetRaw];
-            }
-            const cleanTarget = targetRaw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            const cleanTarget = normalizeClientName(clientName);
             if (!cleanTarget) return 30;
 
+            if (window.clientMasterTerms[cleanTarget] !== undefined) {
+                return window.clientMasterTerms[cleanTarget];
+            }
+
             for (let k in window.clientMasterTerms) {
-                const cleanK = String(k).toUpperCase().replace(/[^A-Z0-9]/g, '');
-                if (cleanK === cleanTarget || (cleanK.length > 3 && cleanTarget.includes(cleanK))) {
+                const cleanK = normalizeClientName(k);
+                if (cleanK === cleanTarget || (cleanK.length > 3 && (cleanTarget.includes(cleanK) || cleanK.includes(cleanTarget)))) {
                     return window.clientMasterTerms[k];
                 }
             }
             return 30;
         }
 
+        // Initialize App
         window.onload = function() {
             loadTermsFromStorage();
             loadHistoricalBatchesFromStorage();
@@ -578,12 +605,12 @@
                             return k ? r[k] : '';
                         };
 
-                        const client = findVal(['cliente', 'razon', 'nombre', 'empresa', 'comprador']);
+                        const client = findVal(['cliente', 'razon', 'nombre', 'empresa', 'comprador', 'social']);
                         const inv = findVal(['factura', 'comprobante', 'nro', 'numero', 'doc']);
-                        const docCol = findVal(['documento', 'tipo', 'concepto']);
-                        const dEmis = findVal(['emision', 'fecha_emision', 'f_emision', 'fecha']);
+                        const docCol = findVal(['documento', 'tipo', 'concepto', 'vendedor']);
+                        const dEmis = findVal(['emision', 'fecha_emision', 'f_emision', 'fecha', 'comprobante']);
                         const dVto = findVal(['vencimiento', 'vto', 'f_vto']);
-                        const amount = findVal(['importe', 'monto', 'total', 'saldo', 'debe']);
+                        const amount = findVal(['importe', 'monto', 'total', 'saldo', 'debe', 'iva']);
 
                         return {
                             cliente: String(client || 'CLIENTE S/D').trim(),
@@ -627,10 +654,10 @@
                             return k ? r[k] : '';
                         };
 
-                        const client = findVal(['cliente', 'razon', 'nombre', 'empresa']);
+                        const client = findVal(['cliente', 'razon', 'nombre', 'empresa', 'social']);
                         const dPay = findVal(['cobro', 'fecha', 'pago']);
-                        const amount = findVal(['importe', 'cobrado', 'monto', 'haber']);
-                        const receipt = findVal(['recibo', 'comprobante', 'nro']);
+                        const amount = findVal(['importe', 'cobrado', 'monto', 'haber', 'total']);
+                        const receipt = findVal(['recibo', 'comprobante', 'nro', 'numero']);
 
                         return {
                             cliente: String(client || 'CLIENTE S/D').trim(),
@@ -665,23 +692,32 @@
                 realToProcess = window.historicalBatches[window.activePeriod].real || [];
             }
 
-            // Group by client
+            // Grouping Map using Normalized Keys for flawless matching
             const clientsMap = {};
+
             salesToProcess.forEach(s => {
-                if (!clientsMap[s.cliente]) clientsMap[s.cliente] = { sales: [], real: [] };
-                clientsMap[s.cliente].sales.push({ ...s, saldo: s.importe, estado: 'Sin pago', reciboAplicado: '' });
+                const normKey = normalizeClientName(s.cliente) || 'cliente_desconocido';
+                if (!clientsMap[normKey]) {
+                    clientsMap[normKey] = { displayName: s.cliente, sales: [], real: [] };
+                }
+                clientsMap[normKey].sales.push({ ...s, saldo: s.importe, estado: 'Sin pago', reciboAplicado: '' });
             });
+
             realToProcess.forEach(r => {
-                if (!clientsMap[r.cliente]) clientsMap[r.cliente] = { sales: [], real: [] };
-                clientsMap[r.cliente].real.push({ ...r, saldoPorAplicar: r.importeCobrado });
+                const normKey = normalizeClientName(r.cliente) || 'cliente_desconocido';
+                if (!clientsMap[normKey]) {
+                    clientsMap[normKey] = { displayName: r.cliente, sales: [], real: [] };
+                }
+                clientsMap[normKey].real.push({ ...r, saldoPorAplicar: r.importeCobrado });
             });
 
             const invoiceDetails = [];
             const clientSummaries = [];
 
-            // Fast FIFO & Exact Imputation
-            Object.keys(clientsMap).forEach(clientName => {
-                const group = clientsMap[clientName];
+            // Fast FIFO & Exact Match Imputation Engine
+            Object.keys(clientsMap).forEach(normKey => {
+                const group = clientsMap[normKey];
+                const clientName = group.displayName;
                 const agreedDays = getClientAgreedDays(clientName);
 
                 let totalSales = group.sales.reduce((sum, i) => sum + i.importe, 0);
@@ -690,11 +726,11 @@
                 let realPayDaysSum = 0;
                 let realPayCount = 0;
 
-                // FIFO Imputation
+                // Match Receipts to Invoices
                 group.real.forEach(rec => {
                     let amountToApply = rec.importeCobrado;
 
-                    // Level 1: Exact Match search
+                    // Level 1: Exact Amount Match
                     const exactMatch = group.sales.find(s => s.saldo > 0 && Math.abs(s.saldo - amountToApply) < 0.01);
                     if (exactMatch) {
                         exactMatch.saldo = 0;
@@ -706,7 +742,7 @@
                         if (diffDays >= 0) { realPayDaysSum += diffDays; realPayCount++; }
                         amountToApply = 0;
                     } else {
-                        // Level 3: FIFO Partial Payment
+                        // Level 2/3: FIFO Partial / Multiple Imputation
                         for (let s of group.sales) {
                             if (s.saldo <= 0) continue;
                             if (amountToApply <= 0) break;
@@ -760,7 +796,7 @@
         }
 
         function processAndSavePeriod() {
-            const periodInput = document.getElementById('upload-period-input').value || '2026-07';
+            const periodInput = document.getElementById('upload-period-input').value || '2026-08';
             if (window.rawSales.length === 0 && window.rawReal.length === 0) {
                 showToast('Seleccione al menos un archivo antes de procesar.', 'error');
                 return;
@@ -860,7 +896,9 @@
 
             const totalFacturado = invoiceDetails.reduce((sum, i) => sum + i.importe, 0);
             const totalPendiente = invoiceDetails.reduce((sum, i) => sum + i.saldo, 0);
-            const totalCobrado = totalFacturado - totalPendiente;
+            
+            // Calculate total collections across all clients for the period
+            const totalCobrado = clientSummaries.reduce((sum, c) => sum + c.cobrado, 0);
             const recuperoPct = totalFacturado > 0 ? Math.round((totalCobrado / totalFacturado) * 100) : 0;
 
             const avgDays = clientSummaries.length > 0 ? Math.round(clientSummaries.reduce((s, c) => s + c.plazoPromedioReal, 0) / clientSummaries.length) : 30;
@@ -869,6 +907,8 @@
             document.getElementById('kpi-facturas-count').textContent = `${invoiceDetails.length} Facturas emitidas`;
 
             document.getElementById('kpi-cobrado').textContent = formatMoney(totalCobrado);
+            document.getElementById('kpi-recibos-count').textContent = `${clientSummaries.filter(c => c.cobrado > 0).length} Clientes con pagos`;
+
             document.getElementById('kpi-pendiente').textContent = formatMoney(totalPendiente);
             document.getElementById('kpi-recupero-pct').textContent = `Recuperación: ${recuperoPct}%`;
 
@@ -1128,7 +1168,7 @@
                             const k = keys.find(key => terms.some(t => key.toLowerCase().includes(t)));
                             return k ? r[k] : '';
                         };
-                        const client = findVal(['cliente', 'razon', 'nombre', 'empresa']);
+                        const client = findVal(['cliente', 'razon', 'nombre', 'empresa', 'social']);
                         const termRaw = findVal(['condicion', 'plazo', 'dias', 'pago']);
                         
                         let days = 30;
@@ -1141,7 +1181,8 @@
                             }
                         }
                         if (client) {
-                            window.clientMasterTerms[String(client).trim()] = days;
+                            const norm = normalizeClientName(client);
+                            window.clientMasterTerms[norm] = days;
                             count++;
                         }
                     });
@@ -1163,7 +1204,8 @@
             const days = parseInt(document.getElementById('manual-term-days').value) || 30;
             if (!client) return;
 
-            window.clientMasterTerms[client] = days;
+            const norm = normalizeClientName(client);
+            window.clientMasterTerms[norm] = days;
             saveTermsToStorage();
             renderMasterTermsTable();
             runReconciliation();
@@ -1175,19 +1217,19 @@
             const tbody = document.getElementById('tbody-master-terms');
             if (!tbody) return;
             tbody.innerHTML = '';
-            Object.keys(window.clientMasterTerms).forEach(c => {
+            Object.keys(window.clientMasterTerms).forEach(cKey => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="p-2.5 font-bold">${c}</td>
-                    <td class="p-2.5 text-center font-semibold text-indigo-600">${window.clientMasterTerms[c]} días</td>
-                    <td class="p-2.5 text-right"><button onclick="deleteTerm('${c}')" class="text-rose-600 font-bold hover:underline">Eliminar</button></td>
+                    <td class="p-2.5 font-bold uppercase">${cKey}</td>
+                    <td class="p-2.5 text-center font-semibold text-indigo-600">${window.clientMasterTerms[cKey]} días</td>
+                    <td class="p-2.5 text-right"><button onclick="deleteTerm('${cKey}')" class="text-rose-600 font-bold hover:underline">Eliminar</button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function deleteTerm(client) {
-            delete window.clientMasterTerms[client];
+        function deleteTerm(clientKey) {
+            delete window.clientMasterTerms[clientKey];
             saveTermsToStorage();
             renderMasterTermsTable();
             runReconciliation();
@@ -1211,7 +1253,7 @@
                 const saved = localStorage.getItem('historicalBatches');
                 if (saved) {
                     window.historicalBatches = JSON.parse(saved);
-                    updatePeriodSelectors(Object.keys(window.historicalBatches)[0]);
+                    updatePeriodSelectors(Object.keys(window.historicalBatches)[0] || 'ALL');
                 }
             } catch(e){}
         }
@@ -1223,14 +1265,14 @@
                 { cliente: 'COMERCIAL CENTRO SRL', factura: 'FC-001-1003', documento: 'CARLOS GOMEZ - Factura B', dEmision: new Date(2026, 6, 5), dVto: new Date(2026, 7, 4), importe: 420000 }
             ];
             const demoReal = [
-                { cliente: 'SUPERMERCADOS SUR S.A.', fechaCobro: new Date(2026, 6, 28), importeCobrado: 520000, recibo: 'REC-9001' },
-                { cliente: 'DISTRIBUIDORA NORTE', fechaCobro: new Date(2026, 6, 30), importeCobrado: 180000, recibo: 'REC-9002' }
+                { cliente: 'SUPERMERCADOS SUR SA', fechaCobro: new Date(2026, 6, 28), importeCobrado: 520000, recibo: 'REC-9001' },
+                { cliente: 'DISTRIBUIDORA NORTE SRL', fechaCobro: new Date(2026, 6, 30), importeCobrado: 180000, recibo: 'REC-9002' }
             ];
 
             window.historicalBatches['2026-07'] = { sales: demoSales, real: demoReal };
-            window.clientMasterTerms['SUPERMERCADOS SUR S.A.'] = 30;
-            window.clientMasterTerms['DISTRIBUIDORA NORTE'] = 30;
-            window.clientMasterTerms['COMERCIAL CENTRO SRL'] = 45;
+            window.clientMasterTerms[normalizeClientName('SUPERMERCADOS SUR S.A.')] = 30;
+            window.clientMasterTerms[normalizeClientName('DISTRIBUIDORA NORTE')] = 30;
+            window.clientMasterTerms[normalizeClientName('COMERCIAL CENTRO SRL')] = 45;
 
             updatePeriodSelectors('2026-07');
             window.activePeriod = '2026-07';
