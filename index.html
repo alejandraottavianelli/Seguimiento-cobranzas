@@ -44,7 +44,7 @@
                     </div>
                     <div>
                         <h1 class="text-base font-bold leading-tight">Conciliación, Plazos Reales & Cash Flow</h1>
-                        <p class="text-xs text-slate-400">Administración, Finanzas & Control de Crédito</p>
+                        <p class="text-xs text-slate-400">Administración y Finanzas & Control de Crédito</p>
                     </div>
                 </div>
 
@@ -112,21 +112,20 @@
         <!-- Toast Notification Area -->
         <div id="toast-container" class="fixed top-20 right-5 z-50 space-y-2 pointer-events-none"></div>
 
-        <!-- TAB 1: UPLOAD & MULTI-PERIOD -->
         <section id="tab-upload" class="space-y-6">
             <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-6">
                     <div>
                         <h2 class="text-lg font-bold text-slate-800 flex items-center">
                             <svg class="w-5 h-5 mr-2 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                            Importación de Archivos (Finnegans / ERP)
+                            Importación de Archivos (Facturación vs. Cobranzas)
                         </h2>
-                        <p class="text-xs text-slate-500 mt-1">Cargue los informes de Ventas y Cobranzas de Finnegans para alimentar el historial acumulado.</p>
+                        <p class="text-xs text-slate-500 mt-1">Cargue los archivos de Ventas y Cobranzas de cada mes para alimentar el historial acumulado.</p>
                     </div>
                     
                     <div class="flex items-center space-x-3 bg-slate-50 p-2 rounded-lg border border-slate-200">
                         <label class="text-xs font-semibold text-slate-600">Asignar a Período:</label>
-                        <input type="month" id="upload-period-input" value="2026-06" class="bg-white border border-slate-300 text-xs rounded-md px-2 py-1 font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <input type="month" id="upload-period-input" value="2026-07" class="bg-white border border-slate-300 text-xs rounded-md px-2 py-1 font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
                     </div>
                 </div>
 
@@ -150,7 +149,7 @@
                         <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-3">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         </div>
-                        <h3 class="text-sm font-semibold text-slate-800 mb-1">Cobranzas Recibidas (Finnegans)</h3>
+                        <h3 class="text-sm font-semibold text-slate-800 mb-1">Cobranzas Recibidas</h3>
                         <p class="text-xs text-slate-500 mb-4 max-w-xs">Informe de Cobranzas / Recibos (Lee columna <code class="bg-slate-100 px-1 py-0.5 text-indigo-700 font-bold">T. cta. cte.</code>)</p>
                         <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium px-4 py-2 border border-slate-300 rounded-lg shadow-sm transition">
                             <span id="real-filename">Seleccionar "Cobranzas"</span>
@@ -180,7 +179,6 @@
             </div>
         </section>
 
-        <!-- TAB 2: EXECUTIVE SUMMARY -->
         <section id="tab-executive" class="space-y-6 hidden">
             <!-- Top KPI Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -239,7 +237,7 @@
                 </div>
 
                 <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-bold text-slate-800 mb-4">Facturado vs Cobrado por Vendedor</h3>
+                    <h3 class="text-sm font-bold text-slate-800 mb-4">Facturado vs Cobrado por Vendedor / Reparto</h3>
                     <div class="h-64 relative">
                         <canvas id="chart-sellers"></canvas>
                     </div>
@@ -247,7 +245,6 @@
             </div>
         </section>
 
-        <!-- TAB 3: CLIENT REAL VS AGREED TERMS -->
         <section id="tab-terms" class="space-y-6 hidden">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -255,7 +252,14 @@
                         <h3 class="text-base font-bold text-slate-800">Comportamiento por Cliente: Plazo Real vs Pactado</h3>
                         <p class="text-xs text-slate-500">Mide si los clientes abonan en el plazo contractual acordado o presentan desvíos sistemáticos.</p>
                     </div>
-                    <input type="text" id="search-client-terms" oninput="renderTermsTable()" placeholder="Buscar cliente..." class="text-xs border border-slate-300 rounded-lg px-3 py-2 w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <div class="flex items-center space-x-2 w-full sm:w-auto">
+                        <select id="filter-terms-status" onchange="renderTermsTable()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            <option value="ALL">Todos los Estados</option>
+                            <option value="EN_PLAZO">En Plazo</option>
+                            <option value="ATRASADO">Atrasado</option>
+                        </select>
+                        <input type="text" id="search-client-terms" oninput="renderTermsTable()" placeholder="Buscar cliente / mercado..." class="text-xs border border-slate-300 rounded-lg px-3 py-2 w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
                 </div>
 
                 <div class="overflow-x-auto custom-scrollbar">
@@ -263,6 +267,7 @@
                         <thead>
                             <tr class="bg-slate-50 border-b border-slate-200 font-semibold text-slate-600 uppercase tracking-wider">
                                 <th class="py-3 px-4">Cliente</th>
+                                <th class="py-3 px-4 text-center">Mercado / Tipo</th>
                                 <th class="py-3 px-4 text-right">Proyectado</th>
                                 <th class="py-3 px-4 text-right">Cobrado</th>
                                 <th class="py-3 px-4 text-center">Plazo Pactado</th>
@@ -280,7 +285,6 @@
             </div>
         </section>
 
-        <!-- TAB 4: DETAILED IMPUTATION -->
         <section id="tab-imputation" class="space-y-6 hidden">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -294,7 +298,6 @@
                             <option value="Pagada">Pagadas</option>
                             <option value="Pago parcial">Pago Parcial</option>
                             <option value="Sin pago">Sin Pago</option>
-                            <option value="Pago agrupado">Pago Agrupado</option>
                         </select>
                         <input type="text" id="search-imputation" oninput="renderImputationTable()" placeholder="Buscar factura / cliente..." class="text-xs border border-slate-300 rounded-lg px-3 py-2 w-48 sm:w-64 focus:outline-none focus:ring-2 focus:ring-brand-500">
                     </div>
@@ -323,41 +326,55 @@
             </div>
         </section>
 
-        <!-- TAB 5: ALERTS & BEHAVIORAL RANKINGS -->
         <section id="tab-alerts" class="space-y-6 hidden">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Smart Alerts List -->
+                <!-- Smart Alerts List with Selector Filter -->
                 <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center text-rose-600">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        Alertas Automáticas de Riesgo de Crédito
-                    </h3>
-                    <div id="alerts-container" class="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b border-slate-100 pb-3">
+                        <h3 class="text-sm font-bold text-slate-800 flex items-center text-rose-600">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            Alertas Automáticas de Riesgo & Deuda
+                        </h3>
+                        <div class="flex items-center space-x-2 w-full sm:w-auto">
+                            <label for="filter-alert-type" class="text-xs text-slate-500 font-semibold whitespace-nowrap">Filtrar Alertas:</label>
+                            <select id="filter-alert-type" onchange="renderAlertsAndRankings()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-50 font-medium text-slate-700 w-full sm:w-auto">
+                                <option value="ALL">Todas las Alertas</option>
+                                <option value="DEBT">⚠️ Mayor Deuda Pendiente</option>
+                                <option value="DELAY">⏰ Desvío Crítico en Plazo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="alerts-container" class="space-y-3 max-h-[480px] overflow-y-auto custom-scrollbar pr-1">
                         <!-- Dynamic Alerts -->
                     </div>
                 </div>
 
-                <!-- Best & Worst Payers Ranking -->
+                <!-- Best & Worst Payers Ranking (Top 10) -->
                 <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
                     <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center text-indigo-600">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                        Ranking de Cumplimiento de Pago
+                        Ranking de Cumplimiento de Pago (Top 10)
                     </h3>
-                    <div class="space-y-4">
+                    <div class="space-y-5">
                         <div>
-                            <h4 class="text-xs font-bold text-emerald-700 uppercase mb-2">Mejores Pagadores (Menor desvío)</h4>
-                            <div id="ranking-top" class="space-y-2"></div>
+                            <h4 class="text-xs font-bold text-emerald-700 uppercase mb-2 flex justify-between items-center">
+                                <span>Mejores 10 Pagadores (Menor desvío)</span>
+                                <span class="text-[10px] text-slate-400 font-normal">Plazo Prom. / Cumplimiento</span>
+                            </h4>
+                            <div id="ranking-top" class="space-y-1.5 max-h-56 overflow-y-auto custom-scrollbar pr-1"></div>
                         </div>
                         <div class="pt-3 border-t border-slate-100">
-                            <h4 class="text-xs font-bold text-rose-700 uppercase mb-2">Clientes con Mayor Demora Habitual</h4>
-                            <div id="ranking-worst" class="space-y-2"></div>
+                            <h4 class="text-xs font-bold text-rose-700 uppercase mb-2 flex justify-between items-center">
+                                <span>10 Clientes con Mayor Demora Habitual</span>
+                                <span class="text-[10px] text-slate-400 font-normal">Desvío / Saldo Pendiente</span>
+                            </h4>
+                            <div id="ranking-worst" class="space-y-1.5 max-h-56 overflow-y-auto custom-scrollbar pr-1"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- TAB 6: PREDICTIVE FORECAST & CASH FLOW AGENDA -->
         <section id="tab-forecast" class="space-y-6 hidden">
             <!-- Forecast Summary Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -419,13 +436,12 @@
 
     </main>
 
-    <!-- TERMS MASTER MODAL -->
     <div id="modal-terms" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-xl mx-4 overflow-hidden">
+        <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-2xl mx-4 overflow-hidden">
             <div class="p-5 bg-slate-900 text-white flex items-center justify-between">
                 <h3 class="text-sm font-bold flex items-center">
                     <svg class="w-5 h-5 mr-2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Maestro de Plazos Pactados por Cliente
+                    Maestro de Plazos Pactados y Mercado por Cliente
                 </h3>
                 <button onclick="closeTermsModal()" class="text-slate-400 hover:text-white">&times;</button>
             </div>
@@ -433,14 +449,16 @@
             <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto custom-scrollbar">
                 <!-- File Upload box for terms -->
                 <div class="border-2 border-dashed border-indigo-200 bg-indigo-50/50 rounded-lg p-4 text-center">
-                    <p class="text-xs text-indigo-900 font-semibold mb-2">Cargar archivo <code class="bg-white px-1 py-0.5 rounded border">Condición de pago por cliente.xlsx</code></p>
+                    <p class="text-xs text-indigo-900 font-semibold mb-1">Cargar archivo <code class="bg-white px-1 py-0.5 rounded border">Condición de pago por cliente.xlsx</code></p>
+                    <p class="text-[11px] text-slate-500 mb-2">Lee automáticamente la columna B (<code class="font-mono text-indigo-600 font-bold">Mercado</code> / Tipo) y el plazo pactado en días.</p>
                     <input type="file" id="terms-file-input" accept=".xlsx, .xls, .csv" class="text-xs text-slate-600 cursor-pointer" onchange="handleTermsFileSelect(event)">
                 </div>
 
                 <!-- Manual add client term -->
-                <div class="flex space-x-2 pt-2 border-t border-slate-100">
-                    <input type="text" id="manual-term-client" placeholder="Nombre de Cliente..." class="flex-1 text-xs border border-slate-300 rounded-lg px-3 py-2">
-                    <input type="number" id="manual-term-days" placeholder="Días pactados" class="w-28 text-xs border border-slate-300 rounded-lg px-3 py-2">
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-100">
+                    <input type="text" id="manual-term-client" placeholder="Cliente..." class="text-xs border border-slate-300 rounded-lg px-3 py-2">
+                    <input type="text" id="manual-term-type" placeholder="Mercado / Tipo..." class="text-xs border border-slate-300 rounded-lg px-3 py-2">
+                    <input type="number" id="manual-term-days" placeholder="Días pactados" class="text-xs border border-slate-300 rounded-lg px-3 py-2">
                     <button onclick="addManualTerm()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition">Guardar</button>
                 </div>
 
@@ -450,6 +468,7 @@
                         <thead class="bg-slate-50 font-semibold text-slate-600">
                             <tr>
                                 <th class="p-2.5">Cliente</th>
+                                <th class="p-2.5 text-center">Mercado / Tipo</th>
                                 <th class="p-2.5 text-center">Plazo Pactado (Días)</th>
                                 <th class="p-2.5 text-right">Acciones</th>
                             </tr>
@@ -493,28 +512,50 @@
             return s;
         }
 
-        // High-Performance Hash Map for Agreed Days lookup (O(1))
+        // High-Performance Lookup for Agreed Days & Mercado/Tipo
         function getClientAgreedDays(clientName) {
             if (!clientName) return 30;
             const cleanTarget = normalizeClientName(clientName);
             if (!cleanTarget) return 30;
 
-            if (window.clientMasterTerms[cleanTarget] !== undefined) {
-                return window.clientMasterTerms[cleanTarget];
-            }
-
-            for (let k in window.clientMasterTerms) {
-                const cleanK = normalizeClientName(k);
-                if (cleanK === cleanTarget || (cleanK.length > 3 && (cleanTarget.includes(cleanK) || cleanK.includes(cleanTarget)))) {
-                    return window.clientMasterTerms[k];
+            let termObj = window.clientMasterTerms[cleanTarget];
+            if (termObj === undefined) {
+                for (let k in window.clientMasterTerms) {
+                    const cleanK = normalizeClientName(k);
+                    if (cleanK === cleanTarget || (cleanK.length > 3 && (cleanTarget.includes(cleanK) || cleanK.includes(cleanTarget)))) {
+                        termObj = window.clientMasterTerms[k];
+                        break;
+                    }
                 }
             }
+            if (termObj === undefined) return 30;
+            if (typeof termObj === 'number') return termObj;
+            if (typeof termObj === 'object' && termObj !== null) return termObj.days !== undefined ? termObj.days : 30;
             return 30;
+        }
+
+        function getClientType(clientName) {
+            if (!clientName) return 'General';
+            const cleanTarget = normalizeClientName(clientName);
+            if (!cleanTarget) return 'General';
+
+            let termObj = window.clientMasterTerms[cleanTarget];
+            if (termObj === undefined) {
+                for (let k in window.clientMasterTerms) {
+                    const cleanK = normalizeClientName(k);
+                    if (cleanK === cleanTarget || (cleanK.length > 3 && (cleanTarget.includes(cleanK) || cleanK.includes(cleanTarget)))) {
+                        termObj = window.clientMasterTerms[k];
+                        break;
+                    }
+                }
+            }
+            if (termObj === undefined) return 'General';
+            if (typeof termObj === 'object' && termObj !== null && termObj.type) return termObj.type;
+            return 'General';
         }
 
         /**
          * Priority-based Column Searcher
-         * Searches for terms in priority order first to avoid grabbing earlier "Total" columns by mistake
          */
         function findRowValue(row, terms) {
             if (!row) return '';
@@ -534,7 +575,6 @@
 
         /**
          * Smart Finnegans Excel Sheet Reader
-         * Scans top 25 rows to find the best header row (maximizing matching keywords)
          */
         function parseExcelSheet(sheet) {
             const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
@@ -544,7 +584,7 @@
             const headerKeywords = [
                 'cliente', 'razon', 'comprobante', 'fecha', 't. cta', 'cta. cte', 
                 't.cta.cte', 'importe', 'monto', 'recibo', 'total', 'organizacion', 
-                'haber', 'cuenta', 'vendedor', 'emision', 'vencimiento'
+                'haber', 'cuenta', 'vendedor', 'emision', 'vencimiento', 'mercado', 'condicion', 'plazo'
             ];
 
             let maxMatchCount = 0;
@@ -623,18 +663,21 @@
 
         function parseExcelDate(val) {
             if (!val) return new Date();
-            if (val instanceof Date) return val;
+            if (val instanceof Date) return isNaN(val.getTime()) ? new Date() : val;
             if (typeof val === 'number') {
                 return new Date(Math.round((val - 25569) * 86400 * 1000));
             }
             const str = String(val).trim();
+            
+            const nativeParsed = new Date(str);
+            if (!isNaN(nativeParsed.getTime())) return nativeParsed;
+
             const parts = str.split(/[-/.]/);
             if (parts.length === 3) {
-                if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]);
-                return new Date(parts[2], parts[1] - 1, parts[0]);
+                if (parts[0].length === 4) return new Date(parts[0], parseInt(parts[1]) - 1, parts[2]);
+                return new Date(parts[2], parseInt(parts[1]) - 1, parseInt(parts[0]));
             }
-            const parsed = new Date(str);
-            return isNaN(parsed.getTime()) ? new Date() : parsed;
+            return new Date();
         }
 
         function extractSellerFromDocument(docStr) {
@@ -650,7 +693,8 @@
         function handleSalesFile(event) {
             const file = event.target.files[0];
             if (!file) return;
-            document.getElementById('sales-filename').textContent = file.name;
+            const salesElem = document.getElementById('sales-filename');
+            if (salesElem) salesElem.textContent = file.name;
             
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -683,8 +727,11 @@
                         };
                     });
 
-                    document.getElementById('sales-status').textContent = `✓ ${window.rawSales.length} facturas leídas (Monto Total: ${formatMoney(totalSum)})`;
-                    document.getElementById('sales-status').classList.remove('hidden');
+                    const statusElem = document.getElementById('sales-status');
+                    if (statusElem) {
+                        statusElem.textContent = `✓ ${window.rawSales.length} facturas leídas (Monto Total: ${formatMoney(totalSum)})`;
+                        statusElem.classList.remove('hidden');
+                    }
                     showToast(`Se cargaron ${window.rawSales.length} facturas de venta.`, 'success');
                 } catch (err) {
                     console.error(err);
@@ -697,7 +744,8 @@
         function handleRealFile(event) {
             const file = event.target.files[0];
             if (!file) return;
-            document.getElementById('real-filename').textContent = file.name;
+            const realElem = document.getElementById('real-filename');
+            if (realElem) realElem.textContent = file.name;
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -711,7 +759,6 @@
                     window.rawReal = json.map(r => {
                         const client = findRowValue(r, ['razon social', 'razon', 'cliente', 'organizacion', 'cuenta', 'nombre', 'empresa']);
                         const dPay = findRowValue(r, ['fecha de cobro', 'fecha cobro', 'fecha emision', 'fecha', 'cobro', 'pago']);
-                        // Finnegans explicit column matcher prioritizes 'T. cta. cte.'
                         const amount = findRowValue(r, ['t. cta. cte', 't.cta.cte', 'cta. cte', 'cta cte', 'total cta', 'importe cobrado', 'importe', 'cobrado', 'monto', 'haber', 'total']);
                         const receipt = findRowValue(r, ['nro. recibo', 'nro. comprobante', 'recibo', 'comprobante', 'nro', 'numero', 'doc', 'transaccion']);
 
@@ -726,8 +773,11 @@
                         };
                     });
 
-                    document.getElementById('real-status').textContent = `✓ ${window.rawReal.length} recibos leídos (Monto Total T. cta. cte.: ${formatMoney(totalSum)})`;
-                    document.getElementById('real-status').classList.remove('hidden');
+                    const statusElem = document.getElementById('real-status');
+                    if (statusElem) {
+                        statusElem.textContent = `✓ ${window.rawReal.length} recibos leídos (Monto Total T. cta. cte.: ${formatMoney(totalSum)})`;
+                        statusElem.classList.remove('hidden');
+                    }
                     showToast(`Se cargaron ${window.rawReal.length} recibos de cobranza (${formatMoney(totalSum)}).`, 'success');
                 } catch (err) {
                     console.error(err);
@@ -758,7 +808,9 @@
                 if (!clientsMap[normKey]) {
                     clientsMap[normKey] = { displayName: s.cliente, sales: [], real: [] };
                 }
-                clientsMap[normKey].sales.push({ ...s, saldo: s.importe, estado: 'Sin pago', reciboAplicado: '' });
+                const dEmis = parseExcelDate(s.dEmision);
+                const dVto = parseExcelDate(s.dVto);
+                clientsMap[normKey].sales.push({ ...s, dEmision: dEmis, dVto: dVto, saldo: s.importe, estado: 'Sin pago', reciboAplicado: '' });
             });
 
             realToProcess.forEach(r => {
@@ -766,7 +818,8 @@
                 if (!clientsMap[normKey]) {
                     clientsMap[normKey] = { displayName: r.cliente, sales: [], real: [] };
                 }
-                clientsMap[normKey].real.push({ ...r, saldoPorAplicar: r.importeCobrado });
+                const dPay = parseExcelDate(r.fechaCobro);
+                clientsMap[normKey].real.push({ ...r, fechaCobro: dPay, saldoPorAplicar: r.importeCobrado });
             });
 
             const invoiceDetails = [];
@@ -776,6 +829,7 @@
                 const group = clientsMap[normKey];
                 const clientName = group.displayName;
                 const agreedDays = getClientAgreedDays(clientName);
+                const clientType = getClientType(clientName);
 
                 let totalSales = group.sales.reduce((sum, i) => sum + i.importe, 0);
                 let totalReal = group.real.reduce((sum, r) => sum + r.importeCobrado, 0);
@@ -795,7 +849,7 @@
                         exactMatch.fechaCobro = rec.fechaCobro;
 
                         const diffDays = Math.round((rec.fechaCobro - exactMatch.dEmision) / (86400 * 1000));
-                        if (diffDays >= 0) { realPayDaysSum += diffDays; realPayCount++; }
+                        if (!isNaN(diffDays) && diffDays >= 0) { realPayDaysSum += diffDays; realPayCount++; }
                         amountToApply = 0;
                     } else {
                         for (let s of group.sales) {
@@ -810,7 +864,7 @@
                                 s.fechaCobro = rec.fechaCobro;
 
                                 const diffDays = Math.round((rec.fechaCobro - s.dEmision) / (86400 * 1000));
-                                if (diffDays >= 0) { realPayDaysSum += diffDays; realPayCount++; }
+                                if (!isNaN(diffDays) && diffDays >= 0) { realPayDaysSum += diffDays; realPayCount++; }
                             } else {
                                 s.saldo -= amountToApply;
                                 s.estado = 'Pago parcial';
@@ -827,9 +881,10 @@
 
                 clientSummaries.push({
                     cliente: clientName,
+                    tipoCliente: clientType,
                     proyectado: totalSales,
                     cobrado: totalReal,
-                    diferencia: totalSales - totalReal,
+                    diferencia: Math.max(0, totalSales - totalReal),
                     plazoPactado: agreedDays,
                     plazoPromedioReal: avgRealDays,
                     desvioDias: avgRealDays - agreedDays,
@@ -850,7 +905,8 @@
         }
 
         function processAndSavePeriod() {
-            const periodInput = document.getElementById('upload-period-input').value || '2026-06';
+            const periodElem = document.getElementById('upload-period-input');
+            const periodInput = periodElem ? periodElem.value : '2026-07';
             if (window.rawSales.length === 0 && window.rawReal.length === 0) {
                 showToast('Seleccione al menos un archivo antes de procesar.', 'error');
                 return;
@@ -870,26 +926,32 @@
 
         function updatePeriodSelectors(selectedPeriod) {
             const select = document.getElementById('global-period-select');
-            select.innerHTML = '<option value="ALL">Todos los Meses (Histórico Acumulado)</option>';
+            if (select) {
+                select.innerHTML = '<option value="ALL">Todos los Meses (Histórico Acumulado)</option>';
+            }
             
             const badges = document.getElementById('period-badges-container');
-            badges.innerHTML = '';
+            if (badges) badges.innerHTML = '';
 
             Object.keys(window.historicalBatches).forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p;
-                opt.textContent = `Período ${p}`;
-                if (p === selectedPeriod) opt.selected = true;
-                select.appendChild(opt);
+                if (select) {
+                    const opt = document.createElement('option');
+                    opt.value = p;
+                    opt.textContent = `Período ${p}`;
+                    if (p === selectedPeriod) opt.selected = true;
+                    select.appendChild(opt);
+                }
 
-                const badge = document.createElement('span');
-                badge.className = 'inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200';
-                badge.innerHTML = `
-                    <span>${p}</span>
-                    <span class="ml-1 text-[10px] text-brand-500">(${window.historicalBatches[p].sales.length} FC / ${window.historicalBatches[p].real.length} REC)</span>
-                    <button onclick="deleteBatchPeriod('${p}')" title="Eliminar período" class="ml-2 text-rose-500 hover:text-rose-700 font-bold hover:bg-rose-100 rounded px-1 transition">&times;</button>
-                `;
-                badges.appendChild(badge);
+                if (badges) {
+                    const badge = document.createElement('span');
+                    badge.className = 'inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200';
+                    badge.innerHTML = `
+                        <span>${p}</span>
+                        <span class="ml-1 text-[10px] text-brand-500">(${window.historicalBatches[p].sales.length} FC / ${window.historicalBatches[p].real.length} REC)</span>
+                        <button onclick="deleteBatchPeriod('${p}')" title="Eliminar período" class="ml-2 text-rose-500 hover:text-rose-700 font-bold hover:bg-rose-100 rounded px-1 transition">&times;</button>
+                    `;
+                    badges.appendChild(badge);
+                }
             });
         }
 
@@ -923,25 +985,40 @@
         }
 
         function switchTab(tabId) {
-            ['tab-upload', 'tab-executive', 'tab-terms', 'tab-imputation', 'tab-alerts', 'tab-forecast'].forEach(id => {
+            const tabs = ['tab-upload', 'tab-executive', 'tab-terms', 'tab-imputation', 'tab-alerts', 'tab-forecast'];
+            tabs.forEach(id => {
                 const sec = document.getElementById(id);
                 const btn = document.getElementById('nav-' + id);
-                if (id === tabId) {
-                    sec.classList.remove('hidden');
-                    btn.className = 'px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-white bg-slate-700 shadow-sm flex items-center';
-                } else {
-                    sec.classList.add('hidden');
-                    btn.className = 'px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center';
+                if (sec) {
+                    if (id === tabId) {
+                        sec.classList.remove('hidden');
+                    } else {
+                        sec.classList.add('hidden');
+                    }
+                }
+                if (btn) {
+                    if (id === tabId) {
+                        btn.className = 'px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-white bg-slate-700 shadow-sm flex items-center';
+                    } else {
+                        btn.className = 'px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center';
+                    }
                 }
             });
+
+            if (tabId === 'tab-executive') {
+                setTimeout(() => {
+                    renderCharts();
+                }, 50);
+            }
         }
 
         function formatMoney(num) {
             return '$ ' + Math.round(num).toLocaleString('es-AR');
         }
         function formatDate(d) {
-            if (!(d instanceof Date) || isNaN(d.getTime())) return '-';
-            return d.toLocaleDateString('es-AR');
+            const parsed = parseExcelDate(d);
+            if (!(parsed instanceof Date) || isNaN(parsed.getTime())) return '-';
+            return parsed.toLocaleDateString('es-AR');
         }
 
         function renderKPIs() {
@@ -951,7 +1028,6 @@
             const totalFacturado = invoiceDetails.reduce((sum, i) => sum + i.importe, 0);
             const totalPendiente = invoiceDetails.reduce((sum, i) => sum + i.saldo, 0);
             
-            // Sum all collection amounts from Finnegans T. cta. cte.
             let totalCobrado = 0;
             let realCount = 0;
             if (window.activePeriod === 'ALL') {
@@ -968,63 +1044,93 @@
             const recuperoPct = totalFacturado > 0 ? Math.round((totalCobrado / totalFacturado) * 100) : 0;
             const avgDays = clientSummaries.length > 0 ? Math.round(clientSummaries.reduce((s, c) => s + c.plazoPromedioReal, 0) / clientSummaries.length) : 30;
 
-            document.getElementById('kpi-facturado').textContent = formatMoney(totalFacturado);
-            document.getElementById('kpi-facturas-count').textContent = `${invoiceDetails.length} Facturas emitidas`;
+            const elemFact = document.getElementById('kpi-facturado');
+            if (elemFact) elemFact.textContent = formatMoney(totalFacturado);
+            
+            const elemFactCount = document.getElementById('kpi-facturas-count');
+            if (elemFactCount) elemFactCount.textContent = `${invoiceDetails.length} Facturas emitidas`;
 
-            document.getElementById('kpi-cobrado').textContent = formatMoney(totalCobrado);
-            document.getElementById('kpi-recibos-count').textContent = `${realCount} Recibos procesados (T. cta. cte.)`;
+            const elemCobr = document.getElementById('kpi-cobrado');
+            if (elemCobr) elemCobr.textContent = formatMoney(totalCobrado);
 
-            document.getElementById('kpi-pendiente').textContent = formatMoney(totalPendiente);
-            document.getElementById('kpi-recupero-pct').textContent = `Recuperación: ${recuperoPct}%`;
+            const elemRecCount = document.getElementById('kpi-recibos-count');
+            if (elemRecCount) elemRecCount.textContent = `${realCount} Recibos procesados (T. cta. cte.)`;
 
-            document.getElementById('kpi-plazo-promedio').textContent = `${avgDays} días`;
+            const elemPend = document.getElementById('kpi-pendiente');
+            if (elemPend) elemPend.textContent = formatMoney(totalPendiente);
+
+            const elemRecPct = document.getElementById('kpi-recupero-pct');
+            if (elemRecPct) elemRecPct.textContent = `Recuperación: ${recuperoPct}%`;
+
+            const elemPlazo = document.getElementById('kpi-plazo-promedio');
+            if (elemPlazo) elemPlazo.textContent = `${avgDays} días`;
         }
 
         function renderCharts() {
             if (!window.reconciliationResult) return;
             const { invoiceDetails } = window.reconciliationResult;
 
-            const statusCounts = { 'Pagada': 0, 'Pago parcial': 0, 'Sin pago': 0 };
-            invoiceDetails.forEach(i => {
-                statusCounts[i.estado] = (statusCounts[i.estado] || 0) + 1;
-            });
+            // 1. Chart Status (Doughnut)
+            const canvasStatus = document.getElementById('chart-status');
+            if (canvasStatus) {
+                const statusCounts = { 'Pagada': 0, 'Pago parcial': 0, 'Sin pago': 0 };
+                invoiceDetails.forEach(i => {
+                    statusCounts[i.estado] = (statusCounts[i.estado] || 0) + 1;
+                });
 
-            const ctxStatus = document.getElementById('chart-status').getContext('2d');
-            if (chartStatusInstance) chartStatusInstance.destroy();
-            chartStatusInstance = new Chart(ctxStatus, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(statusCounts),
-                    datasets: [{
-                        data: Object.values(statusCounts),
-                        backgroundColor: ['#10b981', '#f59e0b', '#f43f5e']
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
+                const ctxStatus = canvasStatus.getContext('2d');
+                if (chartStatusInstance) chartStatusInstance.destroy();
+                chartStatusInstance = new Chart(ctxStatus, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(statusCounts),
+                        datasets: [{
+                            data: Object.values(statusCounts),
+                            backgroundColor: ['#10b981', '#f59e0b', '#f43f5e']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
 
-            const sellerMap = {};
-            invoiceDetails.forEach(i => {
-                const v = i.vendedor || 'General';
-                if (!sellerMap[v]) sellerMap[v] = { facturado: 0, cobrado: 0 };
-                sellerMap[v].facturado += i.importe;
-                sellerMap[v].cobrado += (i.importe - i.saldo);
-            });
+            // 2. Chart Sellers / Repartos (Bar)
+            const canvasSellers = document.getElementById('chart-sellers');
+            if (canvasSellers) {
+                const sellerMap = {};
+                invoiceDetails.forEach(i => {
+                    const v = i.vendedor || 'General';
+                    if (!sellerMap[v]) sellerMap[v] = { facturado: 0, cobrado: 0 };
+                    sellerMap[v].facturado += (i.importe || 0);
+                    sellerMap[v].cobrado += ((i.importe || 0) - (i.saldo || 0));
+                });
 
-            const sellers = Object.keys(sellerMap).slice(0, 6);
-            const ctxSellers = document.getElementById('chart-sellers').getContext('2d');
-            if (chartSellersInstance) chartSellersInstance.destroy();
-            chartSellersInstance = new Chart(ctxSellers, {
-                type: 'bar',
-                data: {
-                    labels: sellers,
-                    datasets: [
-                        { label: 'Facturado', data: sellers.map(s => sellerMap[s].facturado), backgroundColor: '#3b82f6' },
-                        { label: 'Cobrado', data: sellers.map(s => sellerMap[s].cobrado), backgroundColor: '#10b981' }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
+                const sellers = Object.keys(sellerMap).sort((a, b) => sellerMap[b].facturado - sellerMap[a].facturado);
+                const ctxSellers = canvasSellers.getContext('2d');
+                if (chartSellersInstance) chartSellersInstance.destroy();
+                chartSellersInstance = new Chart(ctxSellers, {
+                    type: 'bar',
+                    data: {
+                        labels: sellers,
+                        datasets: [
+                            { label: 'Facturado', data: sellers.map(s => sellerMap[s].facturado), backgroundColor: '#3b82f6' },
+                            { label: 'Cobrado', data: sellers.map(s => sellerMap[s].cobrado), backgroundColor: '#10b981' }
+                        ]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                ticks: {
+                                    autoSkip: false,
+                                    maxRotation: 45,
+                                    minRotation: 0
+                                }
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         function renderTermsTable() {
@@ -1034,18 +1140,33 @@
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            const search = (document.getElementById('search-client-terms').value || '').toLowerCase();
-            const filtered = clientSummaries.filter(c => c.cliente.toLowerCase().includes(search));
+            const statusSelect = document.getElementById('filter-terms-status');
+            const statusFilter = statusSelect ? statusSelect.value : 'ALL';
+            
+            const searchInput = document.getElementById('search-client-terms');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
+
+            const filtered = clientSummaries.filter(c => {
+                const isOverdue = c.desvioDias > 0;
+                const matchStatus = statusFilter === 'ALL' || 
+                                    (statusFilter === 'EN_PLAZO' && !isOverdue) || 
+                                    (statusFilter === 'ATRASADO' && isOverdue);
+                const matchSearch = c.cliente.toLowerCase().includes(search) || 
+                                    (c.tipoCliente && c.tipoCliente.toLowerCase().includes(search));
+                return matchStatus && matchSearch;
+            });
 
             filtered.forEach(c => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-50';
                 
-                const badgeClass = c.desvioDias <= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800';
-                const statusLabel = c.desvioDias <= 0 ? 'En Plazo' : `+${c.desvioDias}d Atraso`;
+                const isOverdue = c.desvioDias > 0;
+                const badgeClass = !isOverdue ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800';
+                const statusLabel = !isOverdue ? 'En Plazo' : 'Atrasado';
 
                 tr.innerHTML = `
                     <td class="py-3 px-4 font-bold text-slate-800">${c.cliente}</td>
+                    <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-[11px] font-semibold">${c.tipoCliente || 'General'}</span></td>
                     <td class="py-3 px-4 text-right">${formatMoney(c.proyectado)}</td>
                     <td class="py-3 px-4 text-right font-bold text-emerald-600">${formatMoney(c.cobrado)}</td>
                     <td class="py-3 px-4 text-center font-semibold text-indigo-600">${c.plazoPactado} días</td>
@@ -1065,8 +1186,11 @@
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            const statusFilter = document.getElementById('filter-status').value;
-            const search = (document.getElementById('search-imputation').value || '').toLowerCase();
+            const statusSelect = document.getElementById('filter-status');
+            const statusFilter = statusSelect ? statusSelect.value : 'ALL';
+            
+            const searchInput = document.getElementById('search-imputation');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
 
             const filtered = invoiceDetails.filter(i => {
                 const matchStatus = statusFilter === 'ALL' || i.estado === statusFilter;
@@ -1098,28 +1222,108 @@
             const { clientSummaries } = window.reconciliationResult;
 
             const alertsContainer = document.getElementById('alerts-container');
-            alertsContainer.innerHTML = '';
+            const alertFilterElem = document.getElementById('filter-alert-type');
+            const alertFilter = alertFilterElem ? alertFilterElem.value : 'ALL';
 
-            const delayed = clientSummaries.filter(c => c.desvioDias > 7);
-            delayed.forEach(c => {
-                const div = document.createElement('div');
-                div.className = 'p-3 bg-rose-50 border-l-4 border-rose-500 rounded-r-lg text-xs';
-                div.innerHTML = `<p class="font-bold text-rose-900">${c.cliente}</p><p class="text-rose-700">Demora habitual de ${c.plazoPromedioReal} días (${c.desvioDias} días por encima del plazo pactado).</p>`;
-                alertsContainer.appendChild(div);
-            });
+            if (alertsContainer) {
+                alertsContainer.innerHTML = '';
+                const alertList = [];
 
-            if (delayed.length === 0) {
-                alertsContainer.innerHTML = '<p class="text-xs text-slate-400 italic">No hay alertas de desvío crítico activas.</p>';
+                // 1. High Pending Debt Alerts
+                const highDebtClients = [...clientSummaries]
+                    .filter(c => c.diferencia > 0)
+                    .sort((a, b) => b.diferencia - a.diferencia)
+                    .slice(0, 10);
+
+                highDebtClients.forEach(c => {
+                    alertList.push({
+                        type: 'DEBT',
+                        cliente: c.cliente,
+                        amount: c.diferencia,
+                        desvio: c.desvioDias,
+                        cumplimiento: c.cumplimientoPct,
+                        title: '⚠️ Mayor Deuda Pendiente',
+                        desc: `Saldo pendiente de ${formatMoney(c.diferencia)} (${c.cumplimientoPct}% recuperado).`
+                    });
+                });
+
+                // 2. Critical Delay Alerts
+                const delayedClients = [...clientSummaries]
+                    .filter(c => c.desvioDias > 7)
+                    .sort((a, b) => b.desvioDias - a.desvioDias);
+
+                delayedClients.forEach(c => {
+                    alertList.push({
+                        type: 'DELAY',
+                        cliente: c.cliente,
+                        amount: c.diferencia,
+                        desvio: c.desvioDias,
+                        cumplimiento: c.cumplimientoPct,
+                        title: '⏰ Desvío Crítico en Plazo',
+                        desc: `Demora habitual de ${c.plazoPromedioReal} días (+${c.desvioDias}d por encima del plazo pactado de ${c.plazoPactado}d).`
+                    });
+                });
+
+                const filteredAlerts = alertList.filter(a => alertFilter === 'ALL' || a.type === alertFilter);
+
+                if (filteredAlerts.length === 0) {
+                    alertsContainer.innerHTML = '<p class="text-xs text-slate-400 italic py-4 text-center">No hay alertas activas para el filtro seleccionado.</p>';
+                } else {
+                    filteredAlerts.forEach(a => {
+                        const isDebt = a.type === 'DEBT';
+                        const borderClass = isDebt ? 'border-amber-500 bg-amber-50/70' : 'border-rose-500 bg-rose-50/70';
+                        const titleClass = isDebt ? 'text-amber-900' : 'text-rose-900';
+                        const descClass = isDebt ? 'text-amber-800' : 'text-rose-800';
+
+                        const div = document.createElement('div');
+                        div.className = `p-3 ${borderClass} border-l-4 rounded-r-lg text-xs shadow-sm transition hover:shadow-md`;
+                        div.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <span class="font-bold uppercase ${titleClass}">${a.cliente}</span>
+                                <span class="text-[10px] font-semibold px-2 py-0.5 rounded ${isDebt ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'}">${a.title}</span>
+                            </div>
+                            <p class="${descClass} mt-1">${a.desc}</p>
+                        `;
+                        alertsContainer.appendChild(div);
+                    });
+                }
             }
 
-            const topPayers = [...clientSummaries].sort((a,b) => a.desvioDias - b.desvioDias).slice(0, 3);
-            const worstPayers = [...clientSummaries].sort((a,b) => b.desvioDias - a.desvioDias).slice(0, 3);
+            // Top 10 Best & Worst Payers
+            const topPayers = [...clientSummaries].sort((a,b) => a.desvioDias - b.desvioDias).slice(0, 10);
+            const worstPayers = [...clientSummaries].sort((a,b) => b.desvioDias - a.desvioDias).slice(0, 10);
 
             const topDiv = document.getElementById('ranking-top');
-            topDiv.innerHTML = topPayers.map(c => `<div class="flex justify-between text-xs font-semibold p-2 bg-emerald-50 rounded"><span>${c.cliente}</span><span class="text-emerald-700">${c.plazoPromedioReal}d promedio</span></div>`).join('');
+            if (topDiv) {
+                topDiv.innerHTML = topPayers.map((c, idx) => `
+                    <div class="flex justify-between items-center text-xs font-semibold p-2 bg-emerald-50/80 rounded hover:bg-emerald-100/80 transition">
+                        <div class="flex items-center space-x-2 truncate mr-2">
+                            <span class="w-5 text-center text-emerald-800 font-bold text-[11px]">${idx + 1}.</span>
+                            <span class="truncate text-slate-800">${c.cliente}</span>
+                        </div>
+                        <div class="text-right whitespace-nowrap">
+                            <span class="text-emerald-700 font-bold">${c.plazoPromedioReal}d prom.</span>
+                            <span class="text-[10px] text-slate-500 ml-1">(${c.cumplimientoPct}%)</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
 
             const worstDiv = document.getElementById('ranking-worst');
-            worstDiv.innerHTML = worstPayers.map(c => `<div class="flex justify-between text-xs font-semibold p-2 bg-rose-50 rounded"><span>${c.cliente}</span><span class="text-rose-700">+${c.desvioDias}d de demora</span></div>`).join('');
+            if (worstDiv) {
+                worstDiv.innerHTML = worstPayers.map((c, idx) => `
+                    <div class="flex justify-between items-center text-xs font-semibold p-2 bg-rose-50/80 rounded hover:bg-rose-100/80 transition">
+                        <div class="flex items-center space-x-2 truncate mr-2">
+                            <span class="w-5 text-center text-rose-800 font-bold text-[11px]">${idx + 1}.</span>
+                            <span class="truncate text-slate-800">${c.cliente}</span>
+                        </div>
+                        <div class="text-right whitespace-nowrap">
+                            <span class="text-rose-700 font-bold">+${c.desvioDias}d mora</span>
+                            ${c.diferencia > 0 ? `<span class="text-[10px] text-rose-900 font-semibold ml-1">(${formatMoney(c.diferencia)})</span>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
         }
 
         function renderPredictionModule() {
@@ -1127,6 +1331,7 @@
             const { invoiceDetails, clientSummaries } = window.reconciliationResult;
 
             const openInvoices = invoiceDetails.filter(i => i.saldo > 0);
+            const totalPendingAll = openInvoices.reduce((sum, i) => sum + i.saldo, 0);
             const today = new Date();
 
             let thisWeekAmt = 0, thisWeekCnt = 0;
@@ -1140,18 +1345,19 @@
                 const agreedDays = getClientAgreedDays(inv.cliente);
                 const daysReal = clientSum ? clientSum.plazoPromedioReal : agreedDays;
 
-                const estPayDate = new Date(inv.dEmision.getTime() + daysReal * 86400 * 1000);
+                const dEmis = parseExcelDate(inv.dEmision);
+                const estPayDate = new Date(dEmis.getTime() + daysReal * 86400 * 1000);
                 const daysDiff = Math.round((estPayDate - today) / (86400 * 1000));
 
                 let bucket = 'LATER';
                 let action = 'Realizar seguimiento de crédito.';
 
-                if (daysDiff <= 7) {
+                if (!isNaN(daysDiff) && daysDiff <= 7) {
                     bucket = 'THIS_WEEK';
                     thisWeekAmt += inv.saldo;
                     thisWeekCnt++;
                     action = 'Enviar recordatorio / Contactar esta semana.';
-                } else if (daysDiff <= 14) {
+                } else if (!isNaN(daysDiff) && daysDiff <= 14) {
                     bucket = 'NEXT_WEEK';
                     nextWeekAmt += inv.saldo;
                     nextWeekCnt++;
@@ -1173,43 +1379,61 @@
                 });
             });
 
-            document.getElementById('pred-this-week-amount').textContent = formatMoney(thisWeekAmt);
-            document.getElementById('pred-this-week-count').textContent = `${thisWeekCnt} Facturas esperadas`;
+            const thisWeekPct = totalPendingAll > 0 ? Math.round((thisWeekAmt / totalPendingAll) * 100) : 0;
+            const nextWeekPct = totalPendingAll > 0 ? Math.round((nextWeekAmt / totalPendingAll) * 100) : 0;
+            const laterPct = totalPendingAll > 0 ? Math.round((laterAmt / totalPendingAll) * 100) : 0;
 
-            document.getElementById('pred-next-week-amount').textContent = formatMoney(nextWeekAmt);
-            document.getElementById('pred-next-week-count').textContent = `${nextWeekCnt} Facturas esperadas`;
+            const elemTWAmt = document.getElementById('pred-this-week-amount');
+            if (elemTWAmt) elemTWAmt.textContent = formatMoney(thisWeekAmt);
 
-            document.getElementById('pred-later-amount').textContent = formatMoney(laterAmt);
-            document.getElementById('pred-later-count').textContent = `${laterCnt} Facturas esperadas`;
+            const elemTWCnt = document.getElementById('pred-this-week-count');
+            if (elemTWCnt) elemTWCnt.textContent = `${thisWeekCnt} Facturas esperadas (${thisWeekPct}% del saldo pendiente)`;
+
+            const elemNWAmt = document.getElementById('pred-next-week-amount');
+            if (elemNWAmt) elemNWAmt.textContent = formatMoney(nextWeekAmt);
+
+            const elemNWCnt = document.getElementById('pred-next-week-count');
+            if (elemNWCnt) elemNWCnt.textContent = `${nextWeekCnt} Facturas esperadas (${nextWeekPct}% del saldo pendiente)`;
+
+            const elemLAmt = document.getElementById('pred-later-amount');
+            if (elemLAmt) elemLAmt.textContent = formatMoney(laterAmt);
+
+            const elemLCnt = document.getElementById('pred-later-count');
+            if (elemLCnt) elemLCnt.textContent = `${laterCnt} Facturas esperadas (${laterPct}% del saldo pendiente)`;
 
             const tbody = document.getElementById('tbody-predictions');
-            tbody.innerHTML = '';
-            const filter = document.getElementById('filter-pred-week').value;
-            const filtered = predictions.filter(p => filter === 'ALL' || p.bucket === filter);
+            if (tbody) {
+                tbody.innerHTML = '';
+                const filterElem = document.getElementById('filter-pred-week');
+                const filter = filterElem ? filterElem.value : 'ALL';
+                const filtered = predictions.filter(p => filter === 'ALL' || p.bucket === filter);
 
-            filtered.slice(0, 150).forEach(p => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50';
-                tr.innerHTML = `
-                    <td class="py-2.5 px-4 font-bold">${p.cliente}</td>
-                    <td class="py-2.5 px-4 font-mono text-brand-600">${p.factura}</td>
-                    <td class="py-2.5 px-4 text-right font-bold text-rose-600">${formatMoney(p.saldo)}</td>
-                    <td class="py-2.5 px-4 text-center font-medium">${p.plazoPactado}d pactados (${p.plazoReal}d real)</td>
-                    <td class="py-2.5 px-4 text-center font-bold text-emerald-600">${p.fechaProbable}</td>
-                    <td class="py-2.5 px-4 text-center font-bold text-slate-700">${p.bucket === 'THIS_WEEK' ? 'Esta Semana' : p.bucket === 'NEXT_WEEK' ? 'Próxima Semana' : 'Posterior'}</td>
-                    <td class="py-2.5 px-4 text-center font-bold text-brand-600">85%</td>
-                    <td class="py-2.5 px-4 text-slate-600">${p.accion}</td>
-                `;
-                tbody.appendChild(tr);
-            });
+                filtered.slice(0, 150).forEach(p => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-50';
+                    tr.innerHTML = `
+                        <td class="py-2.5 px-4 font-bold">${p.cliente}</td>
+                        <td class="py-2.5 px-4 font-mono text-brand-600">${p.factura}</td>
+                        <td class="py-2.5 px-4 text-right font-bold text-rose-600">${formatMoney(p.saldo)}</td>
+                        <td class="py-2.5 px-4 text-center font-medium">${p.plazoPactado}d pactados (${p.plazoReal}d real)</td>
+                        <td class="py-2.5 px-4 text-center font-bold text-emerald-600">${p.fechaProbable}</td>
+                        <td class="py-2.5 px-4 text-center font-bold text-slate-700">${p.bucket === 'THIS_WEEK' ? 'Esta Semana' : p.bucket === 'NEXT_WEEK' ? 'Próxima Semana' : 'Posterior'}</td>
+                        <td class="py-2.5 px-4 text-center font-bold text-brand-600">85%</td>
+                        <td class="py-2.5 px-4 text-slate-600">${p.accion}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
         }
 
         function openTermsModal() {
             renderMasterTermsTable();
-            document.getElementById('modal-terms').classList.remove('hidden');
+            const modal = document.getElementById('modal-terms');
+            if (modal) modal.classList.remove('hidden');
         }
         function closeTermsModal() {
-            document.getElementById('modal-terms').classList.add('hidden');
+            const modal = document.getElementById('modal-terms');
+            if (modal) modal.classList.add('hidden');
         }
 
         function handleTermsFileSelect(e) {
@@ -1227,6 +1451,7 @@
                     json.forEach(r => {
                         const client = findRowValue(r, ['cliente', 'razon', 'nombre', 'empresa', 'organizacion']);
                         const termRaw = findRowValue(r, ['condicion', 'plazo', 'dias', 'pago']);
+                        const mercadoRaw = findRowValue(r, ['mercado', 'tipo de cliente', 'tipo', 'categoria', 'canal', 'clasificacion', 'rubro']);
                         
                         let days = 30;
                         if (termRaw !== undefined && termRaw !== '') {
@@ -1237,9 +1462,15 @@
                                 if (m) days = parseInt(m[0]);
                             }
                         }
+
+                        const mercado = mercadoRaw ? String(mercadoRaw).trim() : 'General';
+
                         if (client) {
                             const norm = normalizeClientName(client);
-                            window.clientMasterTerms[norm] = days;
+                            window.clientMasterTerms[norm] = {
+                                days: days,
+                                type: mercado
+                            };
                             count++;
                         }
                     });
@@ -1247,7 +1478,7 @@
                     saveTermsToStorage();
                     renderMasterTermsTable();
                     runReconciliation();
-                    showToast(`Se importaron ${count} plazos pactados por cliente.`, 'success');
+                    showToast(`Se importaron ${count} condiciones y mercados por cliente.`, 'success');
                 } catch (err) {
                     console.error(err);
                     showToast('Error al procesar condiciones comerciales.', 'error');
@@ -1257,17 +1488,26 @@
         }
 
         function addManualTerm() {
-            const client = document.getElementById('manual-term-client').value.trim();
-            const days = parseInt(document.getElementById('manual-term-days').value) || 30;
+            const clientElem = document.getElementById('manual-term-client');
+            const typeElem = document.getElementById('manual-term-type');
+            const daysElem = document.getElementById('manual-term-days');
+            
+            const client = clientElem ? clientElem.value.trim() : '';
+            const typeVal = typeElem ? typeElem.value.trim() : 'General';
+            const days = daysElem ? (parseInt(daysElem.value) || 30) : 30;
             if (!client) return;
 
             const norm = normalizeClientName(client);
-            window.clientMasterTerms[norm] = days;
+            window.clientMasterTerms[norm] = {
+                days: days,
+                type: typeVal || 'General'
+            };
             saveTermsToStorage();
             renderMasterTermsTable();
             runReconciliation();
-            document.getElementById('manual-term-client').value = '';
-            document.getElementById('manual-term-days').value = '';
+            if (clientElem) clientElem.value = '';
+            if (typeElem) typeElem.value = '';
+            if (daysElem) daysElem.value = '';
         }
 
         function renderMasterTermsTable() {
@@ -1275,10 +1515,15 @@
             if (!tbody) return;
             tbody.innerHTML = '';
             Object.keys(window.clientMasterTerms).forEach(cKey => {
+                const termObj = window.clientMasterTerms[cKey];
+                const days = typeof termObj === 'object' ? termObj.days : termObj;
+                const typeVal = typeof termObj === 'object' ? termObj.type : 'General';
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="p-2.5 font-bold uppercase">${cKey}</td>
-                    <td class="p-2.5 text-center font-semibold text-indigo-600">${window.clientMasterTerms[cKey]} días</td>
+                    <td class="p-2.5 text-center"><span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-[10px] font-semibold">${typeVal || 'General'}</span></td>
+                    <td class="p-2.5 text-center font-semibold text-indigo-600">${days} días</td>
                     <td class="p-2.5 text-right"><button onclick="deleteTerm('${cKey}')" class="text-rose-600 font-bold hover:underline">Eliminar</button></td>
                 `;
                 tbody.appendChild(tr);
@@ -1310,6 +1555,21 @@
                 const saved = localStorage.getItem('historicalBatches');
                 if (saved) {
                     window.historicalBatches = JSON.parse(saved);
+                    Object.keys(window.historicalBatches).forEach(p => {
+                        const batch = window.historicalBatches[p];
+                        if (batch.sales) {
+                            batch.sales.forEach(s => {
+                                s.dEmision = parseExcelDate(s.dEmision);
+                                s.dVto = parseExcelDate(s.dVto);
+                                if (s.fechaCobro) s.fechaCobro = parseExcelDate(s.fechaCobro);
+                            });
+                        }
+                        if (batch.real) {
+                            batch.real.forEach(r => {
+                                r.fechaCobro = parseExcelDate(r.fechaCobro);
+                            });
+                        }
+                    });
                     updatePeriodSelectors(Object.keys(window.historicalBatches)[0] || 'ALL');
                 }
             } catch(e){}
@@ -1327,9 +1587,9 @@
             ];
 
             window.historicalBatches['2026-07'] = { sales: demoSales, real: demoReal };
-            window.clientMasterTerms[normalizeClientName('SUPERMERCADOS SUR S.A.')] = 30;
-            window.clientMasterTerms[normalizeClientName('DISTRIBUIDORA NORTE')] = 30;
-            window.clientMasterTerms[normalizeClientName('COMERCIAL CENTRO SRL')] = 45;
+            window.clientMasterTerms[normalizeClientName('SUPERMERCADOS SUR S.A.')] = { days: 30, type: 'Supermercados' };
+            window.clientMasterTerms[normalizeClientName('DISTRIBUIDORA NORTE')] = { days: 30, type: 'Distribuidor' };
+            window.clientMasterTerms[normalizeClientName('COMERCIAL CENTRO SRL')] = { days: 45, type: 'Retail' };
 
             updatePeriodSelectors('2026-07');
             window.activePeriod = '2026-07';
@@ -1339,4 +1599,3 @@
     </script>
 </body>
 </html>
- 
