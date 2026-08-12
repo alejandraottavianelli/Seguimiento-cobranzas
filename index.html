@@ -122,9 +122,9 @@
                     <div>
                         <h2 class="text-lg font-bold text-slate-800 flex items-center">
                             <svg class="w-5 h-5 mr-2 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                            Importación de Archivos (Facturación vs. Cobranzas)
+                            Importación de Archivos (Finnegans / ERP)
                         </h2>
-                        <p class="text-xs text-slate-500 mt-1">Cargue los archivos de Ventas y Cobranzas de cada mes para alimentar el historial acumulado.</p>
+                        <p class="text-xs text-slate-500 mt-1">Soporta columnas nativas: <code class="bg-slate-100 px-1 py-0.5 rounded text-brand-700 font-bold">Fecha, Documento, Nro comp, Cliente, Total / Bruto</code>.</p>
                     </div>
                     
                     <div class="flex items-center space-x-3 bg-slate-50 p-2 rounded-lg border border-slate-200">
@@ -139,8 +139,8 @@
                         <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-3">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         </div>
-                        <h3 class="text-sm font-semibold text-slate-800 mb-1">Facturas de Venta</h3>
-                        <p class="text-xs text-slate-500 mb-4 max-w-xs">Comprobantes emitidos (Cliente, Factura, Fecha Emisión, Vendedor, Importe)</p>
+                        <h3 class="text-sm font-semibold text-slate-800 mb-1">Facturas, Notas de Crédito y Débito</h3>
+                        <p class="text-xs text-slate-500 mb-4 max-w-xs">Comprobantes de Finnegans (Detecta NC automáticamentes para restar de la deuda)</p>
                         <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium px-4 py-2 border border-slate-300 rounded-lg shadow-sm transition">
                             <span id="sales-filename">Seleccionar "Facturas de venta"</span>
                             <input type="file" id="sales-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleSalesFile(event)">
@@ -205,7 +205,7 @@
                         <p id="kpi-recibos-count" class="text-xs text-emerald-700 mt-1">0 Recibos aplicados</p>
                     </div>
                     <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 01-18 0 9 9 0 0118 0z"></path></svg>
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
                 </div>
 
@@ -250,7 +250,7 @@
             </div>
         </section>
 
-        <!-- NEW: Ruta de Cobranzas por Reparto Tab -->
+        <!-- Ruta de Cobranzas por Reparto Tab -->
         <section id="tab-route" class="space-y-6 hidden">
             <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div class="border-b border-slate-100 pb-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -287,7 +287,7 @@
                                 <thead>
                                     <tr class="bg-slate-50 border-b border-slate-200 font-semibold text-slate-600 uppercase">
                                         <th class="py-2.5 px-3">Cliente</th>
-                                        <th class="py-2.5 px-3">Factura</th>
+                                        <th class="py-2.5 px-3">Factura / NC / ND</th>
                                         <th class="py-2.5 px-3 text-right">Saldo Pendiente</th>
                                         <th class="py-2.5 px-3 text-center">F. Probable Pago</th>
                                         <th class="py-2.5 px-3 text-center">Estado</th>
@@ -349,8 +349,8 @@
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h3 class="text-base font-bold text-slate-800">Detalle Completo de Imputación de Facturas</h3>
-                        <p class="text-xs text-slate-500">Cruce individual factura por factura con los recibos cobrados.</p>
+                        <h3 class="text-base font-bold text-slate-800">Detalle Completo de Imputación de Facturas y Notas de Crédito</h3>
+                        <p class="text-xs text-slate-500">Cruce individual factura por factura con las Notas de Crédito y los recibos cobrados.</p>
                     </div>
                     <div class="flex items-center space-x-2">
                         <select id="filter-status" onchange="renderImputationTable()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
@@ -358,6 +358,7 @@
                             <option value="Pagada">Pagadas</option>
                             <option value="Pago parcial">Pago Parcial</option>
                             <option value="Sin pago">Sin Pago</option>
+                            <option value="Nota de Crédito">Notas de Crédito</option>
                         </select>
                         <input type="text" id="search-imputation" oninput="renderImputationTable()" placeholder="Buscar factura / cliente..." class="text-xs border border-slate-300 rounded-lg px-3 py-2 w-48 sm:w-64 focus:outline-none focus:ring-2 focus:ring-brand-500">
                     </div>
@@ -368,11 +369,11 @@
                         <thead>
                             <tr class="bg-slate-50 border-b border-slate-200 font-semibold text-slate-600 uppercase tracking-wider">
                                 <th class="py-3 px-4">Cliente</th>
-                                <th class="py-3 px-4">Factura</th>
+                                <th class="py-3 px-4">Comprobante</th>
                                 <th class="py-3 px-4 text-center">F. Emisión</th>
                                 <th class="py-3 px-4 text-center">F. Vencimiento</th>
                                 <th class="py-3 px-4 text-right">Importe Orig.</th>
-                                <th class="py-3 px-4 text-right">Cobrado</th>
+                                <th class="py-3 px-4 text-right">Cobrado / Acred.</th>
                                 <th class="py-3 px-4 text-right">Saldo</th>
                                 <th class="py-3 px-4 text-center">Estado</th>
                                 <th class="py-3 px-4">Recibo / Obs</th>
@@ -479,7 +480,7 @@
                         <thead>
                             <tr class="bg-slate-50 border-b border-slate-200 font-semibold text-slate-600 uppercase tracking-wider">
                                 <th class="py-3 px-4">Cliente</th>
-                                <th class="py-3 px-4">Factura</th>
+                                <th class="py-3 px-4">Comprobante</th>
                                 <th class="py-3 px-4 text-right">Saldo Pendiente</th>
                                 <th class="py-3 px-4 text-center">Plazo Pactado (Real)</th>
                                 <th class="py-3 px-4 text-center">Fecha Probable Pago</th>
@@ -638,7 +639,7 @@
             const headerKeywords = [
                 'cliente', 'razon', 'comprobante', 'fecha', 't. cta', 'cta. cte', 
                 't.cta.cte', 'importe', 'monto', 'recibo', 'total', 'organizacion', 
-                'haber', 'cuenta', 'vendedor', 'emision', 'vencimiento', 'mercado', 'condicion', 'plazo'
+                'haber', 'cuenta', 'vendedor', 'emision', 'vencimiento', 'mercado', 'condicion', 'plazo', 'documento', 'nro comp', 'bruto'
             ];
 
             let maxMatchCount = 0;
@@ -760,14 +761,21 @@
 
                     let totalSum = 0;
                     window.rawSales = json.map(r => {
-                        const client = findRowValue(r, ['razon social', 'razon', 'cliente', 'organizacion', 'nombre', 'empresa', 'cuenta', 'comprador']);
-                        const inv = findRowValue(r, ['nro. comprobante', 'comprobante', 'factura', 'nro', 'numero', 'doc']);
+                        const client = findRowValue(r, ['cliente', 'razon social', 'razon', 'organizacion', 'nombre', 'empresa', 'cuenta', 'comprador']);
+                        const inv = findRowValue(r, ['nro comp', 'nro. comprobante', 'comprobante', 'factura', 'nro', 'numero', 'doc']);
                         const docCol = findRowValue(r, ['documento', 'vendedor', 'concepto', 'tipo']);
-                        const dEmis = findRowValue(r, ['fecha de emision', 'fecha emision', 'emision', 'f. emision', 'fecha']);
+                        const dEmis = findRowValue(r, ['fecha', 'fecha de emision', 'fecha emision', 'emision', 'f. emision']);
                         const dVto = findRowValue(r, ['fecha de vencimiento', 'fecha vencimiento', 'vencimiento', 'vto', 'f. vto']);
-                        const amount = findRowValue(r, ['t. cta. cte', 't.cta.cte', 'cta. cte', 'cta cte', 'importe con iva', 'importe', 'monto', 'total con iva', 'total', 'debe']);
+                        const amount = findRowValue(r, ['total', 'bruto', 't. cta. cte', 't.cta.cte', 'cta. cte', 'cta cte', 'importe con iva', 'importe', 'monto']);
 
-                        const parsedAmount = Math.abs(parseMoney(amount));
+                        // Smart Document Classification (Factura, NC, ND)
+                        const docType = String(docCol || inv || '').toLowerCase();
+                        const isCreditNote = docType.includes('credito') || docType.includes('crédito') || docType.includes('nc') || docType.includes('n/c');
+
+                        // Credit notes are ALWAYS forced to be negative (-Math.abs), Invoices/Debit Notes are forced positive (+Math.abs)
+                        const rawAmt = parseMoney(amount);
+                        const parsedAmount = isCreditNote ? -Math.abs(rawAmt) : Math.abs(rawAmt);
+                        
                         totalSum += parsedAmount;
 
                         return {
@@ -777,16 +785,17 @@
                             vendedor: extractSellerFromDocument(docCol),
                             dEmision: parseExcelDate(dEmis),
                             dVto: parseExcelDate(dVto),
-                            importe: parsedAmount
+                            importe: parsedAmount,
+                            isNC: isCreditNote
                         };
                     });
 
                     const statusElem = document.getElementById('sales-status');
                     if (statusElem) {
-                        statusElem.textContent = `✓ ${window.rawSales.length} facturas leídas (Monto Total: ${formatMoney(totalSum)})`;
+                        statusElem.textContent = `✓ ${window.rawSales.length} comprobantes leídos (Neto Facturado: ${formatMoney(totalSum)})`;
                         statusElem.classList.remove('hidden');
                     }
-                    showToast(`Se cargaron ${window.rawSales.length} facturas de venta.`, 'success');
+                    showToast(`Se cargaron ${window.rawSales.length} comprobantes de venta (Manejo automático de Notas de Crédito).`, 'success');
                 } catch (err) {
                     console.error(err);
                     showToast('Error al leer archivo de Facturas.', 'error');
@@ -811,7 +820,7 @@
 
                     let totalSum = 0;
                     window.rawReal = json.map(r => {
-                        const client = findRowValue(r, ['razon social', 'razon', 'cliente', 'organizacion', 'cuenta', 'nombre', 'empresa']);
+                        const client = findRowValue(r, ['cliente', 'razon social', 'razon', 'organizacion', 'cuenta', 'nombre', 'empresa']);
                         const dPay = findRowValue(r, ['fecha de cobro', 'fecha cobro', 'fecha emision', 'fecha', 'cobro', 'pago']);
                         const amount = findRowValue(r, ['t. cta. cte', 't.cta.cte', 'cta. cte', 'cta cte', 'total cta', 'importe cobrado', 'importe', 'cobrado', 'monto', 'haber', 'total']);
                         const receipt = findRowValue(r, ['nro. recibo', 'nro. comprobante', 'recibo', 'comprobante', 'nro', 'numero', 'doc', 'transaccion']);
@@ -864,7 +873,15 @@
                 }
                 const dEmis = parseExcelDate(s.dEmision);
                 const dVto = parseExcelDate(s.dVto);
-                clientsMap[normKey].sales.push({ ...s, dEmision: dEmis, dVto: dVto, saldo: s.importe, estado: 'Sin pago', reciboAplicado: '' });
+                const isNC = s.isNC || false;
+                clientsMap[normKey].sales.push({ 
+                    ...s, 
+                    dEmision: dEmis, 
+                    dVto: dVto, 
+                    saldo: s.importe, 
+                    estado: isNC ? 'Nota de Crédito' : 'Sin pago', 
+                    reciboAplicado: '' 
+                });
             });
 
             realToProcess.forEach(r => {
@@ -884,6 +901,27 @@
                 const clientName = group.displayName;
                 const agreedDays = getClientAgreedDays(clientName);
                 const clientType = getClientType(clientName);
+
+                // Handle Credit Notes first: Credit notes reduce total invoice amount
+                let creditNotesTotal = group.sales.filter(s => s.importe < 0).reduce((sum, s) => sum + Math.abs(s.importe), 0);
+                
+                // Apply Credit Notes to open positive invoices
+                if (creditNotesTotal > 0) {
+                    group.sales.filter(s => s.importe > 0).forEach(s => {
+                        if (creditNotesTotal <= 0) return;
+                        if (creditNotesTotal >= s.saldo) {
+                            creditNotesTotal -= s.saldo;
+                            s.saldo = 0;
+                            s.estado = 'Pagada';
+                            s.reciboAplicado = 'Acred. N/C';
+                        } else {
+                            s.saldo -= creditNotesTotal;
+                            s.estado = 'Pago parcial';
+                            s.reciboAplicado = 'Desc. N/C parcial';
+                            creditNotesTotal = 0;
+                        }
+                    });
+                }
 
                 let totalSales = group.sales.reduce((sum, i) => sum + i.importe, 0);
                 let totalReal = group.real.reduce((sum, r) => sum + r.importeCobrado, 0);
@@ -1002,7 +1040,7 @@
                     badge.className = 'inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200';
                     badge.innerHTML = `
                         <span>${p}</span>
-                        <span class="ml-1 text-[10px] text-brand-500">(${window.historicalBatches[p].sales.length} FC / ${window.historicalBatches[p].real.length} REC)</span>
+                        <span class="ml-1 text-[10px] text-brand-500">(${window.historicalBatches[p].sales.length} Comprob. / ${window.historicalBatches[p].real.length} REC)</span>
                         <button onclick="deleteBatchPeriod('${p}')" title="Eliminar período" class="ml-2 text-rose-500 hover:text-rose-700 font-bold hover:bg-rose-100 rounded px-1 transition">&times;</button>
                     `;
                     badges.appendChild(badge);
@@ -1103,7 +1141,7 @@
             if (elemFact) elemFact.textContent = formatMoney(totalFacturado);
             
             const elemFactCount = document.getElementById('kpi-facturas-count');
-            if (elemFactCount) elemFactCount.textContent = `${invoiceDetails.length} Facturas emitidas`;
+            if (elemFactCount) elemFactCount.textContent = `${invoiceDetails.length} Comprobantes emitidos`;
 
             const elemCobr = document.getElementById('kpi-cobrado');
             if (elemCobr) elemCobr.textContent = formatMoney(totalCobrado);
@@ -1128,7 +1166,7 @@
             // 1. Chart Status (Doughnut)
             const canvasStatus = document.getElementById('chart-status');
             if (canvasStatus) {
-                const statusCounts = { 'Pagada': 0, 'Pago parcial': 0, 'Sin pago': 0 };
+                const statusCounts = { 'Pagada': 0, 'Pago parcial': 0, 'Sin pago': 0, 'Nota de Crédito': 0 };
                 invoiceDetails.forEach(i => {
                     statusCounts[i.estado] = (statusCounts[i.estado] || 0) + 1;
                 });
@@ -1141,7 +1179,7 @@
                         labels: Object.keys(statusCounts),
                         datasets: [{
                             data: Object.values(statusCounts),
-                            backgroundColor: ['#10b981', '#f59e0b', '#f43f5e']
+                            backgroundColor: ['#10b981', '#f59e0b', '#f43f5e', '#6366f1']
                         }]
                     },
                     options: { responsive: true, maintainAspectRatio: false }
@@ -1358,13 +1396,13 @@
             filtered.slice(0, 200).forEach(i => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-50';
-                const stClass = i.estado === 'Pagada' ? 'bg-emerald-100 text-emerald-800' : i.estado === 'Pago parcial' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800';
+                const stClass = i.estado === 'Pagada' ? 'bg-emerald-100 text-emerald-800' : i.estado === 'Pago parcial' ? 'bg-amber-100 text-amber-800' : i.estado === 'Nota de Crédito' ? 'bg-indigo-100 text-indigo-800' : 'bg-rose-100 text-rose-800';
                 tr.innerHTML = `
                     <td class="py-2.5 px-4 font-medium">${i.cliente}</td>
                     <td class="py-2.5 px-4 font-mono text-brand-600">${i.factura}</td>
                     <td class="py-2.5 px-4 text-center">${formatDate(i.dEmision)}</td>
                     <td class="py-2.5 px-4 text-center">${formatDate(i.dVto)}</td>
-                    <td class="py-2.5 px-4 text-right">${formatMoney(i.importe)}</td>
+                    <td class="py-2.5 px-4 text-right ${i.importe < 0 ? 'text-indigo-600 font-bold' : ''}">${formatMoney(i.importe)}</td>
                     <td class="py-2.5 px-4 text-right text-emerald-600 font-bold">${formatMoney(i.importe - i.saldo)}</td>
                     <td class="py-2.5 px-4 text-right text-rose-600 font-bold">${formatMoney(i.saldo)}</td>
                     <td class="py-2.5 px-4 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${stClass}">${i.estado}</span></td>
@@ -1734,24 +1772,19 @@
 
         function loadDemoDataset() {
             const demoSales = [
-                { cliente: 'SUPERMERCADOS SUR S.A.', factura: 'FC-001-1001', documento: 'RTO 41 - Factura B', dEmision: new Date(2026, 6, 1), dVto: new Date(2026, 6, 31), importe: 520000 },
-                { cliente: 'DISTRIBUIDORA NORTE', factura: 'FC-001-1002', documento: 'RTO 42 - Factura B', dEmision: new Date(2026, 6, 3), dVto: new Date(2026, 7, 2), importe: 340000 },
-                { cliente: 'COMERCIAL CENTRO SRL', factura: 'FC-001-1003', documento: 'RTO 56 - Factura B', dEmision: new Date(2026, 6, 5), dVto: new Date(2026, 7, 4), importe: 420000 }
+                { cliente: 'OSORIO BADILLO HELEN DANIELA', factura: 'A-00152-00000001', documento: 'RTO 52 - Nota de Débito Venta', dEmision: new Date(2026, 6, 16), dVto: new Date(2026, 7, 16), importe: 33424698.78, isNC: false },
+                { cliente: 'OSORIO BADILLO HELEN DANIELA', factura: 'A-00152-00000246', documento: 'RTO 52 - Nota de Crédito de Ventas', dEmision: new Date(2026, 6, 2), dVto: new Date(2026, 6, 2), importe: -33424698.78, isNC: true },
+                { cliente: 'OSORIO BADILLO HELEN DANIELA', factura: 'A-00152-00000249', documento: 'RTO 52 - Nota de Crédito de Ventas', dEmision: new Date(2026, 6, 7), dVto: new Date(2026, 6, 7), importe: -37307365.81, isNC: true }
             ];
-            const demoReal = [
-                { cliente: 'SUPERMERCADOS SUR SA', fechaCobro: new Date(2026, 6, 28), importeCobrado: 520000, recibo: 'REC-9001' },
-                { cliente: 'DISTRIBUIDORA NORTE SRL', fechaCobro: new Date(2026, 6, 30), importeCobrado: 180000, recibo: 'REC-9002' }
-            ];
+            const demoReal = [];
 
             window.historicalBatches['2026-07'] = { sales: demoSales, real: demoReal };
-            window.clientMasterTerms[normalizeClientName('SUPERMERCADOS SUR S.A.')] = { days: 30, type: 'Supermercados' };
-            window.clientMasterTerms[normalizeClientName('DISTRIBUIDORA NORTE')] = { days: 30, type: 'Distribuidor' };
-            window.clientMasterTerms[normalizeClientName('COMERCIAL CENTRO SRL')] = { days: 45, type: 'Retail' };
+            window.clientMasterTerms[normalizeClientName('OSORIO BADILLO HELEN DANIELA')] = { days: 30, type: 'Distribuidor' };
 
             updatePeriodSelectors('2026-07');
             window.activePeriod = '2026-07';
             runReconciliation();
-            showToast('Datos de demo (Julio) cargados correctamente.', 'success');
+            showToast('Datos de demo (con manejo exacto de Finnegans NC/ND) cargados.', 'success');
         }
     </script>
 </body>
