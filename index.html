@@ -31,6 +31,8 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .sort-header { cursor: pointer; user-select: none; }
+        .sort-header:hover { background-color: #f1f5f9; }
     </style>
 </head>
 <body class="h-full text-slate-800 bg-slate-50 flex flex-col font-sans">
@@ -140,7 +142,7 @@
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         </div>
                         <h3 class="text-sm font-semibold text-slate-800 mb-1">Facturas, Notas de Crédito y Débito</h3>
-                        <p class="text-xs text-slate-500 mb-4 max-w-xs">Comprobantes de Finnegans (Detecta NC automáticamentes para restar de la deuda)</p>
+                        <p class="text-xs text-slate-500 mb-4 max-w-xs">Comprobantes de Finnegans (Detecta NC automáticamente para restar de la deuda)</p>
                         <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium px-4 py-2 border border-slate-300 rounded-lg shadow-sm transition">
                             <span id="sales-filename">Seleccionar "Facturas de venta"</span>
                             <input type="file" id="sales-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleSalesFile(event)">
@@ -286,10 +288,18 @@
                             <table class="w-full text-left border-collapse text-xs">
                                 <thead>
                                     <tr class="bg-slate-50 border-b border-slate-200 font-semibold text-slate-600 uppercase">
-                                        <th class="py-2.5 px-3">Cliente</th>
-                                        <th class="py-2.5 px-3">Factura / NC / ND</th>
-                                        <th class="py-2.5 px-3 text-right">Saldo Pendiente</th>
-                                        <th class="py-2.5 px-3 text-center">F. Probable Pago</th>
+                                        <th class="py-2.5 px-3 sort-header" onclick="sortRouteTable('cliente')">
+                                            Cliente <span id="sort-icon-route-cliente">↕</span>
+                                        </th>
+                                        <th class="py-2.5 px-3 sort-header" onclick="sortRouteTable('factura')">
+                                            Factura / NC / ND <span id="sort-icon-route-factura">↕</span>
+                                        </th>
+                                        <th class="py-2.5 px-3 text-right sort-header" onclick="sortRouteTable('saldo')">
+                                            Saldo Pendiente <span id="sort-icon-route-saldo">↕</span>
+                                        </th>
+                                        <th class="py-2.5 px-3 text-center sort-header" onclick="sortRouteTable('fechaProbable')">
+                                            F. Probable Pago <span id="sort-icon-route-fechaProbable">↕</span>
+                                        </th>
                                         <th class="py-2.5 px-3 text-center">Estado</th>
                                     </tr>
                                 </thead>
@@ -325,14 +335,30 @@
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
                             <tr class="bg-slate-50 border-b border-slate-200 font-semibold text-slate-600 uppercase tracking-wider">
-                                <th class="py-3 px-4">Cliente</th>
-                                <th class="py-3 px-4 text-center">Mercado / Tipo</th>
-                                <th class="py-3 px-4 text-right">Proyectado</th>
-                                <th class="py-3 px-4 text-right">Cobrado</th>
-                                <th class="py-3 px-4 text-center">Plazo Pactado</th>
-                                <th class="py-3 px-4 text-center">Plazo Real Prom.</th>
-                                <th class="py-3 px-4 text-center">Desvío (Días)</th>
-                                <th class="py-3 px-4 text-center">Cumplimiento</th>
+                                <th class="py-3 px-4 sort-header" onclick="sortTermsTable('cliente')">
+                                    Cliente <span id="sort-icon-terms-cliente">↕</span>
+                                </th>
+                                <th class="py-3 px-4 text-center sort-header" onclick="sortTermsTable('tipoCliente')">
+                                    Mercado / Tipo <span id="sort-icon-terms-tipoCliente">↕</span>
+                                </th>
+                                <th class="py-3 px-4 text-right sort-header" onclick="sortTermsTable('proyectado')">
+                                    Proyectado <span id="sort-icon-terms-proyectado">↕</span>
+                                </th>
+                                <th class="py-3 px-4 text-right sort-header" onclick="sortTermsTable('cobrado')">
+                                    Cobrado <span id="sort-icon-terms-cobrado">↕</span>
+                                </th>
+                                <th class="py-3 px-4 text-center sort-header" onclick="sortTermsTable('plazoPactado')">
+                                    Plazo Pactado <span id="sort-icon-terms-plazoPactado">↕</span>
+                                </th>
+                                <th class="py-3 px-4 text-center sort-header" onclick="sortTermsTable('plazoPromedioReal')">
+                                    Plazo Real Prom. <span id="sort-icon-terms-plazoPromedioReal">↕</span>
+                                </th>
+                                <th class="py-3 px-4 text-center sort-header" onclick="sortTermsTable('desvioDias')">
+                                    Desvío (Días) <span id="sort-icon-terms-desvioDias">↕</span>
+                                </th>
+                                <th class="py-3 px-4 text-center sort-header" onclick="sortTermsTable('cumplimientoPct')">
+                                    Cumplimiento <span id="sort-icon-terms-cumplimientoPct">↕</span>
+                                </th>
                                 <th class="py-3 px-4 text-center">Estado</th>
                             </tr>
                         </thead>
@@ -442,19 +468,19 @@
             <!-- Forecast Summary Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-gradient-to-br from-emerald-500 to-teal-700 text-white rounded-xl p-5 shadow">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-emerald-100">Pronóstico Esta Semana</span>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-emerald-100">Pronóstico Esta Semana (0 a 7 días desde hoy)</span>
                     <h3 id="pred-this-week-amount" class="text-2xl font-black mt-1">$ 0</h3>
                     <p id="pred-this-week-count" class="text-xs text-emerald-100 mt-2">0 Facturas esperadas</p>
                 </div>
 
                 <div class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-xl p-5 shadow">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-blue-100">Pronóstico Próxima Semana</span>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-blue-100">Pronóstico Próxima Semana (8 a 14 días desde hoy)</span>
                     <h3 id="pred-next-week-amount" class="text-2xl font-black mt-1">$ 0</h3>
                     <p id="pred-next-week-count" class="text-xs text-blue-100 mt-2">0 Facturas esperadas</p>
                 </div>
 
                 <div class="bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-xl p-5 shadow">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-amber-100">Posteriores / En Riesgo</span>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-amber-100">Posteriores / En Riesgo (> 14 días desde hoy)</span>
                     <h3 id="pred-later-amount" class="text-2xl font-black mt-1">$ 0</h3>
                     <p id="pred-later-count" class="text-xs text-amber-100 mt-2">0 Facturas esperadas</p>
                 </div>
@@ -469,9 +495,9 @@
                     </div>
                     <select id="filter-pred-week" onchange="renderPredictionModule()" class="text-xs border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
                         <option value="ALL">Todas las Facturas Pendientes</option>
-                        <option value="THIS_WEEK">Esta Semana</option>
-                        <option value="NEXT_WEEK">Próxima Semana</option>
-                        <option value="LATER">Posteriores / En Riesgo</option>
+                        <option value="THIS_WEEK">Esta Semana (0-7d)</option>
+                        <option value="NEXT_WEEK">Próxima Semana (8-14d)</option>
+                        <option value="LATER">Posteriores / En Riesgo (>14d)</option>
                     </select>
                 </div>
 
@@ -484,8 +510,9 @@
                                 <th class="py-3 px-4 text-right">Saldo Pendiente</th>
                                 <th class="py-3 px-4 text-center">Plazo Pactado (Real)</th>
                                 <th class="py-3 px-4 text-center">Fecha Probable Pago</th>
+                                <th class="py-3 px-4 text-center">Días desde Hoy / Estado</th>
                                 <th class="py-3 px-4 text-center">Ventana</th>
-                                <th class="py-3 px-4 text-center">Probabilidad</th>
+                                <th class="py-3 px-4 text-center">Probabilidad de Cobro</th>
                                 <th class="py-3 px-4">Acción Recomendada</th>
                             </tr>
                         </thead>
@@ -501,13 +528,13 @@
 
     <!-- Terms Modal -->
     <div id="modal-terms" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-2xl mx-4 overflow-hidden">
+        <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl mx-4 overflow-hidden">
             <div class="p-5 bg-slate-900 text-white flex items-center justify-between">
                 <h3 class="text-sm font-bold flex items-center">
                     <svg class="w-5 h-5 mr-2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     Maestro de Plazos Pactados y Mercado por Cliente
                 </h3>
-                <button onclick="closeTermsModal()" class="text-slate-400 hover:text-white">&times;</button>
+                <button onclick="closeTermsModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
             </div>
 
             <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto custom-scrollbar">
@@ -520,14 +547,19 @@
 
                 <!-- Manual add client term -->
                 <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-100">
-                    <input type="text" id="manual-term-client" placeholder="Cliente..." class="text-xs border border-slate-300 rounded-lg px-3 py-2">
+                    <input type="text" id="manual-term-client" placeholder="Nombre de cliente..." class="text-xs border border-slate-300 rounded-lg px-3 py-2">
                     <input type="text" id="manual-term-type" placeholder="Mercado / Tipo..." class="text-xs border border-slate-300 rounded-lg px-3 py-2">
                     <input type="number" id="manual-term-days" placeholder="Días pactados" class="text-xs border border-slate-300 rounded-lg px-3 py-2">
-                    <button onclick="addManualTerm()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition">Guardar</button>
+                    <button onclick="addManualTerm()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition">Guardar Cliente</button>
+                </div>
+
+                <!-- Buscador de Plazos Pactados -->
+                <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-4">
+                    <input type="text" id="search-master-terms" oninput="renderMasterTermsTable()" placeholder="🔍 Buscar cliente o mercado en el maestro..." class="text-xs border border-slate-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
 
                 <!-- Terms Table -->
-                <div class="mt-4 border border-slate-200 rounded-lg overflow-hidden">
+                <div class="mt-2 border border-slate-200 rounded-lg overflow-hidden">
                     <table class="w-full text-xs text-left">
                         <thead class="bg-slate-50 font-semibold text-slate-600">
                             <tr>
@@ -559,6 +591,10 @@
         window.activePeriod = 'ALL';
         window.reconciliationResult = null;
         window.selectedReparto = null;
+
+        // Sorting state
+        window.termsSort = { col: 'desvioDias', dir: 'desc' };
+        window.routeSort = { col: 'saldo', dir: 'desc' };
 
         // Chart instances
         let chartStatusInstance = null;
@@ -768,11 +804,9 @@
                         const dVto = findRowValue(r, ['fecha de vencimiento', 'fecha vencimiento', 'vencimiento', 'vto', 'f. vto']);
                         const amount = findRowValue(r, ['total', 'bruto', 't. cta. cte', 't.cta.cte', 'cta. cte', 'cta cte', 'importe con iva', 'importe', 'monto']);
 
-                        // Smart Document Classification (Factura, NC, ND)
                         const docType = String(docCol || inv || '').toLowerCase();
                         const isCreditNote = docType.includes('credito') || docType.includes('crédito') || docType.includes('nc') || docType.includes('n/c');
 
-                        // Credit notes are ALWAYS forced to be negative (-Math.abs), Invoices/Debit Notes are forced positive (+Math.abs)
                         const rawAmt = parseMoney(amount);
                         const parsedAmount = isCreditNote ? -Math.abs(rawAmt) : Math.abs(rawAmt);
                         
@@ -795,7 +829,7 @@
                         statusElem.textContent = `✓ ${window.rawSales.length} comprobantes leídos (Neto Facturado: ${formatMoney(totalSum)})`;
                         statusElem.classList.remove('hidden');
                     }
-                    showToast(`Se cargaron ${window.rawSales.length} comprobantes de venta (Manejo automático de Notas de Crédito).`, 'success');
+                    showToast(`Se cargaron ${window.rawSales.length} comprobantes de venta.`, 'success');
                 } catch (err) {
                     console.error(err);
                     showToast('Error al leer archivo de Facturas.', 'error');
@@ -902,10 +936,9 @@
                 const agreedDays = getClientAgreedDays(clientName);
                 const clientType = getClientType(clientName);
 
-                // Handle Credit Notes first: Credit notes reduce total invoice amount
+                // Handle Credit Notes
                 let creditNotesTotal = group.sales.filter(s => s.importe < 0).reduce((sum, s) => sum + Math.abs(s.importe), 0);
                 
-                // Apply Credit Notes to open positive invoices
                 if (creditNotesTotal > 0) {
                     group.sales.filter(s => s.importe > 0).forEach(s => {
                         if (creditNotesTotal <= 0) return;
@@ -1278,12 +1311,22 @@
             }
         }
 
+        function sortRouteTable(columnKey) {
+            if (window.routeSort.col === columnKey) {
+                window.routeSort.dir = window.routeSort.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                window.routeSort.col = columnKey;
+                window.routeSort.dir = 'desc';
+            }
+            if (window.selectedReparto) selectRouteReparto(window.selectedReparto);
+        }
+
         function selectRouteReparto(repartoName) {
             window.selectedReparto = repartoName;
             if (!window.reconciliationResult) return;
             const { invoiceDetails, clientSummaries } = window.reconciliationResult;
 
-            const rInvoices = invoiceDetails.filter(i => (i.vendedor || 'General') === repartoName && i.saldo > 0);
+            let rInvoices = invoiceDetails.filter(i => (i.vendedor || 'General') === repartoName && i.saldo > 0);
             const totalRepartoPending = rInvoices.reduce((sum, i) => sum + i.saldo, 0);
 
             const titleElem = document.getElementById('selected-reparto-title');
@@ -1291,31 +1334,55 @@
             if (titleElem) titleElem.textContent = `Detalle de Reparto: ${repartoName}`;
             if (subElem) subElem.textContent = `Saldo acumulado a cobrar en esta ruta: ${formatMoney(totalRepartoPending)}`;
 
+            // Apply Sorting
+            const today = new Date();
+            const preparedInvoices = rInvoices.map(inv => {
+                const clientSum = clientSummaries.find(c => c.cliente === inv.cliente);
+                const daysReal = clientSum ? clientSum.plazoPromedioReal : getClientAgreedDays(inv.cliente);
+                const dEmis = parseExcelDate(inv.dEmision);
+                const estPayDate = new Date(dEmis.getTime() + daysReal * 86400 * 1000);
+                return { ...inv, fechaProbable: estPayDate };
+            });
+
+            const col = window.routeSort.col;
+            const dir = window.routeSort.dir === 'asc' ? 1 : -1;
+
+            preparedInvoices.sort((a, b) => {
+                let valA = a[col], valB = b[col];
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+                if (valA < valB) return -1 * dir;
+                if (valA > valB) return 1 * dir;
+                return 0;
+            });
+
+            // Update Sort Icons
+            ['cliente', 'factura', 'saldo', 'fechaProbable'].forEach(cKey => {
+                const icon = document.getElementById(`sort-icon-route-${cKey}`);
+                if (icon) {
+                    if (window.routeSort.col === cKey) icon.textContent = window.routeSort.dir === 'asc' ? '↑' : '↓';
+                    else icon.textContent = '↕';
+                }
+            });
+
             const tbody = document.getElementById('tbody-reparto-detail');
             if (tbody) {
                 tbody.innerHTML = '';
-                const today = new Date();
-
-                rInvoices.forEach(inv => {
-                    const clientSum = clientSummaries.find(c => c.cliente === inv.cliente);
-                    const daysReal = clientSum ? clientSum.plazoPromedioReal : getClientAgreedDays(inv.cliente);
-                    const dEmis = parseExcelDate(inv.dEmision);
-                    const estPayDate = new Date(dEmis.getTime() + daysReal * 86400 * 1000);
-
+                preparedInvoices.forEach(inv => {
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-slate-50';
                     tr.innerHTML = `
                         <td class="py-2.5 px-3 font-bold text-slate-800">${inv.cliente}</td>
                         <td class="py-2.5 px-3 font-mono text-brand-600">${inv.factura}</td>
                         <td class="py-2.5 px-3 text-right font-bold text-rose-600">${formatMoney(inv.saldo)}</td>
-                        <td class="py-2.5 px-3 text-center font-bold text-emerald-600">${formatDate(estPayDate)}</td>
+                        <td class="py-2.5 px-3 text-center font-bold text-emerald-600">${formatDate(inv.fechaProbable)}</td>
                         <td class="py-2.5 px-3 text-center"><span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-[10px] font-bold">Pendiente</span></td>
                     `;
                     tbody.appendChild(tr);
                 });
             }
 
-            // Re-render route list to update active highlight
+            // Re-render route list highlight
             const listContainer = document.getElementById('route-repartos-list');
             if (listContainer) {
                 Array.from(listContainer.children).forEach(child => {
@@ -1326,6 +1393,16 @@
                     }
                 });
             }
+        }
+
+        function sortTermsTable(columnKey) {
+            if (window.termsSort.col === columnKey) {
+                window.termsSort.dir = window.termsSort.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                window.termsSort.col = columnKey;
+                window.termsSort.dir = 'desc';
+            }
+            renderTermsTable();
         }
 
         function renderTermsTable() {
@@ -1341,7 +1418,7 @@
             const searchInput = document.getElementById('search-client-terms');
             const search = searchInput ? searchInput.value.toLowerCase() : '';
 
-            const filtered = clientSummaries.filter(c => {
+            let filtered = clientSummaries.filter(c => {
                 const isOverdue = c.desvioDias > 0;
                 const matchStatus = statusFilter === 'ALL' || 
                                     (statusFilter === 'EN_PLAZO' && !isOverdue) || 
@@ -1349,6 +1426,28 @@
                 const matchSearch = c.cliente.toLowerCase().includes(search) || 
                                     (c.tipoCliente && c.tipoCliente.toLowerCase().includes(search));
                 return matchStatus && matchSearch;
+            });
+
+            // Apply Sorting
+            const col = window.termsSort.col;
+            const dir = window.termsSort.dir === 'asc' ? 1 : -1;
+
+            filtered.sort((a, b) => {
+                let valA = a[col], valB = b[col];
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+                if (valA < valB) return -1 * dir;
+                if (valA > valB) return 1 * dir;
+                return 0;
+            });
+
+            // Update Sort Icons
+            ['cliente', 'tipoCliente', 'proyectado', 'cobrado', 'plazoPactado', 'plazoPromedioReal', 'desvioDias', 'cumplimientoPct'].forEach(cKey => {
+                const icon = document.getElementById(`sort-icon-terms-${cKey}`);
+                if (icon) {
+                    if (window.termsSort.col === cKey) icon.textContent = window.termsSort.dir === 'asc' ? '↑' : '↓';
+                    else icon.textContent = '↕';
+                }
             });
 
             filtered.forEach(c => {
@@ -1539,6 +1638,7 @@
                 const clientSum = clientSummaries.find(c => c.cliente === inv.cliente);
                 const agreedDays = getClientAgreedDays(inv.cliente);
                 const daysReal = clientSum ? clientSum.plazoPromedioReal : agreedDays;
+                const compliancePct = clientSum ? clientSum.cumplimientoPct : 80;
 
                 const dEmis = parseExcelDate(inv.dEmision);
                 const estPayDate = new Date(dEmis.getTime() + daysReal * 86400 * 1000);
@@ -1562,6 +1662,13 @@
                     laterCnt++;
                 }
 
+                // Dynamic probability calculation based on actual client compliance
+                let dynamicProb = compliancePct;
+                if (daysDiff < 0) {
+                    const overdueDays = Math.abs(daysDiff);
+                    dynamicProb = Math.max(25, dynamicProb - (overdueDays * 3));
+                }
+
                 predictions.push({
                     cliente: inv.cliente,
                     factura: inv.factura,
@@ -1569,6 +1676,8 @@
                     plazoReal: daysReal,
                     plazoPactado: agreedDays,
                     fechaProbable: formatDate(estPayDate),
+                    daysDiff: daysDiff,
+                    probabilidad: Math.min(100, Math.max(15, dynamicProb)),
                     bucket,
                     accion: action
                 });
@@ -1604,6 +1713,10 @@
                 const filtered = predictions.filter(p => filter === 'ALL' || p.bucket === filter);
 
                 filtered.slice(0, 150).forEach(p => {
+                    const daysLabel = p.daysDiff < 0 ? `<span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-bold">Vencida hace ${Math.abs(p.daysDiff)}d</span>` : p.daysDiff === 0 ? `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-bold">Vence Hoy</span>` : `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold">Faltan ${p.daysDiff}d</span>`;
+
+                    const probColor = p.probabilidad >= 80 ? 'text-emerald-600' : p.probabilidad >= 50 ? 'text-amber-600' : 'text-rose-600';
+
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-slate-50';
                     tr.innerHTML = `
@@ -1612,8 +1725,9 @@
                         <td class="py-2.5 px-4 text-right font-bold text-rose-600">${formatMoney(p.saldo)}</td>
                         <td class="py-2.5 px-4 text-center font-medium">${p.plazoPactado}d pactados (${p.plazoReal}d real)</td>
                         <td class="py-2.5 px-4 text-center font-bold text-emerald-600">${p.fechaProbable}</td>
+                        <td class="py-2.5 px-4 text-center">${daysLabel}</td>
                         <td class="py-2.5 px-4 text-center font-bold text-slate-700">${p.bucket === 'THIS_WEEK' ? 'Esta Semana' : p.bucket === 'NEXT_WEEK' ? 'Próxima Semana' : 'Posterior'}</td>
-                        <td class="py-2.5 px-4 text-center font-bold text-brand-600">85%</td>
+                        <td class="py-2.5 px-4 text-center font-bold ${probColor}">${p.probabilidad}%</td>
                         <td class="py-2.5 px-4 text-slate-600">${p.accion}</td>
                     `;
                     tbody.appendChild(tr);
@@ -1703,13 +1817,49 @@
             if (clientElem) clientElem.value = '';
             if (typeElem) typeElem.value = '';
             if (daysElem) daysElem.value = '';
+            showToast(`Cliente ${client} guardado en el maestro.`, 'success');
+        }
+
+        function editMasterTerm(cKey) {
+            const termObj = window.clientMasterTerms[cKey];
+            const currentDays = typeof termObj === 'object' ? termObj.days : termObj;
+            const currentType = typeof termObj === 'object' ? termObj.type : 'General';
+
+            const newType = prompt(`Modificar Mercado/Tipo para ${cKey.toUpperCase()}:`, currentType);
+            if (newType === null) return;
+
+            const newDaysStr = prompt(`Modificar Días Pactados para ${cKey.toUpperCase()}:`, currentDays);
+            if (newDaysStr === null) return;
+
+            const newDays = parseInt(newDaysStr) || 0;
+            window.clientMasterTerms[cKey] = { days: newDays, type: newType.trim() || 'General' };
+
+            saveTermsToStorage();
+            renderMasterTermsTable();
+            runReconciliation();
+            showToast(`Condiciones actualizadas para ${cKey.toUpperCase()}.`, 'success');
         }
 
         function renderMasterTermsTable() {
             const tbody = document.getElementById('tbody-master-terms');
             if (!tbody) return;
             tbody.innerHTML = '';
-            Object.keys(window.clientMasterTerms).forEach(cKey => {
+
+            const searchElem = document.getElementById('search-master-terms');
+            const search = searchElem ? searchElem.value.toLowerCase().trim() : '';
+
+            const keys = Object.keys(window.clientMasterTerms).filter(k => {
+                const termObj = window.clientMasterTerms[k];
+                const typeVal = typeof termObj === 'object' ? (termObj.type || '') : '';
+                return k.toLowerCase().includes(search) || typeVal.toLowerCase().includes(search);
+            });
+
+            if (keys.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">No se encontraron clientes en el maestro.</td></tr>';
+                return;
+            }
+
+            keys.forEach(cKey => {
                 const termObj = window.clientMasterTerms[cKey];
                 const days = typeof termObj === 'object' ? termObj.days : termObj;
                 const typeVal = typeof termObj === 'object' ? termObj.type : 'General';
@@ -1719,7 +1869,10 @@
                     <td class="p-2.5 font-bold uppercase">${cKey}</td>
                     <td class="p-2.5 text-center"><span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-[10px] font-semibold">${typeVal || 'General'}</span></td>
                     <td class="p-2.5 text-center font-semibold text-indigo-600">${days} días</td>
-                    <td class="p-2.5 text-right"><button onclick="deleteTerm('${cKey}')" class="text-rose-600 font-bold hover:underline">Eliminar</button></td>
+                    <td class="p-2.5 text-right space-x-2">
+                        <button onclick="editMasterTerm('${cKey}')" class="text-indigo-600 font-bold hover:underline">✏️ Editar</button>
+                        <button onclick="deleteTerm('${cKey}')" class="text-rose-600 font-bold hover:underline">Eliminar</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
