@@ -376,7 +376,7 @@
                 <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h3 class="text-base font-bold text-slate-800">Detalle Completo de Imputación de Facturas y Notas de Crédito</h3>
-                        <p class="text-xs text-slate-500">Cruce individual factura por factura con las Notas de Crédito y los recibos cobrados.</p>
+                        <p class="text-xs text-slate-500">Cruce individual factura por factura. Puedes excluir facturas pagadas previamente para redistribuir cobros.</p>
                     </div>
                     <div class="flex items-center space-x-2">
                         <select id="filter-status" onchange="renderImputationTable()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
@@ -385,6 +385,7 @@
                             <option value="Pago parcial">Pago Parcial</option>
                             <option value="Sin pago">Sin Pago</option>
                             <option value="Nota de Crédito">Notas de Crédito</option>
+                            <option value="Excluida">Excluidas del Cálculo</option>
                         </select>
                         <input type="text" id="search-imputation" oninput="renderImputationTable()" placeholder="Buscar factura / cliente..." class="text-xs border border-slate-300 rounded-lg px-3 py-2 w-48 sm:w-64 focus:outline-none focus:ring-2 focus:ring-brand-500">
                     </div>
@@ -403,6 +404,7 @@
                                 <th class="py-3 px-4 text-right">Saldo</th>
                                 <th class="py-3 px-4 text-center">Estado</th>
                                 <th class="py-3 px-4">Recibo / Obs</th>
+                                <th class="py-3 px-4 text-right">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tbody-imputation" class="divide-y divide-slate-100 font-medium">
@@ -588,6 +590,7 @@
         window.rawReal = [];
         window.clientMasterTerms = {}; 
         window.historicalBatches = {}; 
+        window.excludedInvoices = {}; // Excluded invoices dictionary
         window.activePeriod = 'ALL';
         window.reconciliationResult = null;
         window.selectedReparto = null;
@@ -702,6 +705,7 @@
 
         window.onload = function() {
             loadTermsFromStorage();
+            loadExcludedInvoicesFromStorage();
             loadHistoricalBatchesFromStorage();
             if (Object.keys(window.historicalBatches).length === 0) {
                 loadDemoDataset();
@@ -884,6 +888,18 @@
             reader.readAsArrayBuffer(file);
         }
 
+        function toggleExcludeInvoice(facturaNumber) {
+            if (window.excludedInvoices[facturaNumber]) {
+                delete window.excludedInvoices[facturaNumber];
+                showToast(`Comprobante ${facturaNumber} restaurado.`, 'info');
+            } else {
+                window.excludedInvoices[facturaNumber] = true;
+                showToast(`Comprobante ${facturaNumber} excluido. Pagos redistribuidos.`, 'success');
+            }
+            saveExcludedInvoicesToStorage();
+            runReconciliation();
+        }
+
         function runReconciliation() {
             let salesToProcess = [];
             let realToProcess = [];
@@ -908,13 +924,16 @@
                 const dEmis = parseExcelDate(s.dEmision);
                 const dVto = parseExcelDate(s.dVto);
                 const isNC = s.isNC || false;
+                const isExcluded = !!window.excludedInvoices[s.factura];
+
                 clientsMap[normKey].sales.push({ 
                     ...s, 
                     dEmision: dEmis, 
                     dVto: dVto, 
-                    saldo: s.importe, 
-                    estado: isNC ? 'Nota de Crédito' : 'Sin pago', 
-                    reciboAplicado: '' 
+                    saldo: isExcluded ? 0 : s.importe, 
+                    estado: isExcluded ? 'Excluida' : (isNC ? 'Nota de Crédito' : 'Sin pago'), 
+                    reciboAplicado: isExcluded ? 'Excluida manualmente' : '',
+                    isExcluded: isExcluded
                 });
             });
 
@@ -936,11 +955,11 @@
                 const agreedDays = getClientAgreedDays(clientName);
                 const clientType = getClientType(clientName);
 
-                // Handle Credit Notes
-                let creditNotesTotal = group.sales.filter(s => s.importe < 0).reduce((sum, s) => sum + Math.abs(s.importe), 0);
+                // Handle Credit Notes (ignore excluded invoices)
+                let creditNotesTotal = group.sales.filter(s => s.importe < 0 && !s.isExcluded).reduce((sum, s) => sum + Math.abs(s.importe), 0);
                 
                 if (creditNotesTotal > 0) {
-                    group.sales.filter(s => s.importe > 0).forEach(s => {
+                    group.sales.filter(s => s.importe > 0 && !s.isExcluded).forEach(s => {
                         if (creditNotesTotal <= 0) return;
                         if (creditNotesTotal >= s.saldo) {
                             creditNotesTotal -= s.saldo;
@@ -956,17 +975,17 @@
                     });
                 }
 
-                let totalSales = group.sales.reduce((sum, i) => sum + i.importe, 0);
+                let totalSales = group.sales.filter(s => !s.isExcluded).reduce((sum, i) => sum + i.importe, 0);
                 let totalReal = group.real.reduce((sum, r) => sum + r.importeCobrado, 0);
 
                 let realPayDaysSum = 0;
                 let realPayCount = 0;
 
-                // Match Receipts to Invoices
+                // Match Receipts to Non-Excluded Invoices
                 group.real.forEach(rec => {
                     let amountToApply = rec.importeCobrado;
 
-                    const exactMatch = group.sales.find(s => s.saldo > 0 && Math.abs(s.saldo - amountToApply) < 0.01);
+                    const exactMatch = group.sales.find(s => !s.isExcluded && s.saldo > 0 && Math.abs(s.saldo - amountToApply) < 0.01);
                     if (exactMatch) {
                         exactMatch.saldo = 0;
                         exactMatch.estado = 'Pagada';
@@ -978,7 +997,7 @@
                         amountToApply = 0;
                     } else {
                         for (let s of group.sales) {
-                            if (s.saldo <= 0) continue;
+                            if (s.isExcluded || s.saldo <= 0) continue;
                             if (amountToApply <= 0) break;
 
                             if (amountToApply >= s.saldo) {
@@ -1151,8 +1170,8 @@
             if (!window.reconciliationResult) return;
             const { invoiceDetails, clientSummaries } = window.reconciliationResult;
 
-            const totalFacturado = invoiceDetails.reduce((sum, i) => sum + i.importe, 0);
-            const totalPendiente = invoiceDetails.reduce((sum, i) => sum + i.saldo, 0);
+            const totalFacturado = invoiceDetails.filter(i => !i.isExcluded).reduce((sum, i) => sum + i.importe, 0);
+            const totalPendiente = invoiceDetails.filter(i => !i.isExcluded).reduce((sum, i) => sum + i.saldo, 0);
             
             let totalCobrado = 0;
             let realCount = 0;
@@ -1174,7 +1193,7 @@
             if (elemFact) elemFact.textContent = formatMoney(totalFacturado);
             
             const elemFactCount = document.getElementById('kpi-facturas-count');
-            if (elemFactCount) elemFactCount.textContent = `${invoiceDetails.length} Comprobantes emitidos`;
+            if (elemFactCount) elemFactCount.textContent = `${invoiceDetails.filter(i => !i.isExcluded).length} Comprobantes activos`;
 
             const elemCobr = document.getElementById('kpi-cobrado');
             if (elemCobr) elemCobr.textContent = formatMoney(totalCobrado);
@@ -1199,7 +1218,7 @@
             // 1. Chart Status (Doughnut)
             const canvasStatus = document.getElementById('chart-status');
             if (canvasStatus) {
-                const statusCounts = { 'Pagada': 0, 'Pago parcial': 0, 'Sin pago': 0, 'Nota de Crédito': 0 };
+                const statusCounts = { 'Pagada': 0, 'Pago parcial': 0, 'Sin pago': 0, 'Nota de Crédito': 0, 'Excluida': 0 };
                 invoiceDetails.forEach(i => {
                     statusCounts[i.estado] = (statusCounts[i.estado] || 0) + 1;
                 });
@@ -1212,7 +1231,7 @@
                         labels: Object.keys(statusCounts),
                         datasets: [{
                             data: Object.values(statusCounts),
-                            backgroundColor: ['#10b981', '#f59e0b', '#f43f5e', '#6366f1']
+                            backgroundColor: ['#10b981', '#f59e0b', '#f43f5e', '#6366f1', '#94a3b8']
                         }]
                     },
                     options: { responsive: true, maintainAspectRatio: false }
@@ -1223,7 +1242,7 @@
             const canvasSellers = document.getElementById('chart-sellers');
             if (canvasSellers) {
                 const sellerMap = {};
-                invoiceDetails.forEach(i => {
+                invoiceDetails.filter(i => !i.isExcluded).forEach(i => {
                     const v = i.vendedor || 'General';
                     if (!sellerMap[v]) sellerMap[v] = { facturado: 0, cobrado: 0 };
                     sellerMap[v].facturado += (i.importe || 0);
@@ -1267,7 +1286,7 @@
             const repartoMap = {};
             let grandTotalPending = 0;
 
-            invoiceDetails.filter(i => i.saldo > 0).forEach(inv => {
+            invoiceDetails.filter(i => !i.isExcluded && i.saldo > 0).forEach(inv => {
                 const rto = inv.vendedor || 'General';
                 if (!repartoMap[rto]) repartoMap[rto] = { name: rto, totalPending: 0, invoices: [] };
                 repartoMap[rto].totalPending += inv.saldo;
@@ -1326,7 +1345,7 @@
             if (!window.reconciliationResult) return;
             const { invoiceDetails, clientSummaries } = window.reconciliationResult;
 
-            let rInvoices = invoiceDetails.filter(i => (i.vendedor || 'General') === repartoName && i.saldo > 0);
+            let rInvoices = invoiceDetails.filter(i => !i.isExcluded && (i.vendedor || 'General') === repartoName && i.saldo > 0);
             const totalRepartoPending = rInvoices.reduce((sum, i) => sum + i.saldo, 0);
 
             const titleElem = document.getElementById('selected-reparto-title');
@@ -1494,11 +1513,17 @@
 
             filtered.slice(0, 200).forEach(i => {
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50';
-                const stClass = i.estado === 'Pagada' ? 'bg-emerald-100 text-emerald-800' : i.estado === 'Pago parcial' ? 'bg-amber-100 text-amber-800' : i.estado === 'Nota de Crédito' ? 'bg-indigo-100 text-indigo-800' : 'bg-rose-100 text-rose-800';
+                tr.className = i.isExcluded ? 'bg-slate-100/80 opacity-75' : 'hover:bg-slate-50';
+                
+                const stClass = i.isExcluded ? 'bg-slate-200 text-slate-700' : (i.estado === 'Pagada' ? 'bg-emerald-100 text-emerald-800' : i.estado === 'Pago parcial' ? 'bg-amber-100 text-amber-800' : i.estado === 'Nota de Crédito' ? 'bg-indigo-100 text-indigo-800' : 'bg-rose-100 text-rose-800');
+                
+                const actionBtn = i.isExcluded ? 
+                    `<button onclick="toggleExcludeInvoice('${i.factura}')" class="px-2.5 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 rounded font-bold transition">🔄 Restaurar</button>` : 
+                    `<button onclick="toggleExcludeInvoice('${i.factura}')" class="px-2.5 py-1 bg-rose-100 hover:bg-rose-200 text-rose-800 rounded font-bold transition">🗑️ Excluir</button>`;
+
                 tr.innerHTML = `
-                    <td class="py-2.5 px-4 font-medium">${i.cliente}</td>
-                    <td class="py-2.5 px-4 font-mono text-brand-600">${i.factura}</td>
+                    <td class="py-2.5 px-4 font-medium ${i.isExcluded ? 'line-through text-slate-500' : ''}">${i.cliente}</td>
+                    <td class="py-2.5 px-4 font-mono text-brand-600 ${i.isExcluded ? 'line-through' : ''}">${i.factura}</td>
                     <td class="py-2.5 px-4 text-center">${formatDate(i.dEmision)}</td>
                     <td class="py-2.5 px-4 text-center">${formatDate(i.dVto)}</td>
                     <td class="py-2.5 px-4 text-right ${i.importe < 0 ? 'text-indigo-600 font-bold' : ''}">${formatMoney(i.importe)}</td>
@@ -1506,6 +1531,7 @@
                     <td class="py-2.5 px-4 text-right text-rose-600 font-bold">${formatMoney(i.saldo)}</td>
                     <td class="py-2.5 px-4 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${stClass}">${i.estado}</span></td>
                     <td class="py-2.5 px-4 text-slate-500 font-mono text-[11px]">${i.reciboAplicado || '-'}</td>
+                    <td class="py-2.5 px-4 text-right">${actionBtn}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1624,7 +1650,7 @@
             if (!window.reconciliationResult) return;
             const { invoiceDetails, clientSummaries } = window.reconciliationResult;
 
-            const openInvoices = invoiceDetails.filter(i => i.saldo > 0);
+            const openInvoices = invoiceDetails.filter(i => !i.isExcluded && i.saldo > 0);
             const totalPendingAll = openInvoices.reduce((sum, i) => sum + i.saldo, 0);
             const today = new Date();
 
@@ -1662,7 +1688,6 @@
                     laterCnt++;
                 }
 
-                // Dynamic probability calculation based on actual client compliance
                 let dynamicProb = compliancePct;
                 if (daysDiff < 0) {
                     const overdueDays = Math.abs(daysDiff);
@@ -1895,6 +1920,16 @@
             } catch(e){}
         }
 
+        function saveExcludedInvoicesToStorage() {
+            try { localStorage.setItem('excludedInvoices', JSON.stringify(window.excludedInvoices)); } catch(e){}
+        }
+        function loadExcludedInvoicesFromStorage() {
+            try {
+                const saved = localStorage.getItem('excludedInvoices');
+                if (saved) window.excludedInvoices = JSON.parse(saved);
+            } catch(e){}
+        }
+
         function saveHistoricalBatchesToStorage() {
             try { localStorage.setItem('historicalBatches', JSON.stringify(window.historicalBatches)); } catch(e){}
         }
@@ -1925,19 +1960,21 @@
 
         function loadDemoDataset() {
             const demoSales = [
-                { cliente: 'OSORIO BADILLO HELEN DANIELA', factura: 'A-00152-00000001', documento: 'RTO 52 - Nota de Débito Venta', dEmision: new Date(2026, 6, 16), dVto: new Date(2026, 7, 16), importe: 33424698.78, isNC: false },
-                { cliente: 'OSORIO BADILLO HELEN DANIELA', factura: 'A-00152-00000246', documento: 'RTO 52 - Nota de Crédito de Ventas', dEmision: new Date(2026, 6, 2), dVto: new Date(2026, 6, 2), importe: -33424698.78, isNC: true },
-                { cliente: 'OSORIO BADILLO HELEN DANIELA', factura: 'A-00152-00000249', documento: 'RTO 52 - Nota de Crédito de Ventas', dEmision: new Date(2026, 6, 7), dVto: new Date(2026, 6, 7), importe: -37307365.81, isNC: true }
+                { cliente: 'DESARROLLOS DEPORTIVOS SP S.R.L', factura: 'A-00135-00000101', documento: 'RTO 52 - Factura B', dEmision: new Date(2026, 0, 4), dVto: new Date(2026, 7, 14), importe: 24000000.00, isNC: false },
+                { cliente: 'DESARROLLOS DEPORTIVOS SP S.R.L', factura: 'A-00135-00000181', documento: 'RTO 52 - Factura B', dEmision: new Date(2026, 4, 28), dVto: new Date(2026, 7, 14), importe: 11088000.00, isNC: false },
+                { cliente: 'DESARROLLOS DEPORTIVOS SP S.R.L', factura: 'A-00135-00000182', documento: 'RTO 52 - Factura B', dEmision: new Date(2026, 4, 31), dVto: new Date(2026, 7, 14), importe: 16632000.00, isNC: false }
             ];
-            const demoReal = [];
+            const demoReal = [
+                { cliente: 'DESARROLLOS DEPORTIVOS SP S.R.L', fechaCobro: new Date(2026, 6, 28), importeCobrado: 27720000.00, recibo: 'R-0037-00000738' }
+            ];
 
             window.historicalBatches['2026-07'] = { sales: demoSales, real: demoReal };
-            window.clientMasterTerms[normalizeClientName('OSORIO BADILLO HELEN DANIELA')] = { days: 30, type: 'Distribuidor' };
+            window.clientMasterTerms[normalizeClientName('DESARROLLOS DEPORTIVOS SP S.R.L')] = { days: 30, type: 'Deportes' };
 
             updatePeriodSelectors('2026-07');
             window.activePeriod = '2026-07';
             runReconciliation();
-            showToast('Datos de demo (con manejo exacto de Finnegans NC/ND) cargados.', 'success');
+            showToast('Datos de demo de Desarrollos Deportivos cargados.', 'success');
         }
     </script>
 </body>
