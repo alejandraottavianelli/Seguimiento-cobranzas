@@ -187,7 +187,7 @@
                         <div id="real-status" class="mt-2 text-[11px] text-emerald-600 font-semibold hidden"></div>
                     </div>
 
-                    <!-- 3. NEW: Live Debt Snapshot Drop Area -->
+                    <!-- 3. Live Debt Snapshot Drop Area -->
                     <div class="border-2 border-dashed border-amber-300 rounded-xl p-5 text-center hover:border-amber-500 transition-colors bg-amber-50/40 flex flex-col items-center justify-center min-h-[180px]">
                         <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -514,6 +514,44 @@
 
         <!-- Prediccion Tab -->
         <section id="tab-forecast" class="space-y-6 hidden">
+            <!-- NEW: Historical Real Empirical Rates Indicator -->
+            <div class="bg-indigo-900 text-white p-4 rounded-xl shadow border border-indigo-800">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="px-2.5 py-0.5 bg-emerald-400 text-slate-900 font-black rounded text-[10px] uppercase">Empírico Real de Historial (Ene-Hoy)</span>
+                        <h3 class="text-base font-bold mt-1">Velocidad de Cobranza Real del Histórico Integrado</h3>
+                        <p class="text-xs text-indigo-200 mt-0.5">Porcentajes efectivos recuperados semanalmente según todos los recibos y facturas cargados.</p>
+                    </div>
+
+                    <!-- Target / Goal Adjustment Selector -->
+                    <div class="flex items-center space-x-2 bg-indigo-950/80 p-2 rounded-lg border border-indigo-700">
+                        <label for="filter-recovery-rate" class="text-xs text-indigo-300 font-semibold whitespace-nowrap">Modelo / Meta:</label>
+                        <select id="filter-recovery-rate" onchange="renderPredictionModule()" class="text-xs border border-indigo-600 rounded-md px-2 py-1 font-bold bg-slate-900 text-amber-300 focus:outline-none">
+                            <option value="REAL">📊 Rendimiento Histórico Real (Empírico)</option>
+                            <option value="TARGET_60">🎯 Meta Desafío Equipo (60% Sem 1)</option>
+                            <option value="TARGET_70">🔥 Meta Exigente Equipo (70% Sem 1)</option>
+                            <option value="FULL">100% Deuda Total Exigible</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Empirical Badges Display -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-3 border-t border-indigo-800/80 text-xs">
+                    <div class="bg-indigo-800/60 p-2.5 rounded-lg flex justify-between items-center border border-indigo-700/60">
+                        <span>Semana 1 (0-7d Real):</span>
+                        <span id="empirical-rate-w1" class="font-extrabold text-emerald-300 text-sm">0%</span>
+                    </div>
+                    <div class="bg-indigo-800/60 p-2.5 rounded-lg flex justify-between items-center border border-indigo-700/60">
+                        <span>Semana 2 (8-14d Real):</span>
+                        <span id="empirical-rate-w2" class="font-extrabold text-blue-300 text-sm">0%</span>
+                    </div>
+                    <div class="bg-indigo-800/60 p-2.5 rounded-lg flex justify-between items-center border border-indigo-700/60">
+                        <span>Posteriores (>14d Real):</span>
+                        <span id="empirical-rate-later" class="font-extrabold text-amber-300 text-sm">0%</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Forecast Summary Cards with Cash vs Bank breakdown -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-gradient-to-br from-emerald-500 to-teal-700 text-white rounded-xl p-5 shadow">
@@ -714,14 +752,29 @@
             return 'General';
         }
 
+        /**
+         * Strictly Mapped Row Searcher
+         */
         function findRowValue(row, terms) {
             if (!row) return '';
             const keys = Object.keys(row);
+            
+            // 1. Try EXACT key matches first
+            for (const term of terms) {
+                const cleanT = String(term).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+                const exactKey = keys.find(k => String(k).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim() === cleanT);
+                if (exactKey && row[exactKey] !== undefined && row[exactKey] !== '') {
+                    return row[exactKey];
+                }
+            }
+
+            // 2. Try partial key matches (avoiding 'código cliente' over 'cliente')
             for (const term of terms) {
                 const cleanT = String(term).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
                 const matchedKey = keys.find(k => {
                     const cleanK = String(k).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-                    return cleanK === cleanT || cleanK.includes(cleanT);
+                    if (cleanT === 'cliente' && cleanK.includes('codigo')) return false; // Ignore 'Código cliente'
+                    return cleanK.includes(cleanT);
                 });
                 if (matchedKey && row[matchedKey] !== undefined && row[matchedKey] !== '') {
                     return row[matchedKey];
@@ -882,13 +935,13 @@
 
                     let totalSum = 0;
                     window.rawSales = json.map(r => {
-                        const client = findRowValue(r, ['cliente', 'razon social', 'razon', 'organizacion', 'nombre', 'empresa', 'cuenta', 'comprador']);
-                        const inv = findRowValue(r, ['nro comp', 'nro. comprobante', 'comprobante', 'factura', 'nro', 'numero', 'doc']);
+                        const client = findRowValue(r, ['cliente', 'razon social', 'razon', 'organizacion', 'empresa', 'cuenta']);
+                        const inv = findRowValue(r, ['comprobante', 'nro comp', 'nro. comprobante', 'factura', 'nro']);
                         const docCol = findRowValue(r, ['documento', 'vendedor', 'concepto', 'tipo']);
-                        const dEmis = findRowValue(r, ['fecha', 'fecha de emision', 'fecha emision', 'emision', 'f. emision', 'fecha comprobante']);
-                        const dVto = findRowValue(r, ['fecha de vencimiento', 'fecha vencimiento', 'vencimiento', 'vto', 'f. vto', 'fecha vto']);
-                        const amount = findRowValue(r, ['total', 'bruto', 't. cta. cte', 't.cta.cte', 'cta. cte', 'cta cte', 'importe con iva', 'importe', 'monto', 'importe ppal']);
-                        const companyRaw = findRowValue(r, ['empresa', 'razon social empresa', 'unidad']);
+                        const dEmis = findRowValue(r, ['fecha', 'fecha de emision', 'fecha emision', 'fecha comprobante']);
+                        const dVto = findRowValue(r, ['fecha de vencimiento', 'fecha vencimiento', 'vencimiento', 'fecha vto']);
+                        const amount = findRowValue(r, ['total', 'bruto', 'importe ppal', 't. cta. cte', 't.cta.cte', 'importe', 'monto']);
+                        const companyRaw = findRowValue(r, ['empresa', 'razon social empresa']);
 
                         let company = defaultCompany;
                         if (companyRaw) {
@@ -955,11 +1008,11 @@
 
                     let totalSum = 0;
                     window.rawReal = json.map(r => {
-                        const client = findRowValue(r, ['cliente', 'razon social', 'razon', 'organizacion', 'cuenta', 'nombre', 'empresa']);
-                        const dPay = findRowValue(r, ['fecha de cobro', 'fecha cobro', 'fecha emision', 'fecha', 'cobro', 'pago', 'fecha comprobante']);
-                        const amount = findRowValue(r, ['t. cta. cte', 't.cta.cte', 'cta. cte', 'cta cte', 'total cta', 'importe cobrado', 'importe', 'cobrado', 'monto', 'haber', 'total', 'importe ppal']);
-                        const receipt = findRowValue(r, ['nro. recibo', 'nro. comprobante', 'recibo', 'comprobante', 'nro', 'numero', 'doc', 'transaccion']);
-                        const companyRaw = findRowValue(r, ['empresa', 'razon social empresa', 'unidad']);
+                        const client = findRowValue(r, ['cliente', 'razon social', 'razon', 'organizacion', 'cuenta', 'empresa']);
+                        const dPay = findRowValue(r, ['fecha de cobro', 'fecha cobro', 'fecha emision', 'fecha', 'fecha comprobante']);
+                        const amount = findRowValue(r, ['t. cta. cte', 't.cta.cte', 'cta. cte', 'importe cobrado', 'importe', 'monto', 'importe ppal']);
+                        const receipt = findRowValue(r, ['nro. recibo', 'comprobante', 'nro. comprobante', 'recibo', 'doc']);
+                        const companyRaw = findRowValue(r, ['empresa', 'razon social empresa']);
 
                         let company = defaultCompany;
                         if (companyRaw) {
@@ -999,7 +1052,6 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // NEW: Handler for Live Open Debt Snapshot (e.g. Reporte 7)
         function handleLiveDebtFile(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1018,13 +1070,13 @@
 
                     let totalSum = 0;
                     window.rawLiveDebt = json.map(r => {
-                        const client = findRowValue(r, ['cliente', 'razon social', 'razon', 'organizacion', 'nombre', 'empresa']);
-                        const inv = findRowValue(r, ['comprobante', 'nro comp', 'nro. comprobante', 'factura', 'doc-nro int']);
-                        const docCol = findRowValue(r, ['vendedor', 'documento', 'concepto']);
-                        const dEmis = findRowValue(r, ['fecha comprobante', 'fecha', 'fecha de emision', 'emision']);
-                        const dVto = findRowValue(r, ['fecha vto', 'fecha de vencimiento', 'vencimiento', 'vto']);
-                        const amount = findRowValue(r, ['importe ppal', 'total', 'bruto', 'saldo', 'importe', 'monto']);
-                        const companyRaw = findRowValue(r, ['empresa', 'razon social empresa']);
+                        const client = findRowValue(r, ['cliente', 'razon social', 'razon']);
+                        const inv = findRowValue(r, ['comprobante', 'nro comp', 'factura']);
+                        const docCol = findRowValue(r, ['documento', 'vendedor']);
+                        const dEmis = findRowValue(r, ['fecha comprobante', 'fecha']);
+                        const dVto = findRowValue(r, ['fecha vto', 'vencimiento']);
+                        const amount = findRowValue(r, ['importe ppal', 'total', 'bruto', 'saldo']);
+                        const companyRaw = findRowValue(r, ['empresa']);
 
                         let company = defaultCompany;
                         if (companyRaw) {
@@ -1110,43 +1162,92 @@
                 realToProcess = window.historicalBatches[window.activePeriod].real || [];
             }
 
-            // Calculate Historical Payment Conduct per Client (Real Days & Compliance)
-            const clientConductMap = {};
+            // Apply Company Filter to History
             const salesFilteredConduct = filterByCompanyData(salesToProcess);
             const realFilteredConduct = filterByCompanyData(realToProcess);
+
+            // Reconcile Historical Accounts for Executive Summary and Empirical Recovery Rates
+            const clientConductMap = {};
+            let historicalTotalInvoiced = 0;
+            let historicalRecoveredW1 = 0;
+            let historicalRecoveredW2 = 0;
+            let historicalRecoveredLater = 0;
 
             salesFilteredConduct.forEach(s => {
                 const normKey = normalizeClientName(s.cliente) || 'cliente_desconocido';
                 if (!clientConductMap[normKey]) clientConductMap[normKey] = { displayName: s.cliente, sales: [], real: [] };
-                clientConductMap[normKey].sales.push({ ...s, saldo: s.importe });
+                const isExcluded = !!window.excludedInvoices[s.factura];
+                
+                const dEmis = parseExcelDate(s.dEmision);
+                const dVto = parseExcelDate(s.dVto);
+
+                clientConductMap[normKey].sales.push({ 
+                    ...s, 
+                    dEmision: dEmis,
+                    dVto: dVto,
+                    saldo: isExcluded ? 0 : s.importe,
+                    estado: isExcluded ? 'Excluida' : (s.isNC ? 'Nota de Crédito' : 'Sin pago'),
+                    reciboAplicado: isExcluded ? 'Excluida manualmente' : '',
+                    isExcluded
+                });
+
+                if (!isExcluded && s.importe > 0) {
+                    historicalTotalInvoiced += s.importe;
+                }
             });
 
             realFilteredConduct.forEach(r => {
                 const normKey = normalizeClientName(r.cliente) || 'cliente_desconocido';
                 if (!clientConductMap[normKey]) clientConductMap[normKey] = { displayName: r.cliente, sales: [], real: [] };
-                clientConductMap[normKey].real.push({ ...r });
+                clientConductMap[normKey].real.push({ ...r, fechaCobro: parseExcelDate(r.fechaCobro) });
             });
 
+            const invoiceDetailsHistory = [];
             const clientConductStats = {};
+
             Object.keys(clientConductMap).forEach(normKey => {
                 const group = clientConductMap[normKey];
-                const agreedDays = getClientAgreedDays(group.displayName);
+                const clientName = group.displayName;
+                const agreedDays = getClientAgreedDays(clientName);
 
-                let realPayDaysSum = 0, realPayCount = 0;
-                let totalSales = group.sales.reduce((sum, i) => sum + i.importe, 0);
+                // Apply Credit Notes
+                let creditNotesTotal = group.sales.filter(s => s.importe < 0 && !s.isExcluded).reduce((sum, s) => sum + Math.abs(s.importe), 0);
+                if (creditNotesTotal > 0) {
+                    group.sales.filter(s => s.importe > 0 && !s.isExcluded).forEach(s => {
+                        if (creditNotesTotal <= 0) return;
+                        if (creditNotesTotal >= s.saldo) { creditNotesTotal -= s.saldo; s.saldo = 0; s.estado = 'Pagada'; s.reciboAplicado = 'Acred. N/C'; } 
+                        else { s.saldo -= creditNotesTotal; s.estado = 'Pago parcial'; s.reciboAplicado = 'Desc. N/C parcial'; creditNotesTotal = 0; }
+                    });
+                }
+
+                let totalSales = group.sales.filter(s => !s.isExcluded).reduce((sum, i) => sum + i.importe, 0);
                 let totalReal = group.real.reduce((sum, r) => sum + r.importeCobrado, 0);
 
+                let realPayDaysSum = 0, realPayCount = 0;
+
+                // Match Receipts and Calculate Empirical Weekly Recovery
                 group.real.forEach(rec => {
-                    let amt = rec.importeCobrado;
+                    let amountToApply = rec.importeCobrado;
                     for (let s of group.sales) {
-                        if (s.saldo <= 0) continue;
-                        if (amt <= 0) break;
-                        if (amt >= s.saldo) {
-                            amt -= s.saldo; s.saldo = 0;
-                            const diffDays = Math.round((parseExcelDate(rec.fechaCobro) - parseExcelDate(s.dEmision)) / (86400 * 1000));
+                        if (s.isExcluded || s.saldo <= 0) continue;
+                        if (amountToApply <= 0) break;
+
+                        const diffDays = Math.round((rec.fechaCobro - s.dEmision) / (86400 * 1000));
+                        const appliedAmt = Math.min(amountToApply, s.saldo);
+
+                        if (diffDays <= 7) {
+                            historicalRecoveredW1 += appliedAmt;
+                        } else if (diffDays <= 14) {
+                            historicalRecoveredW2 += appliedAmt;
+                        } else {
+                            historicalRecoveredLater += appliedAmt;
+                        }
+
+                        if (amountToApply >= s.saldo) {
+                            amountToApply -= s.saldo; s.saldo = 0; s.estado = 'Pagada'; s.reciboAplicado = rec.recibo; s.fechaCobro = rec.fechaCobro;
                             if (!isNaN(diffDays) && diffDays >= 0) { realPayDaysSum += diffDays; realPayCount++; }
                         } else {
-                            s.saldo -= amt; amt = 0;
+                            s.saldo -= amountToApply; s.estado = 'Pago parcial'; s.reciboAplicado = rec.recibo; s.fechaCobro = rec.fechaCobro; amountToApply = 0;
                         }
                     }
                 });
@@ -1155,21 +1256,34 @@
                 const compliancePct = totalSales > 0 ? Math.min(100, Math.round((totalReal / totalSales) * 100)) : 100;
 
                 clientConductStats[normKey] = {
-                    displayName: group.displayName,
+                    displayName: clientName,
                     agreedDays,
                     avgRealDays,
                     compliancePct,
                     totalSales,
                     totalReal
                 };
+
+                group.sales.forEach(s => invoiceDetailsHistory.push(s));
             });
 
-            // Reconcile Invoice Details
+            // Calculate Historical Empirical Percentages
+            const empiricalW1Rate = historicalTotalInvoiced > 0 ? Math.min(0.9, historicalRecoveredW1 / historicalTotalInvoiced) : 0.5;
+            const empiricalW2Rate = historicalTotalInvoiced > 0 ? Math.min(0.5, historicalRecoveredW2 / historicalTotalInvoiced) : 0.3;
+            const empiricalLaterRate = historicalTotalInvoiced > 0 ? Math.min(0.3, historicalRecoveredLater / historicalTotalInvoiced) : 0.2;
+
+            window.empiricalRates = {
+                w1: Math.max(0.2, empiricalW1Rate),
+                w2: Math.max(0.1, empiricalW2Rate),
+                later: Math.max(0.05, empiricalLaterRate)
+            };
+
+            // Reconcile Active Open Invoices for Route and Forecast
             let finalInvoiceList = [];
             const hasLiveSnapshot = window.rawLiveDebt && window.rawLiveDebt.length > 0;
 
             if (hasLiveSnapshot) {
-                // Hybrid Mode: Live Open Debt Snapshot determines current open balance
+                // Live Open Debt Snapshot Mode
                 let liveFiltered = filterByCompanyData(window.rawLiveDebt);
                 finalInvoiceList = liveFiltered.map(i => {
                     const isExcluded = !!window.excludedInvoices[i.factura];
@@ -1187,45 +1301,7 @@
                 if (syncBanner) syncBanner.classList.remove('hidden');
                 if (syncBannerMonto) syncBannerMonto.textContent = formatMoney(liveTotal);
             } else {
-                // Standard Reconciliation Mode
-                const clientsMap = {};
-                salesFilteredConduct.forEach(s => {
-                    const normKey = normalizeClientName(s.cliente) || 'cliente_desconocido';
-                    if (!clientsMap[normKey]) clientsMap[normKey] = { displayName: s.cliente, sales: [], real: [] };
-                    const isExcluded = !!window.excludedInvoices[s.factura];
-                    clientsMap[normKey].sales.push({ ...s, dEmision: parseExcelDate(s.dEmision), dVto: parseExcelDate(s.dVto), saldo: isExcluded ? 0 : s.importe, estado: isExcluded ? 'Excluida' : (s.isNC ? 'Nota de Crédito' : 'Sin pago'), reciboAplicado: isExcluded ? 'Excluida manualmente' : '', isExcluded });
-                });
-
-                realFilteredConduct.forEach(r => {
-                    const normKey = normalizeClientName(r.cliente) || 'cliente_desconocido';
-                    if (!clientsMap[normKey]) clientsMap[normKey] = { displayName: r.cliente, sales: [], real: [] };
-                    clientsMap[normKey].real.push({ ...r, fechaCobro: parseExcelDate(r.fechaCobro) });
-                });
-
-                Object.keys(clientsMap).forEach(normKey => {
-                    const group = clientsMap[normKey];
-                    let creditNotesTotal = group.sales.filter(s => s.importe < 0 && !s.isExcluded).reduce((sum, s) => sum + Math.abs(s.importe), 0);
-                    if (creditNotesTotal > 0) {
-                        group.sales.filter(s => s.importe > 0 && !s.isExcluded).forEach(s => {
-                            if (creditNotesTotal <= 0) return;
-                            if (creditNotesTotal >= s.saldo) { creditNotesTotal -= s.saldo; s.saldo = 0; s.estado = 'Pagada'; s.reciboAplicado = 'Acred. N/C'; } 
-                            else { s.saldo -= creditNotesTotal; s.estado = 'Pago parcial'; s.reciboAplicado = 'Desc. N/C parcial'; creditNotesTotal = 0; }
-                        });
-                    }
-
-                    group.real.forEach(rec => {
-                        let amountToApply = rec.importeCobrado;
-                        for (let s of group.sales) {
-                            if (s.isExcluded || s.saldo <= 0) continue;
-                            if (amountToApply <= 0) break;
-                            if (amountToApply >= s.saldo) { amountToApply -= s.saldo; s.saldo = 0; s.estado = 'Pagada'; s.reciboAplicado = rec.recibo; } 
-                            else { s.saldo -= amountToApply; s.estado = 'Pago parcial'; s.reciboAplicado = rec.recibo; amountToApply = 0; }
-                        }
-                    });
-
-                    group.sales.forEach(s => finalInvoiceList.push(s));
-                });
-
+                finalInvoiceList = invoiceDetailsHistory;
                 const syncBanner = document.getElementById('sync-banner');
                 if (syncBanner) syncBanner.classList.add('hidden');
             }
@@ -1259,7 +1335,7 @@
                 });
             });
 
-            window.reconciliationResult = { invoiceDetails: finalInvoiceList, clientSummaries };
+            window.reconciliationResult = { invoiceDetails: finalInvoiceList, invoiceDetailsHistory, clientSummaries };
 
             renderKPIs();
             renderCharts();
@@ -1390,9 +1466,11 @@
 
         function renderKPIs() {
             if (!window.reconciliationResult) return;
-            const { invoiceDetails, clientSummaries } = window.reconciliationResult;
+            const { invoiceDetails, invoiceDetailsHistory, clientSummaries } = window.reconciliationResult;
 
-            const totalFacturado = invoiceDetails.filter(i => !i.isExcluded).reduce((sum, i) => sum + (i.importe || 0), 0);
+            const activeHistory = invoiceDetailsHistory || invoiceDetails;
+
+            const totalFacturado = activeHistory.filter(i => !i.isExcluded).reduce((sum, i) => sum + (i.importe || 0), 0);
             const totalPendiente = invoiceDetails.filter(i => !i.isExcluded).reduce((sum, i) => sum + (i.saldo || 0), 0);
             
             let totalCobrado = 0;
@@ -1415,7 +1493,7 @@
             if (elemFact) elemFact.textContent = formatMoney(totalFacturado);
             
             const elemFactCount = document.getElementById('kpi-facturas-count');
-            if (elemFactCount) elemFactCount.textContent = `${invoiceDetails.filter(i => !i.isExcluded).length} Comprobantes activos`;
+            if (elemFactCount) elemFactCount.textContent = `${activeHistory.filter(i => !i.isExcluded).length} Comprobantes cargados`;
 
             const elemCobr = document.getElementById('kpi-cobrado');
             if (elemCobr) elemCobr.textContent = formatMoney(totalCobrado);
@@ -1435,13 +1513,15 @@
 
         function renderCharts() {
             if (!window.reconciliationResult) return;
-            const { invoiceDetails } = window.reconciliationResult;
+            const { invoiceDetailsHistory, invoiceDetails } = window.reconciliationResult;
+
+            const targetList = invoiceDetailsHistory || invoiceDetails;
 
             // 1. Chart Status (Doughnut)
             const canvasStatus = document.getElementById('chart-status');
             if (canvasStatus) {
                 const statusCounts = { 'Pagada': 0, 'Pago parcial': 0, 'Sin pago': 0, 'Nota de Crédito': 0, 'Excluida': 0 };
-                invoiceDetails.forEach(i => {
+                targetList.forEach(i => {
                     statusCounts[i.estado] = (statusCounts[i.estado] || 0) + 1;
                 });
 
@@ -1464,7 +1544,7 @@
             const canvasSellers = document.getElementById('chart-sellers');
             if (canvasSellers) {
                 const sellerMap = {};
-                invoiceDetails.filter(i => !i.isExcluded).forEach(i => {
+                targetList.filter(i => !i.isExcluded).forEach(i => {
                     const v = i.vendedor || 'General';
                     if (!sellerMap[v]) sellerMap[v] = { facturado: 0, cobrado: 0 };
                     sellerMap[v].facturado += (i.importe || 0);
@@ -1716,7 +1796,9 @@
 
         function renderImputationTable() {
             if (!window.reconciliationResult) return;
-            const { invoiceDetails } = window.reconciliationResult;
+            const { invoiceDetailsHistory, invoiceDetails } = window.reconciliationResult;
+            
+            const targetList = invoiceDetailsHistory || invoiceDetails;
             const tbody = document.getElementById('tbody-imputation');
             if (!tbody) return;
             tbody.innerHTML = '';
@@ -1727,7 +1809,7 @@
             const searchInput = document.getElementById('search-imputation');
             const search = searchInput ? searchInput.value.toLowerCase() : '';
 
-            const filtered = invoiceDetails.filter(i => {
+            const filtered = targetList.filter(i => {
                 const matchStatus = statusFilter === 'ALL' || i.estado === statusFilter;
                 const matchSearch = i.cliente.toLowerCase().includes(search) || i.factura.toLowerCase().includes(search);
                 return matchStatus && matchSearch;
@@ -1880,9 +1962,26 @@
             const totalPendingAll = openInvoices.reduce((sum, i) => sum + i.saldo, 0);
             const today = new Date();
 
-            let thisWeekAmt = 0, thisWeekCnt = 0, thisWeekCash = 0, thisWeekBank = 0;
-            let nextWeekAmt = 0, nextWeekCnt = 0, nextWeekCash = 0, nextWeekBank = 0;
-            let laterAmt = 0, laterCnt = 0, laterCash = 0, laterBank = 0;
+            // Calculate Historical Empirical Recovery Factor
+            const emp = window.empiricalRates || { w1: 0.5, w2: 0.3, later: 0.2 };
+
+            // Update Empirical Display Badges
+            if (document.getElementById('empirical-rate-w1')) document.getElementById('empirical-rate-w1').textContent = `${Math.round(emp.w1 * 100)}% de cobro real`;
+            if (document.getElementById('empirical-rate-w2')) document.getElementById('empirical-rate-w2').textContent = `${Math.round(emp.w2 * 100)}% de cobro real`;
+            if (document.getElementById('empirical-rate-later')) document.getElementById('empirical-rate-later').textContent = `${Math.round(emp.later * 100)}% de cobro real`;
+
+            // Read Selected Model Mode
+            const modelModeElem = document.getElementById('filter-recovery-rate');
+            const modelMode = modelModeElem ? modelModeElem.value : 'REAL';
+
+            let factorW1 = emp.w1, factorW2 = emp.w2, factorLater = emp.later;
+            if (modelMode === 'TARGET_60') { factorW1 = 0.60; factorW2 = 0.25; factorLater = 0.15; }
+            else if (modelMode === 'TARGET_70') { factorW1 = 0.70; factorW2 = 0.20; factorLater = 0.10; }
+            else if (modelMode === 'FULL') { factorW1 = 1.0; factorW2 = 1.0; factorLater = 1.0; }
+
+            let thisWeekRaw = 0, thisWeekCnt = 0, thisWeekCash = 0, thisWeekBank = 0;
+            let nextWeekRaw = 0, nextWeekCnt = 0, nextWeekCash = 0, nextWeekBank = 0;
+            let laterRaw = 0, laterCnt = 0, laterCash = 0, laterBank = 0;
 
             const predictions = [];
 
@@ -1903,23 +2002,23 @@
 
                 if (!isNaN(daysDiff) && daysDiff <= 7) {
                     bucket = 'THIS_WEEK';
-                    thisWeekAmt += inv.saldo;
+                    thisWeekRaw += inv.saldo;
                     thisWeekCnt++;
-                    if (isCapacitacion) thisWeekCash += inv.saldo;
-                    else thisWeekBank += inv.saldo;
+                    if (isCapacitacion) thisWeekCash += inv.saldo * factorW1;
+                    else thisWeekBank += inv.saldo * factorW1;
                     action = 'Enviar recordatorio / Contactar esta semana.';
                 } else if (!isNaN(daysDiff) && daysDiff <= 14) {
                     bucket = 'NEXT_WEEK';
-                    nextWeekAmt += inv.saldo;
+                    nextWeekRaw += inv.saldo;
                     nextWeekCnt++;
-                    if (isCapacitacion) nextWeekCash += inv.saldo;
-                    else nextWeekBank += inv.saldo;
+                    if (isCapacitacion) nextWeekCash += inv.saldo * factorW2;
+                    else nextWeekBank += inv.saldo * factorW2;
                     action = 'Confirmar fecha pactada para próxima semana.';
                 } else {
-                    laterAmt += inv.saldo;
+                    laterRaw += inv.saldo;
                     laterCnt++;
-                    if (isCapacitacion) laterCash += inv.saldo;
-                    else laterBank += inv.saldo;
+                    if (isCapacitacion) laterCash += inv.saldo * factorLater;
+                    else laterBank += inv.saldo * factorLater;
                 }
 
                 let dynamicProb = compliancePct;
@@ -1944,20 +2043,25 @@
                 });
             });
 
+            // Apply Empirical Factors to Totals
+            const thisWeekAmt = thisWeekRaw * factorW1;
+            const nextWeekAmt = nextWeekRaw * factorW2;
+            const laterAmt = laterRaw * factorLater;
+
             const thisWeekPct = totalPendingAll > 0 ? Math.round((thisWeekAmt / totalPendingAll) * 100) : 0;
             const nextWeekPct = totalPendingAll > 0 ? Math.round((nextWeekAmt / totalPendingAll) * 100) : 0;
             const laterPct = totalPendingAll > 0 ? Math.round((laterAmt / totalPendingAll) * 100) : 0;
 
             if (document.getElementById('pred-this-week-amount')) document.getElementById('pred-this-week-amount').textContent = formatMoney(thisWeekAmt);
-            if (document.getElementById('pred-this-week-count')) document.getElementById('pred-this-week-count').textContent = `${thisWeekCnt} Facturas esperadas (${thisWeekPct}% del saldo pendiente)`;
+            if (document.getElementById('pred-this-week-count')) document.getElementById('pred-this-week-count').textContent = `${thisWeekCnt} Facturas esperadas (${thisWeekPct}% del saldo a tasa ${Math.round(factorW1*100)}%)`;
             if (document.getElementById('pred-this-week-breakdown')) document.getElementById('pred-this-week-breakdown').textContent = `💵 Efectivo: ${formatMoney(thisWeekCash)} | 🏦 Bancos: ${formatMoney(thisWeekBank)}`;
 
             if (document.getElementById('pred-next-week-amount')) document.getElementById('pred-next-week-amount').textContent = formatMoney(nextWeekAmt);
-            if (document.getElementById('pred-next-week-count')) document.getElementById('pred-next-week-count').textContent = `${nextWeekCnt} Facturas esperadas (${nextWeekPct}% del saldo pendiente)`;
+            if (document.getElementById('pred-next-week-count')) document.getElementById('pred-next-week-count').textContent = `${nextWeekCnt} Facturas esperadas (${nextWeekPct}% del saldo a tasa ${Math.round(factorW2*100)}%)`;
             if (document.getElementById('pred-next-week-breakdown')) document.getElementById('pred-next-week-breakdown').textContent = `💵 Efectivo: ${formatMoney(nextWeekCash)} | 🏦 Bancos: ${formatMoney(nextWeekBank)}`;
 
             if (document.getElementById('pred-later-amount')) document.getElementById('pred-later-amount').textContent = formatMoney(laterAmt);
-            if (document.getElementById('pred-later-count')) document.getElementById('pred-later-count').textContent = `${laterCnt} Facturas esperadas (${laterPct}% del saldo pendiente)`;
+            if (document.getElementById('pred-later-count')) document.getElementById('pred-later-count').textContent = `${laterCnt} Facturas esperadas (${laterPct}% del saldo a tasa ${Math.round(factorLater*100)}%)`;
             if (document.getElementById('pred-later-breakdown')) document.getElementById('pred-later-breakdown').textContent = `💵 Efectivo: ${formatMoney(laterCash)} | 🏦 Bancos: ${formatMoney(laterBank)}`;
 
             const tbody = document.getElementById('tbody-predictions');
@@ -2016,7 +2120,7 @@
 
                     let count = 0;
                     json.forEach(r => {
-                        const client = findRowValue(r, ['cliente', 'razon', 'nombre', 'empresa', 'organizacion']);
+                        const client = findRowValue(r, ['cliente', 'razon social', 'razon', 'empresa', 'organizacion']);
                         const termRaw = findRowValue(r, ['condicion', 'plazo', 'dias', 'pago']);
                         const mercadoRaw = findRowValue(r, ['mercado', 'tipo de cliente', 'tipo', 'categoria', 'canal', 'clasificacion', 'rubro']);
                         
@@ -2193,23 +2297,19 @@
 
         function loadDemoDataset() {
             const demoSales = [
-                { cliente: 'DESARROLLOS DEPORTIVOS SP S.R.L', factura: 'A-00135-00000101', documento: 'RTO 52 - Factura B', dEmision: new Date(2026, 0, 4), dVto: new Date(2026, 7, 14), importe: 24000000.00, isNC: false, empresa: 'GANADERA NORTE NEUQUINO' },
-                { cliente: 'DESARROLLOS DEPORTIVOS SP S.R.L', factura: 'A-00135-00000181', documento: 'RTO 52 - Factura B', dEmision: new Date(2026, 4, 28), dVto: new Date(2026, 7, 14), importe: 11088000.00, isNC: false, empresa: 'GANADERA NORTE NEUQUINO' },
-                { cliente: 'CLIENTE EVENTOS EFECTIVO', factura: 'CAP-001-88', documento: 'RTO 90 - Venta Efectivo', dEmision: new Date(2026, 6, 10), dVto: new Date(2026, 7, 10), importe: 18500000.00, isNC: false, empresa: 'Capacitación' }
+                { cliente: 'CALFUQUEO HORACIO', factura: 'B-00157-00001255', documento: 'RTO 57 - 3944', dEmision: new Date(2026, 5, 16), dVto: new Date(2026, 5, 23), importe: 20623.90, isNC: false, empresa: 'GANADERA NORTE NEUQUINO' },
+                { cliente: 'VIDAL AMSESIL ELDER', factura: 'X-99999-00003977', documento: 'RTO 44 - 4549', dEmision: new Date(2026, 5, 25), dVto: new Date(2026, 5, 26), importe: 3207434.18, isNC: false, empresa: 'Capacitación' }
             ];
-            const demoReal = [
-                { cliente: 'DESARROLLOS DEPORTIVOS SP S.R.L', fechaCobro: new Date(2026, 6, 28), importeCobrado: 11088000.00, recibo: 'R-0037-00000738', empresa: 'GANADERA NORTE NEUQUINO' },
-                { cliente: 'CLIENTE EVENTOS EFECTIVO', fechaCobro: new Date(2026, 6, 12), importeCobrado: 18500000.00, recibo: 'REC-CAP-12', empresa: 'Capacitación' }
-            ];
+            const demoReal = [];
 
             window.historicalBatches['2026-07'] = { sales: demoSales, real: demoReal };
-            window.clientMasterTerms[normalizeClientName('DESARROLLOS DEPORTIVOS SP S.R.L')] = { days: 30, type: 'Deportes' };
-            window.clientMasterTerms[normalizeClientName('CLIENTE EVENTOS EFECTIVO')] = { days: 0, type: 'Eventos' };
+            window.clientMasterTerms[normalizeClientName('CALFUQUEO HORACIO')] = { days: 7, type: 'Zapala' };
+            window.clientMasterTerms[normalizeClientName('VIDAL AMSESIL ELDER')] = { days: 1, type: 'San Martin' };
 
             updatePeriodSelectors('2026-07');
             window.activePeriod = '2026-07';
             runReconciliation();
-            showToast('Demo Multiempresa (Ganadera + Capacitación) cargada.', 'success');
+            showToast('Datos de demo corregidos cargados.', 'success');
         }
     </script>
 </body>
