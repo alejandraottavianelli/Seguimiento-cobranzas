@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Módulo Multiempresa de Conciliación, Plazos Reales y Cash Flow</title>
+    <title>Módulo Multiempresa de Conciliación, Plazos Reales y Cash Flow Híbrido</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -99,7 +99,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 py-1">
                 <button onclick="switchTab('tab-upload')" id="nav-tab-upload" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-white bg-slate-700 shadow-sm flex items-center">
                     <svg class="w-4 h-4 mr-1.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                    1. Cargar Archivos
+                    1. Cargar Archivos & Saldos
                 </button>
                 <button onclick="switchTab('tab-executive')" id="nav-tab-executive" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center">
                     <svg class="w-4 h-4 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 30.555A9.001 9.001 0 1020 12h-9v8.555z"></path></svg>
@@ -140,9 +140,9 @@
                     <div>
                         <h2 class="text-lg font-bold text-slate-800 flex items-center">
                             <svg class="w-5 h-5 mr-2 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                            Importación Multiempresa (Ganadera & Capacitación)
+                            Importación Multiempresa (3 Archivos de Gestión Lunes)
                         </h2>
-                        <p class="text-xs text-slate-500 mt-1">Lee la columna <code class="bg-slate-100 px-1 py-0.5 rounded text-brand-700 font-bold">Empresa</code> de Finnegans o asigna la empresa por defecto.</p>
+                        <p class="text-xs text-slate-500 mt-1">Cargue el historial de Facturas + Cobranzas para inteligencia, y el Reporte de Deuda Viva para saldos exactos.</p>
                     </div>
                     
                     <div class="flex items-center space-x-3 bg-slate-50 p-2 rounded-lg border border-slate-200">
@@ -154,42 +154,56 @@
                             </select>
                         </div>
                         <label class="text-xs font-semibold text-slate-600">Período:</label>
-                        <input type="month" id="upload-period-input" value="2026-07" class="bg-white border border-slate-300 text-xs rounded-md px-2 py-1 font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <input type="month" id="upload-period-input" value="2026-08" class="bg-white border border-slate-300 text-xs rounded-md px-2 py-1 font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Invoices Drop Area -->
-                    <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-brand-500 transition-colors bg-slate-50/50 flex flex-col items-center justify-center min-h-[180px]">
-                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-3">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <!-- 1. Invoices Drop Area -->
+                    <div class="border-2 border-dashed border-slate-300 rounded-xl p-5 text-center hover:border-brand-500 transition-colors bg-slate-50/50 flex flex-col items-center justify-center min-h-[180px]">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         </div>
-                        <h3 class="text-sm font-semibold text-slate-800 mb-1">Facturas, Ventas y Notas de Crédito</h3>
-                        <p class="text-xs text-slate-500 mb-4 max-w-xs">Comprobantes de Ganadera o Capacitación (Soporta archivos Excel o planillas manuales)</p>
-                        <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium px-4 py-2 border border-slate-300 rounded-lg shadow-sm transition">
-                            <span id="sales-filename">Seleccionar "Facturas de venta"</span>
+                        <h3 class="text-xs font-bold text-slate-800 mb-1">1. Facturas Emitidas</h3>
+                        <p class="text-[11px] text-slate-500 mb-3 max-w-xs">Análisis de Facturación (Ene-Ago)</p>
+                        <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium px-3 py-1.5 border border-slate-300 rounded-lg shadow-sm transition">
+                            <span id="sales-filename">Seleccionar Facturas...</span>
                             <input type="file" id="sales-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleSalesFile(event)">
                         </label>
-                        <div id="sales-status" class="mt-3 text-xs text-emerald-600 font-medium hidden"></div>
+                        <div id="sales-status" class="mt-2 text-[11px] text-emerald-600 font-semibold hidden"></div>
                     </div>
 
-                    <!-- Receipts Drop Area -->
-                    <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-emerald-500 transition-colors bg-slate-50/50 flex flex-col items-center justify-center min-h-[180px]">
-                        <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-3">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <!-- 2. Receipts Drop Area -->
+                    <div class="border-2 border-dashed border-slate-300 rounded-xl p-5 text-center hover:border-emerald-500 transition-colors bg-slate-50/50 flex flex-col items-center justify-center min-h-[180px]">
+                        <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         </div>
-                        <h3 class="text-sm font-semibold text-slate-800 mb-1">Cobranzas Recibidas (Recibos / Efectivo)</h3>
-                        <p class="text-xs text-slate-500 mb-4 max-w-xs">Informe de Cobranzas / Recibos (Lee columna <code class="bg-slate-100 px-1 py-0.5 text-indigo-700 font-bold">T. cta. cte.</code>)</p>
-                        <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium px-4 py-2 border border-slate-300 rounded-lg shadow-sm transition">
-                            <span id="real-filename">Seleccionar "Cobranzas"</span>
+                        <h3 class="text-xs font-bold text-slate-800 mb-1">2. Cobranzas Recibidas</h3>
+                        <p class="text-[11px] text-slate-500 mb-3 max-w-xs">Recibos de Cobro (Lee <code class="bg-slate-100 px-1 py-0.5 text-indigo-700 font-bold">T. cta. cte.</code>)</p>
+                        <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium px-3 py-1.5 border border-slate-300 rounded-lg shadow-sm transition">
+                            <span id="real-filename">Seleccionar Cobranzas...</span>
                             <input type="file" id="real-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleRealFile(event)">
                         </label>
-                        <div id="real-status" class="mt-3 text-xs text-emerald-600 font-medium hidden"></div>
+                        <div id="real-status" class="mt-2 text-[11px] text-emerald-600 font-semibold hidden"></div>
+                    </div>
+
+                    <!-- 3. NEW: Live Debt Snapshot Drop Area -->
+                    <div class="border-2 border-dashed border-amber-300 rounded-xl p-5 text-center hover:border-amber-500 transition-colors bg-amber-50/40 flex flex-col items-center justify-center min-h-[180px]">
+                        <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        </div>
+                        <h3 class="text-xs font-bold text-amber-900 mb-1">3. Deuda Viva en la Calle (Lunes)</h3>
+                        <p class="text-[11px] text-amber-700 mb-3 max-w-xs">Foto Oficial Finnegans (ej. <code class="font-bold">Reporte (7).xlsx</code>)</p>
+                        <label class="cursor-pointer bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition">
+                            <span id="live-debt-filename">Cargar Reporte Deuda...</span>
+                            <input type="file" id="live-debt-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleLiveDebtFile(event)">
+                        </label>
+                        <div id="live-debt-status" class="mt-2 text-[11px] text-amber-800 font-bold hidden"></div>
                     </div>
                 </div>
 
                 <!-- Run Process Button & History Badges -->
-                <div class="mt-6 pt-6 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="pt-6 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-xs font-semibold text-slate-500">Historial de Períodos Cargados:</span>
@@ -210,6 +224,15 @@
 
         <!-- Executive Dashboard Tab -->
         <section id="tab-executive" class="space-y-6 hidden">
+            <!-- Sync Notification Banner -->
+            <div id="sync-banner" class="bg-amber-50 border border-amber-200 rounded-xl p-3 flex justify-between items-center hidden text-xs text-amber-900 font-semibold">
+                <span class="flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Sincronizado con Reporte Oficial de Deuda Viva en la Calle (Finnegans)
+                </span>
+                <span id="sync-banner-monto" class="font-bold text-amber-800">$ 0</span>
+            </div>
+
             <!-- Top KPI Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
@@ -236,7 +259,7 @@
 
                 <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Monto Pendiente</p>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Deuda Viva en la Calle</p>
                         <h3 id="kpi-pendiente" class="text-2xl font-black text-rose-600 mt-1">$ 0</h3>
                         <p id="kpi-recupero-pct" class="text-xs text-slate-500 mt-1">Recuperación: 0%</p>
                     </div>
@@ -616,6 +639,7 @@
         // GLOBAL STATE
         window.rawSales = [];
         window.rawReal = [];
+        window.rawLiveDebt = []; // Live Debt Report (e.g. Reporte 7)
         window.clientMasterTerms = {}; 
         window.historicalBatches = {}; 
         window.excludedInvoices = {}; 
@@ -714,7 +738,7 @@
             const headerKeywords = [
                 'cliente', 'razon', 'comprobante', 'fecha', 't. cta', 'cta. cte', 
                 't.cta.cte', 'importe', 'monto', 'recibo', 'total', 'organizacion', 
-                'haber', 'cuenta', 'vendedor', 'emision', 'vencimiento', 'mercado', 'condicion', 'plazo', 'documento', 'nro comp', 'bruto', 'empresa'
+                'haber', 'cuenta', 'vendedor', 'emision', 'vencimiento', 'mercado', 'condicion', 'plazo', 'documento', 'nro comp', 'bruto', 'empresa', 'importe ppal'
             ];
 
             let maxMatchCount = 0;
@@ -861,9 +885,9 @@
                         const client = findRowValue(r, ['cliente', 'razon social', 'razon', 'organizacion', 'nombre', 'empresa', 'cuenta', 'comprador']);
                         const inv = findRowValue(r, ['nro comp', 'nro. comprobante', 'comprobante', 'factura', 'nro', 'numero', 'doc']);
                         const docCol = findRowValue(r, ['documento', 'vendedor', 'concepto', 'tipo']);
-                        const dEmis = findRowValue(r, ['fecha', 'fecha de emision', 'fecha emision', 'emision', 'f. emision']);
-                        const dVto = findRowValue(r, ['fecha de vencimiento', 'fecha vencimiento', 'vencimiento', 'vto', 'f. vto']);
-                        const amount = findRowValue(r, ['total', 'bruto', 't. cta. cte', 't.cta.cte', 'cta. cte', 'cta cte', 'importe con iva', 'importe', 'monto']);
+                        const dEmis = findRowValue(r, ['fecha', 'fecha de emision', 'fecha emision', 'emision', 'f. emision', 'fecha comprobante']);
+                        const dVto = findRowValue(r, ['fecha de vencimiento', 'fecha vencimiento', 'vencimiento', 'vto', 'f. vto', 'fecha vto']);
+                        const amount = findRowValue(r, ['total', 'bruto', 't. cta. cte', 't.cta.cte', 'cta. cte', 'cta cte', 'importe con iva', 'importe', 'monto', 'importe ppal']);
                         const companyRaw = findRowValue(r, ['empresa', 'razon social empresa', 'unidad']);
 
                         let company = defaultCompany;
@@ -932,8 +956,8 @@
                     let totalSum = 0;
                     window.rawReal = json.map(r => {
                         const client = findRowValue(r, ['cliente', 'razon social', 'razon', 'organizacion', 'cuenta', 'nombre', 'empresa']);
-                        const dPay = findRowValue(r, ['fecha de cobro', 'fecha cobro', 'fecha emision', 'fecha', 'cobro', 'pago']);
-                        const amount = findRowValue(r, ['t. cta. cte', 't.cta.cte', 'cta. cte', 'cta cte', 'total cta', 'importe cobrado', 'importe', 'cobrado', 'monto', 'haber', 'total']);
+                        const dPay = findRowValue(r, ['fecha de cobro', 'fecha cobro', 'fecha emision', 'fecha', 'cobro', 'pago', 'fecha comprobante']);
+                        const amount = findRowValue(r, ['t. cta. cte', 't.cta.cte', 'cta. cte', 'cta cte', 'total cta', 'importe cobrado', 'importe', 'cobrado', 'monto', 'haber', 'total', 'importe ppal']);
                         const receipt = findRowValue(r, ['nro. recibo', 'nro. comprobante', 'recibo', 'comprobante', 'nro', 'numero', 'doc', 'transaccion']);
                         const companyRaw = findRowValue(r, ['empresa', 'razon social empresa', 'unidad']);
 
@@ -970,6 +994,78 @@
                 } catch (err) {
                     console.error(err);
                     showToast('Error al leer archivo de Cobranzas.', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // NEW: Handler for Live Open Debt Snapshot (e.g. Reporte 7)
+        function handleLiveDebtFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const liveElem = document.getElementById('live-debt-filename');
+            if (liveElem) liveElem.textContent = file.name;
+
+            const defaultCompany = document.getElementById('upload-default-company')?.value || 'GANADERA NORTE NEUQUINO';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = parseExcelSheet(sheet);
+
+                    let totalSum = 0;
+                    window.rawLiveDebt = json.map(r => {
+                        const client = findRowValue(r, ['cliente', 'razon social', 'razon', 'organizacion', 'nombre', 'empresa']);
+                        const inv = findRowValue(r, ['comprobante', 'nro comp', 'nro. comprobante', 'factura', 'doc-nro int']);
+                        const docCol = findRowValue(r, ['vendedor', 'documento', 'concepto']);
+                        const dEmis = findRowValue(r, ['fecha comprobante', 'fecha', 'fecha de emision', 'emision']);
+                        const dVto = findRowValue(r, ['fecha vto', 'fecha de vencimiento', 'vencimiento', 'vto']);
+                        const amount = findRowValue(r, ['importe ppal', 'total', 'bruto', 'saldo', 'importe', 'monto']);
+                        const companyRaw = findRowValue(r, ['empresa', 'razon social empresa']);
+
+                        let company = defaultCompany;
+                        if (companyRaw) {
+                            const cStr = String(companyRaw).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                            if (cStr.includes('capacitacion')) {
+                                company = 'Capacitación';
+                            } else if (cStr.includes('ganadera')) {
+                                company = 'GANADERA NORTE NEUQUINO';
+                            } else {
+                                company = String(companyRaw).trim();
+                            }
+                        }
+
+                        const parsedAmount = parseMoney(amount);
+                        totalSum += parsedAmount;
+
+                        return {
+                            cliente: String(client || 'CLIENTE S/D').trim(),
+                            factura: String(inv || 'F-000').trim(),
+                            documento: String(docCol || ''),
+                            vendedor: extractSellerFromDocument(docCol),
+                            dEmision: parseExcelDate(dEmis),
+                            dVto: parseExcelDate(dVto),
+                            importe: parsedAmount,
+                            saldo: parsedAmount,
+                            estado: 'Sin pago',
+                            empresa: company,
+                            isLiveSnapshot: true
+                        };
+                    });
+
+                    const statusElem = document.getElementById('live-debt-status');
+                    if (statusElem) {
+                        statusElem.textContent = `✓ ${window.rawLiveDebt.length} saldos de calle leídos (${formatMoney(totalSum)})`;
+                        statusElem.classList.remove('hidden');
+                    }
+                    showToast(`Saldos Abiertos de Finnegans cargados: ${formatMoney(totalSum)}.`, 'success');
+                    runReconciliation();
+                } catch (err) {
+                    console.error(err);
+                    showToast('Error al leer Reporte de Deuda Viva.', 'error');
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -1014,113 +1110,43 @@
                 realToProcess = window.historicalBatches[window.activePeriod].real || [];
             }
 
-            // Apply Company Filter
-            salesToProcess = filterByCompanyData(salesToProcess);
-            realToProcess = filterByCompanyData(realToProcess);
+            // Calculate Historical Payment Conduct per Client (Real Days & Compliance)
+            const clientConductMap = {};
+            const salesFilteredConduct = filterByCompanyData(salesToProcess);
+            const realFilteredConduct = filterByCompanyData(realToProcess);
 
-            const clientsMap = {};
-
-            salesToProcess.forEach(s => {
+            salesFilteredConduct.forEach(s => {
                 const normKey = normalizeClientName(s.cliente) || 'cliente_desconocido';
-                if (!clientsMap[normKey]) {
-                    clientsMap[normKey] = { displayName: s.cliente, sales: [], real: [] };
-                }
-                const dEmis = parseExcelDate(s.dEmision);
-                const dVto = parseExcelDate(s.dVto);
-                const isNC = s.isNC || false;
-                const isExcluded = !!window.excludedInvoices[s.factura];
-
-                clientsMap[normKey].sales.push({ 
-                    ...s, 
-                    dEmision: dEmis, 
-                    dVto: dVto, 
-                    saldo: isExcluded ? 0 : s.importe, 
-                    estado: isExcluded ? 'Excluida' : (isNC ? 'Nota de Crédito' : 'Sin pago'), 
-                    reciboAplicado: isExcluded ? 'Excluida manualmente' : '',
-                    isExcluded: isExcluded,
-                    empresa: s.empresa || 'GANADERA NORTE NEUQUINO'
-                });
+                if (!clientConductMap[normKey]) clientConductMap[normKey] = { displayName: s.cliente, sales: [], real: [] };
+                clientConductMap[normKey].sales.push({ ...s, saldo: s.importe });
             });
 
-            realToProcess.forEach(r => {
+            realFilteredConduct.forEach(r => {
                 const normKey = normalizeClientName(r.cliente) || 'cliente_desconocido';
-                if (!clientsMap[normKey]) {
-                    clientsMap[normKey] = { displayName: r.cliente, sales: [], real: [] };
-                }
-                const dPay = parseExcelDate(r.fechaCobro);
-                clientsMap[normKey].real.push({ ...r, fechaCobro: dPay, saldoPorAplicar: r.importeCobrado, empresa: r.empresa || 'GANADERA NORTE NEUQUINO' });
+                if (!clientConductMap[normKey]) clientConductMap[normKey] = { displayName: r.cliente, sales: [], real: [] };
+                clientConductMap[normKey].real.push({ ...r });
             });
 
-            const invoiceDetails = [];
-            const clientSummaries = [];
+            const clientConductStats = {};
+            Object.keys(clientConductMap).forEach(normKey => {
+                const group = clientConductMap[normKey];
+                const agreedDays = getClientAgreedDays(group.displayName);
 
-            Object.keys(clientsMap).forEach(normKey => {
-                const group = clientsMap[normKey];
-                const clientName = group.displayName;
-                const agreedDays = getClientAgreedDays(clientName);
-                const clientType = getClientType(clientName);
-
-                // Handle Credit Notes
-                let creditNotesTotal = group.sales.filter(s => s.importe < 0 && !s.isExcluded).reduce((sum, s) => sum + Math.abs(s.importe), 0);
-                
-                if (creditNotesTotal > 0) {
-                    group.sales.filter(s => s.importe > 0 && !s.isExcluded).forEach(s => {
-                        if (creditNotesTotal <= 0) return;
-                        if (creditNotesTotal >= s.saldo) {
-                            creditNotesTotal -= s.saldo;
-                            s.saldo = 0;
-                            s.estado = 'Pagada';
-                            s.reciboAplicado = 'Acred. N/C';
-                        } else {
-                            s.saldo -= creditNotesTotal;
-                            s.estado = 'Pago parcial';
-                            s.reciboAplicado = 'Desc. N/C parcial';
-                            creditNotesTotal = 0;
-                        }
-                    });
-                }
-
-                let totalSales = group.sales.filter(s => !s.isExcluded).reduce((sum, i) => sum + i.importe, 0);
+                let realPayDaysSum = 0, realPayCount = 0;
+                let totalSales = group.sales.reduce((sum, i) => sum + i.importe, 0);
                 let totalReal = group.real.reduce((sum, r) => sum + r.importeCobrado, 0);
 
-                let realPayDaysSum = 0;
-                let realPayCount = 0;
-
-                // Match Receipts to Invoices
                 group.real.forEach(rec => {
-                    let amountToApply = rec.importeCobrado;
-
-                    const exactMatch = group.sales.find(s => !s.isExcluded && s.saldo > 0 && Math.abs(s.saldo - amountToApply) < 0.01);
-                    if (exactMatch) {
-                        exactMatch.saldo = 0;
-                        exactMatch.estado = 'Pagada';
-                        exactMatch.reciboAplicado = rec.recibo;
-                        exactMatch.fechaCobro = rec.fechaCobro;
-
-                        const diffDays = Math.round((rec.fechaCobro - exactMatch.dEmision) / (86400 * 1000));
-                        if (!isNaN(diffDays) && diffDays >= 0) { realPayDaysSum += diffDays; realPayCount++; }
-                        amountToApply = 0;
-                    } else {
-                        for (let s of group.sales) {
-                            if (s.isExcluded || s.saldo <= 0) continue;
-                            if (amountToApply <= 0) break;
-
-                            if (amountToApply >= s.saldo) {
-                                amountToApply -= s.saldo;
-                                s.saldo = 0;
-                                s.estado = 'Pagada';
-                                s.reciboAplicado = rec.recibo;
-                                s.fechaCobro = rec.fechaCobro;
-
-                                const diffDays = Math.round((rec.fechaCobro - s.dEmision) / (86400 * 1000));
-                                if (!isNaN(diffDays) && diffDays >= 0) { realPayDaysSum += diffDays; realPayCount++; }
-                            } else {
-                                s.saldo -= amountToApply;
-                                s.estado = 'Pago parcial';
-                                s.reciboAplicado = rec.recibo;
-                                s.fechaCobro = rec.fechaCobro;
-                                amountToApply = 0;
-                            }
+                    let amt = rec.importeCobrado;
+                    for (let s of group.sales) {
+                        if (s.saldo <= 0) continue;
+                        if (amt <= 0) break;
+                        if (amt >= s.saldo) {
+                            amt -= s.saldo; s.saldo = 0;
+                            const diffDays = Math.round((parseExcelDate(rec.fechaCobro) - parseExcelDate(s.dEmision)) / (86400 * 1000));
+                            if (!isNaN(diffDays) && diffDays >= 0) { realPayDaysSum += diffDays; realPayCount++; }
+                        } else {
+                            s.saldo -= amt; amt = 0;
                         }
                     }
                 });
@@ -1128,22 +1154,112 @@
                 const avgRealDays = realPayCount > 0 ? Math.round(realPayDaysSum / realPayCount) : agreedDays;
                 const compliancePct = totalSales > 0 ? Math.min(100, Math.round((totalReal / totalSales) * 100)) : 100;
 
+                clientConductStats[normKey] = {
+                    displayName: group.displayName,
+                    agreedDays,
+                    avgRealDays,
+                    compliancePct,
+                    totalSales,
+                    totalReal
+                };
+            });
+
+            // Reconcile Invoice Details
+            let finalInvoiceList = [];
+            const hasLiveSnapshot = window.rawLiveDebt && window.rawLiveDebt.length > 0;
+
+            if (hasLiveSnapshot) {
+                // Hybrid Mode: Live Open Debt Snapshot determines current open balance
+                let liveFiltered = filterByCompanyData(window.rawLiveDebt);
+                finalInvoiceList = liveFiltered.map(i => {
+                    const isExcluded = !!window.excludedInvoices[i.factura];
+                    return {
+                        ...i,
+                        saldo: isExcluded ? 0 : i.saldo,
+                        estado: isExcluded ? 'Excluida' : 'Sin pago',
+                        isExcluded: isExcluded
+                    };
+                });
+
+                const syncBanner = document.getElementById('sync-banner');
+                const syncBannerMonto = document.getElementById('sync-banner-monto');
+                const liveTotal = finalInvoiceList.filter(i => !i.isExcluded).reduce((s, i) => s + i.saldo, 0);
+                if (syncBanner) syncBanner.classList.remove('hidden');
+                if (syncBannerMonto) syncBannerMonto.textContent = formatMoney(liveTotal);
+            } else {
+                // Standard Reconciliation Mode
+                const clientsMap = {};
+                salesFilteredConduct.forEach(s => {
+                    const normKey = normalizeClientName(s.cliente) || 'cliente_desconocido';
+                    if (!clientsMap[normKey]) clientsMap[normKey] = { displayName: s.cliente, sales: [], real: [] };
+                    const isExcluded = !!window.excludedInvoices[s.factura];
+                    clientsMap[normKey].sales.push({ ...s, dEmision: parseExcelDate(s.dEmision), dVto: parseExcelDate(s.dVto), saldo: isExcluded ? 0 : s.importe, estado: isExcluded ? 'Excluida' : (s.isNC ? 'Nota de Crédito' : 'Sin pago'), reciboAplicado: isExcluded ? 'Excluida manualmente' : '', isExcluded });
+                });
+
+                realFilteredConduct.forEach(r => {
+                    const normKey = normalizeClientName(r.cliente) || 'cliente_desconocido';
+                    if (!clientsMap[normKey]) clientsMap[normKey] = { displayName: r.cliente, sales: [], real: [] };
+                    clientsMap[normKey].real.push({ ...r, fechaCobro: parseExcelDate(r.fechaCobro) });
+                });
+
+                Object.keys(clientsMap).forEach(normKey => {
+                    const group = clientsMap[normKey];
+                    let creditNotesTotal = group.sales.filter(s => s.importe < 0 && !s.isExcluded).reduce((sum, s) => sum + Math.abs(s.importe), 0);
+                    if (creditNotesTotal > 0) {
+                        group.sales.filter(s => s.importe > 0 && !s.isExcluded).forEach(s => {
+                            if (creditNotesTotal <= 0) return;
+                            if (creditNotesTotal >= s.saldo) { creditNotesTotal -= s.saldo; s.saldo = 0; s.estado = 'Pagada'; s.reciboAplicado = 'Acred. N/C'; } 
+                            else { s.saldo -= creditNotesTotal; s.estado = 'Pago parcial'; s.reciboAplicado = 'Desc. N/C parcial'; creditNotesTotal = 0; }
+                        });
+                    }
+
+                    group.real.forEach(rec => {
+                        let amountToApply = rec.importeCobrado;
+                        for (let s of group.sales) {
+                            if (s.isExcluded || s.saldo <= 0) continue;
+                            if (amountToApply <= 0) break;
+                            if (amountToApply >= s.saldo) { amountToApply -= s.saldo; s.saldo = 0; s.estado = 'Pagada'; s.reciboAplicado = rec.recibo; } 
+                            else { s.saldo -= amountToApply; s.estado = 'Pago parcial'; s.reciboAplicado = rec.recibo; amountToApply = 0; }
+                        }
+                    });
+
+                    group.sales.forEach(s => finalInvoiceList.push(s));
+                });
+
+                const syncBanner = document.getElementById('sync-banner');
+                if (syncBanner) syncBanner.classList.add('hidden');
+            }
+
+            // Build Client Summaries
+            const clientSummaries = [];
+            const summaryGroupMap = {};
+
+            finalInvoiceList.forEach(i => {
+                const normKey = normalizeClientName(i.cliente);
+                if (!summaryGroupMap[normKey]) summaryGroupMap[normKey] = { cliente: i.cliente, openDebt: 0 };
+                summaryGroupMap[normKey].openDebt += i.saldo;
+            });
+
+            Object.keys(summaryGroupMap).forEach(normKey => {
+                const clientName = summaryGroupMap[normKey].cliente;
+                const openDebt = summaryGroupMap[normKey].openDebt;
+                const stats = clientConductStats[normKey] || { agreedDays: getClientAgreedDays(clientName), avgRealDays: getClientAgreedDays(clientName), compliancePct: 100, totalSales: openDebt, totalReal: 0 };
+                const clientType = getClientType(clientName);
+
                 clientSummaries.push({
                     cliente: clientName,
                     tipoCliente: clientType,
-                    proyectado: totalSales,
-                    cobrado: totalReal,
-                    diferencia: Math.max(0, totalSales - totalReal),
-                    plazoPactado: agreedDays,
-                    plazoPromedioReal: avgRealDays,
-                    desvioDias: avgRealDays - agreedDays,
-                    cumplimientoPct: compliancePct
+                    proyectado: stats.totalSales || openDebt,
+                    cobrado: stats.totalReal || 0,
+                    diferencia: openDebt,
+                    plazoPactado: stats.agreedDays,
+                    plazoPromedioReal: stats.avgRealDays,
+                    desvioDias: stats.avgRealDays - stats.agreedDays,
+                    cumplimientoPct: stats.compliancePct
                 });
-
-                group.sales.forEach(s => invoiceDetails.push(s));
             });
 
-            window.reconciliationResult = { invoiceDetails, clientSummaries };
+            window.reconciliationResult = { invoiceDetails: finalInvoiceList, clientSummaries };
 
             renderKPIs();
             renderCharts();
@@ -1157,7 +1273,7 @@
         function processAndSavePeriod() {
             const periodElem = document.getElementById('upload-period-input');
             const periodInput = periodElem ? periodElem.value : '2026-07';
-            if (window.rawSales.length === 0 && window.rawReal.length === 0) {
+            if (window.rawSales.length === 0 && window.rawReal.length === 0 && window.rawLiveDebt.length === 0) {
                 showToast('Seleccione al menos un archivo antes de procesar.', 'error');
                 return;
             }
@@ -1221,6 +1337,7 @@
         function clearAllBatches() {
             if (confirm('¿Desea borrar TODOS los períodos cargados y reiniciar el historial?')) {
                 window.historicalBatches = {};
+                window.rawLiveDebt = [];
                 saveHistoricalBatchesToStorage();
                 updatePeriodSelectors('ALL');
                 window.activePeriod = 'ALL';
@@ -1275,8 +1392,8 @@
             if (!window.reconciliationResult) return;
             const { invoiceDetails, clientSummaries } = window.reconciliationResult;
 
-            const totalFacturado = invoiceDetails.filter(i => !i.isExcluded).reduce((sum, i) => sum + i.importe, 0);
-            const totalPendiente = invoiceDetails.filter(i => !i.isExcluded).reduce((sum, i) => sum + i.saldo, 0);
+            const totalFacturado = invoiceDetails.filter(i => !i.isExcluded).reduce((sum, i) => sum + (i.importe || 0), 0);
+            const totalPendiente = invoiceDetails.filter(i => !i.isExcluded).reduce((sum, i) => sum + (i.saldo || 0), 0);
             
             let totalCobrado = 0;
             let realCount = 0;
