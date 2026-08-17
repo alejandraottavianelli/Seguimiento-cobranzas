@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Módulo de Conciliación, Plazos Reales y Ruta de Cobranzas</title>
+    <title>Módulo Multiempresa de Conciliación, Plazos Reales y Cash Flow</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -45,13 +45,29 @@
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                     </div>
                     <div>
-                        <h1 class="text-base font-bold leading-tight">Conciliación, Plazos Reales & Ruta de Cobranzas</h1>
-                        <p class="text-xs text-slate-400">Administración y Finanzas & Control de Crédito</p>
+                        <h1 class="text-base font-bold leading-tight flex items-center gap-2">
+                            <span>Conciliación, Plazos Reales & Cash Flow</span>
+                            <span id="company-active-badge" class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-indigo-500 text-white">Consolidado Real</span>
+                        </h1>
+                        <p class="text-xs text-slate-400">Ganadera Norte Neuquino (Oficial) & Capacitación (Efectivo)</p>
                     </div>
                 </div>
 
                 <!-- Control Actions -->
                 <div class="flex items-center space-x-3">
+                    <!-- Company Multi-Filter -->
+                    <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs">
+                        <span class="text-slate-400 mr-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            Empresa:
+                        </span>
+                        <select id="global-company-select" onchange="changeCompanyFilter(this.value)" class="bg-transparent text-indigo-300 font-bold focus:outline-none cursor-pointer">
+                            <option value="ALL" class="bg-slate-900 text-white">🏢 Consolidado Real (Ganadera + Capacitación)</option>
+                            <option value="GANADERA" class="bg-slate-900 text-white">🏦 Ganadera Norte Neuquino (Oficial / Bancos)</option>
+                            <option value="CAPACITACION" class="bg-slate-900 text-white">💵 Capacitación (Paralelo / Efectivo)</option>
+                        </select>
+                    </div>
+
                     <!-- Period Filter -->
                     <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs">
                         <span class="text-slate-400 mr-2 flex items-center">
@@ -72,7 +88,7 @@
                     <!-- Demo Data Load -->
                     <button onclick="loadDemoDataset()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium shadow transition flex items-center">
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        Cargar Demo (Julio)
+                        Cargar Demo Multiempresa
                     </button>
                 </div>
             </div>
@@ -124,13 +140,20 @@
                     <div>
                         <h2 class="text-lg font-bold text-slate-800 flex items-center">
                             <svg class="w-5 h-5 mr-2 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                            Importación de Archivos (Finnegans / ERP)
+                            Importación Multiempresa (Ganadera & Capacitación)
                         </h2>
-                        <p class="text-xs text-slate-500 mt-1">Soporta columnas nativas: <code class="bg-slate-100 px-1 py-0.5 rounded text-brand-700 font-bold">Fecha, Documento, Nro comp, Cliente, Total / Bruto</code>.</p>
+                        <p class="text-xs text-slate-500 mt-1">Lee la columna <code class="bg-slate-100 px-1 py-0.5 rounded text-brand-700 font-bold">Empresa</code> de Finnegans o asigna la empresa por defecto.</p>
                     </div>
                     
                     <div class="flex items-center space-x-3 bg-slate-50 p-2 rounded-lg border border-slate-200">
-                        <label class="text-xs font-semibold text-slate-600">Asignar a Período:</label>
+                        <div class="flex items-center space-x-2 mr-2">
+                            <label class="text-xs font-semibold text-slate-600">Empresa por defecto:</label>
+                            <select id="upload-default-company" class="bg-white border border-slate-300 text-xs rounded-md px-2 py-1 font-semibold text-slate-700">
+                                <option value="GANADERA NORTE NEUQUINO">Ganadera Norte Neuquino</option>
+                                <option value="Capacitación">Capacitación (Efectivo)</option>
+                            </select>
+                        </div>
+                        <label class="text-xs font-semibold text-slate-600">Período:</label>
                         <input type="month" id="upload-period-input" value="2026-07" class="bg-white border border-slate-300 text-xs rounded-md px-2 py-1 font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
                     </div>
                 </div>
@@ -141,8 +164,8 @@
                         <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-3">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         </div>
-                        <h3 class="text-sm font-semibold text-slate-800 mb-1">Facturas, Notas de Crédito y Débito</h3>
-                        <p class="text-xs text-slate-500 mb-4 max-w-xs">Comprobantes de Finnegans (Detecta NC automáticamente para restar de la deuda)</p>
+                        <h3 class="text-sm font-semibold text-slate-800 mb-1">Facturas, Ventas y Notas de Crédito</h3>
+                        <p class="text-xs text-slate-500 mb-4 max-w-xs">Comprobantes de Ganadera o Capacitación (Soporta archivos Excel o planillas manuales)</p>
                         <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium px-4 py-2 border border-slate-300 rounded-lg shadow-sm transition">
                             <span id="sales-filename">Seleccionar "Facturas de venta"</span>
                             <input type="file" id="sales-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleSalesFile(event)">
@@ -155,7 +178,7 @@
                         <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-3">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         </div>
-                        <h3 class="text-sm font-semibold text-slate-800 mb-1">Cobranzas Recibidas</h3>
+                        <h3 class="text-sm font-semibold text-slate-800 mb-1">Cobranzas Recibidas (Recibos / Efectivo)</h3>
                         <p class="text-xs text-slate-500 mb-4 max-w-xs">Informe de Cobranzas / Recibos (Lee columna <code class="bg-slate-100 px-1 py-0.5 text-indigo-700 font-bold">T. cta. cte.</code>)</p>
                         <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium px-4 py-2 border border-slate-300 rounded-lg shadow-sm transition">
                             <span id="real-filename">Seleccionar "Cobranzas"</span>
@@ -324,8 +347,8 @@
                     <div class="flex items-center space-x-2 w-full sm:w-auto">
                         <select id="filter-terms-status" onchange="renderTermsTable()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
                             <option value="ALL">Todos los Estados</option>
-                            <option value="EN_PLAZO">En Plazo</option>
-                            <option value="ATRASADO">Atrasado</option>
+                            <option value="EN_PLAZO">En Plazo / Al Día</option>
+                            <option value="ATRASADO">Atrasado con Deuda</option>
                         </select>
                         <input type="text" id="search-client-terms" oninput="renderTermsTable()" placeholder="Buscar cliente / mercado..." class="text-xs border border-slate-300 rounded-lg px-3 py-2 w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-brand-500">
                     </div>
@@ -397,6 +420,7 @@
                             <tr class="bg-slate-50 border-b border-slate-200 font-semibold text-slate-600 uppercase tracking-wider">
                                 <th class="py-3 px-4">Cliente</th>
                                 <th class="py-3 px-4">Comprobante</th>
+                                <th class="py-3 px-4 text-center">Empresa / Canal</th>
                                 <th class="py-3 px-4 text-center">F. Emisión</th>
                                 <th class="py-3 px-4 text-center">F. Vencimiento</th>
                                 <th class="py-3 px-4 text-right">Importe Orig.</th>
@@ -467,24 +491,27 @@
 
         <!-- Prediccion Tab -->
         <section id="tab-forecast" class="space-y-6 hidden">
-            <!-- Forecast Summary Cards -->
+            <!-- Forecast Summary Cards with Cash vs Bank breakdown -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-gradient-to-br from-emerald-500 to-teal-700 text-white rounded-xl p-5 shadow">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-emerald-100">Pronóstico Esta Semana (0 a 7 días desde hoy)</span>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-emerald-100">Pronóstico Esta Semana (0 a 7d)</span>
                     <h3 id="pred-this-week-amount" class="text-2xl font-black mt-1">$ 0</h3>
-                    <p id="pred-this-week-count" class="text-xs text-emerald-100 mt-2">0 Facturas esperadas</p>
+                    <p id="pred-this-week-count" class="text-xs text-emerald-100 mt-1">0 Facturas esperadas</p>
+                    <p id="pred-this-week-breakdown" class="text-[11px] font-semibold text-emerald-200 mt-2 border-t border-emerald-400/40 pt-1.5">💵 Efectivo: $ 0 | 🏦 Bancos: $ 0</p>
                 </div>
 
                 <div class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-xl p-5 shadow">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-blue-100">Pronóstico Próxima Semana (8 a 14 días desde hoy)</span>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-blue-100">Pronóstico Próxima Semana (8 a 14d)</span>
                     <h3 id="pred-next-week-amount" class="text-2xl font-black mt-1">$ 0</h3>
-                    <p id="pred-next-week-count" class="text-xs text-blue-100 mt-2">0 Facturas esperadas</p>
+                    <p id="pred-next-week-count" class="text-xs text-blue-100 mt-1">0 Facturas esperadas</p>
+                    <p id="pred-next-week-breakdown" class="text-[11px] font-semibold text-blue-200 mt-2 border-t border-blue-400/40 pt-1.5">💵 Efectivo: $ 0 | 🏦 Bancos: $ 0</p>
                 </div>
 
                 <div class="bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-xl p-5 shadow">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-amber-100">Posteriores / En Riesgo (> 14 días desde hoy)</span>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-amber-100">Posteriores / En Riesgo (> 14d)</span>
                     <h3 id="pred-later-amount" class="text-2xl font-black mt-1">$ 0</h3>
-                    <p id="pred-later-count" class="text-xs text-amber-100 mt-2">0 Facturas esperadas</p>
+                    <p id="pred-later-count" class="text-xs text-amber-100 mt-1">0 Facturas esperadas</p>
+                    <p id="pred-later-breakdown" class="text-[11px] font-semibold text-amber-200 mt-2 border-t border-amber-400/40 pt-1.5">💵 Efectivo: $ 0 | 🏦 Bancos: $ 0</p>
                 </div>
             </div>
 
@@ -492,7 +519,7 @@
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h3 class="text-base font-bold text-slate-800">Agenda de Cobranzas Proyectadas (Basada en Plazo Real del Cliente)</h3>
+                        <h3 class="text-base font-bold text-slate-800">Agenda de Cobranzas Proyectadas (Efectivo & Bancos)</h3>
                         <p class="text-xs text-slate-500">Calcula la fecha probable de pago: <code class="bg-slate-100 px-1 py-0.5 rounded text-indigo-600">Fecha Emisión + Plazo Promedio Real del Cliente</code>.</p>
                     </div>
                     <select id="filter-pred-week" onchange="renderPredictionModule()" class="text-xs border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
@@ -509,12 +536,13 @@
                             <tr class="bg-slate-50 border-b border-slate-200 font-semibold text-slate-600 uppercase tracking-wider">
                                 <th class="py-3 px-4">Cliente</th>
                                 <th class="py-3 px-4">Comprobante</th>
+                                <th class="py-3 px-4 text-center">Canal / Empresa</th>
                                 <th class="py-3 px-4 text-right">Saldo Pendiente</th>
                                 <th class="py-3 px-4 text-center">Plazo Pactado (Real)</th>
                                 <th class="py-3 px-4 text-center">Fecha Probable Pago</th>
                                 <th class="py-3 px-4 text-center">Días desde Hoy / Estado</th>
                                 <th class="py-3 px-4 text-center">Ventana</th>
-                                <th class="py-3 px-4 text-center">Probabilidad de Cobro</th>
+                                <th class="py-3 px-4 text-center">Probabilidad</th>
                                 <th class="py-3 px-4">Acción Recomendada</th>
                             </tr>
                         </thead>
@@ -590,8 +618,9 @@
         window.rawReal = [];
         window.clientMasterTerms = {}; 
         window.historicalBatches = {}; 
-        window.excludedInvoices = {}; // Excluded invoices dictionary
+        window.excludedInvoices = {}; 
         window.activePeriod = 'ALL';
+        window.globalCompanyFilter = 'ALL'; // 'ALL', 'GANADERA', 'CAPACITACION'
         window.reconciliationResult = null;
         window.selectedReparto = null;
 
@@ -678,7 +707,7 @@
             const headerKeywords = [
                 'cliente', 'razon', 'comprobante', 'fecha', 't. cta', 'cta. cte', 
                 't.cta.cte', 'importe', 'monto', 'recibo', 'total', 'organizacion', 
-                'haber', 'cuenta', 'vendedor', 'emision', 'vencimiento', 'mercado', 'condicion', 'plazo', 'documento', 'nro comp', 'bruto'
+                'haber', 'cuenta', 'vendedor', 'emision', 'vencimiento', 'mercado', 'condicion', 'plazo', 'documento', 'nro comp', 'bruto', 'empresa'
             ];
 
             let maxMatchCount = 0;
@@ -713,6 +742,25 @@
                 runReconciliation();
             }
         };
+
+        function changeCompanyFilter(filterVal) {
+            window.globalCompanyFilter = filterVal;
+            const badge = document.getElementById('company-active-badge');
+            if (badge) {
+                if (filterVal === 'GANADERA') {
+                    badge.textContent = 'Ganadera Norte (Oficial)';
+                    badge.className = 'px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-blue-600 text-white';
+                } else if (filterVal === 'CAPACITACION') {
+                    badge.textContent = 'Capacitación (Efectivo)';
+                    badge.className = 'px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-emerald-600 text-white';
+                } else {
+                    badge.textContent = 'Consolidado Real';
+                    badge.className = 'px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-indigo-500 text-white';
+                }
+            }
+            runReconciliation();
+            showToast(`Filtro cambiado a: ${filterVal === 'GANADERA' ? 'Ganadera Norte' : filterVal === 'CAPACITACION' ? 'Capacitación' : 'Vista Consolidada'}.`, 'info');
+        }
 
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
@@ -790,6 +838,8 @@
             if (!file) return;
             const salesElem = document.getElementById('sales-filename');
             if (salesElem) salesElem.textContent = file.name;
+
+            const defaultCompany = document.getElementById('upload-default-company')?.value || 'GANADERA NORTE NEUQUINO';
             
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -807,6 +857,19 @@
                         const dEmis = findRowValue(r, ['fecha', 'fecha de emision', 'fecha emision', 'emision', 'f. emision']);
                         const dVto = findRowValue(r, ['fecha de vencimiento', 'fecha vencimiento', 'vencimiento', 'vto', 'f. vto']);
                         const amount = findRowValue(r, ['total', 'bruto', 't. cta. cte', 't.cta.cte', 'cta. cte', 'cta cte', 'importe con iva', 'importe', 'monto']);
+                        const companyRaw = findRowValue(r, ['empresa', 'razon social empresa', 'unidad']);
+
+                        let company = defaultCompany;
+                        if (companyRaw) {
+                            const cStr = String(companyRaw).toLowerCase();
+                            if (cStr.includes('capacitacion') || cStr.includes('capacitación')) {
+                                company = 'Capacitación';
+                            } else if (cStr.includes('ganadera')) {
+                                company = 'GANADERA NORTE NEUQUINO';
+                            } else {
+                                company = String(companyRaw).trim();
+                            }
+                        }
 
                         const docType = String(docCol || inv || '').toLowerCase();
                         const isCreditNote = docType.includes('credito') || docType.includes('crédito') || docType.includes('nc') || docType.includes('n/c');
@@ -824,7 +887,8 @@
                             dEmision: parseExcelDate(dEmis),
                             dVto: parseExcelDate(dVto),
                             importe: parsedAmount,
-                            isNC: isCreditNote
+                            isNC: isCreditNote,
+                            empresa: company
                         };
                     });
 
@@ -848,6 +912,8 @@
             const realElem = document.getElementById('real-filename');
             if (realElem) realElem.textContent = file.name;
 
+            const defaultCompany = document.getElementById('upload-default-company')?.value || 'GANADERA NORTE NEUQUINO';
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
@@ -862,6 +928,19 @@
                         const dPay = findRowValue(r, ['fecha de cobro', 'fecha cobro', 'fecha emision', 'fecha', 'cobro', 'pago']);
                         const amount = findRowValue(r, ['t. cta. cte', 't.cta.cte', 'cta. cte', 'cta cte', 'total cta', 'importe cobrado', 'importe', 'cobrado', 'monto', 'haber', 'total']);
                         const receipt = findRowValue(r, ['nro. recibo', 'nro. comprobante', 'recibo', 'comprobante', 'nro', 'numero', 'doc', 'transaccion']);
+                        const companyRaw = findRowValue(r, ['empresa', 'razon social empresa', 'unidad']);
+
+                        let company = defaultCompany;
+                        if (companyRaw) {
+                            const cStr = String(companyRaw).toLowerCase();
+                            if (cStr.includes('capacitacion') || cStr.includes('capacitación')) {
+                                company = 'Capacitación';
+                            } else if (cStr.includes('ganadera')) {
+                                company = 'GANADERA NORTE NEUQUINO';
+                            } else {
+                                company = String(companyRaw).trim();
+                            }
+                        }
 
                         const parsedAmount = Math.abs(parseMoney(amount));
                         totalSum += parsedAmount;
@@ -870,7 +949,8 @@
                             cliente: String(client || 'CLIENTE S/D').trim(),
                             fechaCobro: parseExcelDate(dPay),
                             importeCobrado: parsedAmount,
-                            recibo: String(receipt || 'REC-000').trim()
+                            recibo: String(receipt || 'REC-000').trim(),
+                            empresa: company
                         };
                     });
 
@@ -900,6 +980,19 @@
             runReconciliation();
         }
 
+        function filterByCompanyData(items) {
+            if (window.globalCompanyFilter === 'ALL') return items;
+            return items.filter(item => {
+                const comp = (item.empresa || 'GANADERA NORTE NEUQUINO').toLowerCase();
+                if (window.globalCompanyFilter === 'CAPACITACION') {
+                    return comp.includes('capacitacion') || comp.includes('capacitación');
+                } else if (window.globalCompanyFilter === 'GANADERA') {
+                    return comp.includes('ganadera') || (!comp.includes('capacitacion') && !comp.includes('capacitación'));
+                }
+                return true;
+            });
+        }
+
         function runReconciliation() {
             let salesToProcess = [];
             let realToProcess = [];
@@ -913,6 +1006,10 @@
                 salesToProcess = window.historicalBatches[window.activePeriod].sales || [];
                 realToProcess = window.historicalBatches[window.activePeriod].real || [];
             }
+
+            // Apply Company Filter
+            salesToProcess = filterByCompanyData(salesToProcess);
+            realToProcess = filterByCompanyData(realToProcess);
 
             const clientsMap = {};
 
@@ -933,7 +1030,8 @@
                     saldo: isExcluded ? 0 : s.importe, 
                     estado: isExcluded ? 'Excluida' : (isNC ? 'Nota de Crédito' : 'Sin pago'), 
                     reciboAplicado: isExcluded ? 'Excluida manualmente' : '',
-                    isExcluded: isExcluded
+                    isExcluded: isExcluded,
+                    empresa: s.empresa || 'GANADERA NORTE NEUQUINO'
                 });
             });
 
@@ -943,7 +1041,7 @@
                     clientsMap[normKey] = { displayName: r.cliente, sales: [], real: [] };
                 }
                 const dPay = parseExcelDate(r.fechaCobro);
-                clientsMap[normKey].real.push({ ...r, fechaCobro: dPay, saldoPorAplicar: r.importeCobrado });
+                clientsMap[normKey].real.push({ ...r, fechaCobro: dPay, saldoPorAplicar: r.importeCobrado, empresa: r.empresa || 'GANADERA NORTE NEUQUINO' });
             });
 
             const invoiceDetails = [];
@@ -955,7 +1053,7 @@
                 const agreedDays = getClientAgreedDays(clientName);
                 const clientType = getClientType(clientName);
 
-                // Handle Credit Notes (ignore excluded invoices)
+                // Handle Credit Notes
                 let creditNotesTotal = group.sales.filter(s => s.importe < 0 && !s.isExcluded).reduce((sum, s) => sum + Math.abs(s.importe), 0);
                 
                 if (creditNotesTotal > 0) {
@@ -981,7 +1079,7 @@
                 let realPayDaysSum = 0;
                 let realPayCount = 0;
 
-                // Match Receipts to Non-Excluded Invoices
+                // Match Receipts to Invoices
                 group.real.forEach(rec => {
                     let amountToApply = rec.importeCobrado;
 
@@ -1177,10 +1275,10 @@
             let realCount = 0;
             if (window.activePeriod === 'ALL') {
                 Object.values(window.historicalBatches).forEach(b => {
-                    (b.real || []).forEach(r => { totalCobrado += (r.importeCobrado || 0); realCount++; });
+                    filterByCompanyData(b.real || []).forEach(r => { totalCobrado += (r.importeCobrado || 0); realCount++; });
                 });
             } else if (window.historicalBatches[window.activePeriod]) {
-                (window.historicalBatches[window.activePeriod].real || []).forEach(r => { 
+                filterByCompanyData(window.historicalBatches[window.activePeriod].real || []).forEach(r => { 
                     totalCobrado += (r.importeCobrado || 0); 
                     realCount++; 
                 });
@@ -1199,7 +1297,7 @@
             if (elemCobr) elemCobr.textContent = formatMoney(totalCobrado);
 
             const elemRecCount = document.getElementById('kpi-recibos-count');
-            if (elemRecCount) elemRecCount.textContent = `${realCount} Recibos procesados (T. cta. cte.)`;
+            if (elemRecCount) elemRecCount.textContent = `${realCount} Recibos procesados`;
 
             const elemPend = document.getElementById('kpi-pendiente');
             if (elemPend) elemPend.textContent = formatMoney(totalPendiente);
@@ -1438,10 +1536,10 @@
             const search = searchInput ? searchInput.value.toLowerCase() : '';
 
             let filtered = clientSummaries.filter(c => {
-                const isOverdue = c.desvioDias > 0;
+                const hasPendingDebt = c.diferencia > 0;
                 const matchStatus = statusFilter === 'ALL' || 
-                                    (statusFilter === 'EN_PLAZO' && !isOverdue) || 
-                                    (statusFilter === 'ATRASADO' && isOverdue);
+                                    (statusFilter === 'EN_PLAZO' && !hasPendingDebt) || 
+                                    (statusFilter === 'ATRASADO' && hasPendingDebt);
                 const matchSearch = c.cliente.toLowerCase().includes(search) || 
                                     (c.tipoCliente && c.tipoCliente.toLowerCase().includes(search));
                 return matchStatus && matchSearch;
@@ -1473,9 +1571,9 @@
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-50';
                 
-                const isOverdue = c.desvioDias > 0;
-                const badgeClass = !isOverdue ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800';
-                const statusLabel = !isOverdue ? 'En Plazo' : 'Atrasado';
+                const isDebtOverdue = c.diferencia > 0 && c.desvioDias > 0;
+                const badgeClass = !isDebtOverdue ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800';
+                const statusLabel = !isDebtOverdue ? 'En Plazo / Al Día' : 'Atrasado';
 
                 tr.innerHTML = `
                     <td class="py-3 px-4 font-bold text-slate-800">${c.cliente}</td>
@@ -1515,6 +1613,9 @@
                 const tr = document.createElement('tr');
                 tr.className = i.isExcluded ? 'bg-slate-100/80 opacity-75' : 'hover:bg-slate-50';
                 
+                const isCapacitacion = (i.empresa || '').toLowerCase().includes('capacitacion');
+                const compBadge = isCapacitacion ? `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">💵 Capacitación</span>` : `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-bold text-[10px]">🏦 Ganadera</span>`;
+
                 const stClass = i.isExcluded ? 'bg-slate-200 text-slate-700' : (i.estado === 'Pagada' ? 'bg-emerald-100 text-emerald-800' : i.estado === 'Pago parcial' ? 'bg-amber-100 text-amber-800' : i.estado === 'Nota de Crédito' ? 'bg-indigo-100 text-indigo-800' : 'bg-rose-100 text-rose-800');
                 
                 const actionBtn = i.isExcluded ? 
@@ -1524,6 +1625,7 @@
                 tr.innerHTML = `
                     <td class="py-2.5 px-4 font-medium ${i.isExcluded ? 'line-through text-slate-500' : ''}">${i.cliente}</td>
                     <td class="py-2.5 px-4 font-mono text-brand-600 ${i.isExcluded ? 'line-through' : ''}">${i.factura}</td>
+                    <td class="py-2.5 px-4 text-center">${compBadge}</td>
                     <td class="py-2.5 px-4 text-center">${formatDate(i.dEmision)}</td>
                     <td class="py-2.5 px-4 text-center">${formatDate(i.dVto)}</td>
                     <td class="py-2.5 px-4 text-right ${i.importe < 0 ? 'text-indigo-600 font-bold' : ''}">${formatMoney(i.importe)}</td>
@@ -1569,7 +1671,7 @@
 
                 // 2. Critical Delay Alerts
                 const delayedClients = [...clientSummaries]
-                    .filter(c => c.desvioDias > 7)
+                    .filter(c => c.diferencia > 0 && c.desvioDias > 7)
                     .sort((a, b) => b.desvioDias - a.desvioDias);
 
                 delayedClients.forEach(c => {
@@ -1611,7 +1713,7 @@
 
             // Top 10 Best & Worst Payers
             const topPayers = [...clientSummaries].sort((a,b) => a.desvioDias - b.desvioDias).slice(0, 10);
-            const worstPayers = [...clientSummaries].sort((a,b) => b.desvioDias - a.desvioDias).slice(0, 10);
+            const worstPayers = [...clientSummaries].filter(c => c.diferencia > 0).sort((a,b) => b.desvioDias - a.desvioDias).slice(0, 10);
 
             const topDiv = document.getElementById('ranking-top');
             if (topDiv) {
@@ -1654,9 +1756,9 @@
             const totalPendingAll = openInvoices.reduce((sum, i) => sum + i.saldo, 0);
             const today = new Date();
 
-            let thisWeekAmt = 0, thisWeekCnt = 0;
-            let nextWeekAmt = 0, nextWeekCnt = 0;
-            let laterAmt = 0, laterCnt = 0;
+            let thisWeekAmt = 0, thisWeekCnt = 0, thisWeekCash = 0, thisWeekBank = 0;
+            let nextWeekAmt = 0, nextWeekCnt = 0, nextWeekCash = 0, nextWeekBank = 0;
+            let laterAmt = 0, laterCnt = 0, laterCash = 0, laterBank = 0;
 
             const predictions = [];
 
@@ -1670,6 +1772,8 @@
                 const estPayDate = new Date(dEmis.getTime() + daysReal * 86400 * 1000);
                 const daysDiff = Math.round((estPayDate - today) / (86400 * 1000));
 
+                const isCapacitacion = (inv.empresa || '').toLowerCase().includes('capacitacion');
+
                 let bucket = 'LATER';
                 let action = 'Realizar seguimiento de crédito.';
 
@@ -1677,15 +1781,21 @@
                     bucket = 'THIS_WEEK';
                     thisWeekAmt += inv.saldo;
                     thisWeekCnt++;
+                    if (isCapacitacion) thisWeekCash += inv.saldo;
+                    else thisWeekBank += inv.saldo;
                     action = 'Enviar recordatorio / Contactar esta semana.';
                 } else if (!isNaN(daysDiff) && daysDiff <= 14) {
                     bucket = 'NEXT_WEEK';
                     nextWeekAmt += inv.saldo;
                     nextWeekCnt++;
+                    if (isCapacitacion) nextWeekCash += inv.saldo;
+                    else nextWeekBank += inv.saldo;
                     action = 'Confirmar fecha pactada para próxima semana.';
                 } else {
                     laterAmt += inv.saldo;
                     laterCnt++;
+                    if (isCapacitacion) laterCash += inv.saldo;
+                    else laterBank += inv.saldo;
                 }
 
                 let dynamicProb = compliancePct;
@@ -1704,7 +1814,8 @@
                     daysDiff: daysDiff,
                     probabilidad: Math.min(100, Math.max(15, dynamicProb)),
                     bucket,
-                    accion: action
+                    accion: action,
+                    empresa: inv.empresa || 'GANADERA NORTE NEUQUINO'
                 });
             });
 
@@ -1712,23 +1823,17 @@
             const nextWeekPct = totalPendingAll > 0 ? Math.round((nextWeekAmt / totalPendingAll) * 100) : 0;
             const laterPct = totalPendingAll > 0 ? Math.round((laterAmt / totalPendingAll) * 100) : 0;
 
-            const elemTWAmt = document.getElementById('pred-this-week-amount');
-            if (elemTWAmt) elemTWAmt.textContent = formatMoney(thisWeekAmt);
+            if (document.getElementById('pred-this-week-amount')) document.getElementById('pred-this-week-amount').textContent = formatMoney(thisWeekAmt);
+            if (document.getElementById('pred-this-week-count')) document.getElementById('pred-this-week-count').textContent = `${thisWeekCnt} Facturas esperadas (${thisWeekPct}% del saldo pendiente)`;
+            if (document.getElementById('pred-this-week-breakdown')) document.getElementById('pred-this-week-breakdown').textContent = `💵 Efectivo: ${formatMoney(thisWeekCash)} | 🏦 Bancos: ${formatMoney(thisWeekBank)}`;
 
-            const elemTWCnt = document.getElementById('pred-this-week-count');
-            if (elemTWCnt) elemTWCnt.textContent = `${thisWeekCnt} Facturas esperadas (${thisWeekPct}% del saldo pendiente)`;
+            if (document.getElementById('pred-next-week-amount')) document.getElementById('pred-next-week-amount').textContent = formatMoney(nextWeekAmt);
+            if (document.getElementById('pred-next-week-count')) document.getElementById('pred-next-week-count').textContent = `${nextWeekCnt} Facturas esperadas (${nextWeekPct}% del saldo pendiente)`;
+            if (document.getElementById('pred-next-week-breakdown')) document.getElementById('pred-next-week-breakdown').textContent = `💵 Efectivo: ${formatMoney(nextWeekCash)} | 🏦 Bancos: ${formatMoney(nextWeekBank)}`;
 
-            const elemNWAmt = document.getElementById('pred-next-week-amount');
-            if (elemNWAmt) elemNWAmt.textContent = formatMoney(nextWeekAmt);
-
-            const elemNWCnt = document.getElementById('pred-next-week-count');
-            if (elemNWCnt) elemNWCnt.textContent = `${nextWeekCnt} Facturas esperadas (${nextWeekPct}% del saldo pendiente)`;
-
-            const elemLAmt = document.getElementById('pred-later-amount');
-            if (elemLAmt) elemLAmt.textContent = formatMoney(laterAmt);
-
-            const elemLCnt = document.getElementById('pred-later-count');
-            if (elemLCnt) elemLCnt.textContent = `${laterCnt} Facturas esperadas (${laterPct}% del saldo pendiente)`;
+            if (document.getElementById('pred-later-amount')) document.getElementById('pred-later-amount').textContent = formatMoney(laterAmt);
+            if (document.getElementById('pred-later-count')) document.getElementById('pred-later-count').textContent = `${laterCnt} Facturas esperadas (${laterPct}% del saldo pendiente)`;
+            if (document.getElementById('pred-later-breakdown')) document.getElementById('pred-later-breakdown').textContent = `💵 Efectivo: ${formatMoney(laterCash)} | 🏦 Bancos: ${formatMoney(laterBank)}`;
 
             const tbody = document.getElementById('tbody-predictions');
             if (tbody) {
@@ -1738,6 +1843,9 @@
                 const filtered = predictions.filter(p => filter === 'ALL' || p.bucket === filter);
 
                 filtered.slice(0, 150).forEach(p => {
+                    const isCapacitacion = (p.empresa || '').toLowerCase().includes('capacitacion');
+                    const companyBadge = isCapacitacion ? `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">💵 Efectivo</span>` : `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-bold text-[10px]">🏦 Banco</span>`;
+
                     const daysLabel = p.daysDiff < 0 ? `<span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-bold">Vencida hace ${Math.abs(p.daysDiff)}d</span>` : p.daysDiff === 0 ? `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-bold">Vence Hoy</span>` : `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold">Faltan ${p.daysDiff}d</span>`;
 
                     const probColor = p.probabilidad >= 80 ? 'text-emerald-600' : p.probabilidad >= 50 ? 'text-amber-600' : 'text-rose-600';
@@ -1747,6 +1855,7 @@
                     tr.innerHTML = `
                         <td class="py-2.5 px-4 font-bold">${p.cliente}</td>
                         <td class="py-2.5 px-4 font-mono text-brand-600">${p.factura}</td>
+                        <td class="py-2.5 px-4 text-center">${companyBadge}</td>
                         <td class="py-2.5 px-4 text-right font-bold text-rose-600">${formatMoney(p.saldo)}</td>
                         <td class="py-2.5 px-4 text-center font-medium">${p.plazoPactado}d pactados (${p.plazoReal}d real)</td>
                         <td class="py-2.5 px-4 text-center font-bold text-emerald-600">${p.fechaProbable}</td>
@@ -1960,21 +2069,23 @@
 
         function loadDemoDataset() {
             const demoSales = [
-                { cliente: 'DESARROLLOS DEPORTIVOS SP S.R.L', factura: 'A-00135-00000101', documento: 'RTO 52 - Factura B', dEmision: new Date(2026, 0, 4), dVto: new Date(2026, 7, 14), importe: 24000000.00, isNC: false },
-                { cliente: 'DESARROLLOS DEPORTIVOS SP S.R.L', factura: 'A-00135-00000181', documento: 'RTO 52 - Factura B', dEmision: new Date(2026, 4, 28), dVto: new Date(2026, 7, 14), importe: 11088000.00, isNC: false },
-                { cliente: 'DESARROLLOS DEPORTIVOS SP S.R.L', factura: 'A-00135-00000182', documento: 'RTO 52 - Factura B', dEmision: new Date(2026, 4, 31), dVto: new Date(2026, 7, 14), importe: 16632000.00, isNC: false }
+                { cliente: 'DESARROLLOS DEPORTIVOS SP S.R.L', factura: 'A-00135-00000101', documento: 'RTO 52 - Factura B', dEmision: new Date(2026, 0, 4), dVto: new Date(2026, 7, 14), importe: 24000000.00, isNC: false, empresa: 'GANADERA NORTE NEUQUINO' },
+                { cliente: 'DESARROLLOS DEPORTIVOS SP S.R.L', factura: 'A-00135-00000181', documento: 'RTO 52 - Factura B', dEmision: new Date(2026, 4, 28), dVto: new Date(2026, 7, 14), importe: 11088000.00, isNC: false, empresa: 'GANADERA NORTE NEUQUINO' },
+                { cliente: 'CLIENTE EVENTOS EFECTIVO', factura: 'CAP-001-88', documento: 'RTO 90 - Venta Efectivo', dEmision: new Date(2026, 6, 10), dVto: new Date(2026, 7, 10), importe: 18500000.00, isNC: false, empresa: 'Capacitación' }
             ];
             const demoReal = [
-                { cliente: 'DESARROLLOS DEPORTIVOS SP S.R.L', fechaCobro: new Date(2026, 6, 28), importeCobrado: 27720000.00, recibo: 'R-0037-00000738' }
+                { cliente: 'DESARROLLOS DEPORTIVOS SP S.R.L', fechaCobro: new Date(2026, 6, 28), importeCobrado: 11088000.00, recibo: 'R-0037-00000738', empresa: 'GANADERA NORTE NEUQUINO' },
+                { cliente: 'CLIENTE EVENTOS EFECTIVO', fechaCobro: new Date(2026, 6, 12), importeCobrado: 18500000.00, recibo: 'REC-CAP-12', empresa: 'Capacitación' }
             ];
 
             window.historicalBatches['2026-07'] = { sales: demoSales, real: demoReal };
             window.clientMasterTerms[normalizeClientName('DESARROLLOS DEPORTIVOS SP S.R.L')] = { days: 30, type: 'Deportes' };
+            window.clientMasterTerms[normalizeClientName('CLIENTE EVENTOS EFECTIVO')] = { days: 0, type: 'Eventos' };
 
             updatePeriodSelectors('2026-07');
             window.activePeriod = '2026-07';
             runReconciliation();
-            showToast('Datos de demo de Desarrollos Deportivos cargados.', 'success');
+            showToast('Demo Multiempresa (Ganadera + Capacitación) cargada.', 'success');
         }
     </script>
 </body>
