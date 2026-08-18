@@ -534,15 +534,25 @@
                         <p class="text-xs text-indigo-200 mt-0.5">Porcentajes efectivos recuperados semanalmente según todos los recibos y facturas cargados.</p>
                     </div>
 
-                    <!-- Target / Goal Adjustment Selector -->
-                    <div class="flex items-center space-x-2 bg-indigo-950/80 p-2 rounded-lg border border-indigo-700">
-                        <label for="filter-recovery-rate" class="text-xs text-indigo-300 font-semibold whitespace-nowrap">Modelo / Meta:</label>
-                        <select id="filter-recovery-rate" onchange="renderPredictionModule()" class="text-xs border border-indigo-600 rounded-md px-2 py-1 font-bold bg-slate-900 text-amber-300 focus:outline-none">
-                            <option value="REAL">📊 Rendimiento Histórico Real (Empírico)</option>
-                            <option value="TARGET_60">🎯 Meta Desafío Equipo (60% Sem 1)</option>
-                            <option value="TARGET_70">🔥 Meta Exigente Equipo (70% Sem 1)</option>
-                            <option value="FULL">100% Deuda Total Exigible</option>
-                        </select>
+                    <!-- Filter by Channel & Goal Selector -->
+                    <div class="flex flex-wrap items-center gap-2 bg-indigo-950/80 p-2 rounded-lg border border-indigo-700">
+                        <div class="flex items-center space-x-1">
+                            <label for="filter-forecast-channel" class="text-xs text-indigo-300 font-semibold whitespace-nowrap">Canal / Empresa:</label>
+                            <select id="filter-forecast-channel" onchange="renderPredictionModule()" class="text-xs border border-indigo-600 rounded-md px-2 py-1 font-bold bg-slate-900 text-emerald-300 focus:outline-none">
+                                <option value="ALL">Todos (Efectivo + Bancos)</option>
+                                <option value="CAPACITACION">💵 Solo Efectivo (Capacitación)</option>
+                                <option value="GANADERA">🏦 Solo Bancos (Ganadera Norte)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <label for="filter-recovery-rate" class="text-xs text-indigo-300 font-semibold whitespace-nowrap">Modelo / Meta:</label>
+                            <select id="filter-recovery-rate" onchange="renderPredictionModule()" class="text-xs border border-indigo-600 rounded-md px-2 py-1 font-bold bg-slate-900 text-amber-300 focus:outline-none">
+                                <option value="REAL">📊 Rendimiento Histórico Real (Empírico)</option>
+                                <option value="TARGET_60">🎯 Meta Desafío Equipo (60% Sem 1)</option>
+                                <option value="TARGET_70">🔥 Meta Exigente Equipo (70% Sem 1)</option>
+                                <option value="FULL">100% Deuda Total Exigible</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -715,11 +725,14 @@
             return s;
         }
 
-        function isCapacitacionCompany(empresaStr, docStr) {
+        /**
+         * Enhanced Capacitación Detection Rule
+         */
+        function isCapacitacionCompany(empresaStr, docStr, facturaStr) {
             if (window.globalCompanyFilter === 'CAPACITACION') return true;
-            const combined = (String(empresaStr || '') + ' ' + String(docStr || '')).toLowerCase();
+            const combined = (String(empresaStr || '') + ' ' + String(docStr || '') + ' ' + String(facturaStr || '')).toLowerCase();
             const normalized = combined.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            return normalized.includes('capacitacion');
+            return normalized.includes('capacitacion') || normalized.includes('x-99999') || normalized.includes('cap-');
         }
 
         function getClientAgreedDays(clientName) {
@@ -1008,9 +1021,9 @@
                         const companyRaw = findRowValue(r, ['empresa', 'razon social empresa']);
 
                         let company = defaultCompany;
-                        if (companyRaw) {
-                            const cStr = String(companyRaw).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-                            if (cStr.includes('capacitacion')) {
+                        if (companyRaw || isCapacitacionCompany(companyRaw, docCol, inv)) {
+                            const cStr = String(companyRaw || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                            if (cStr.includes('capacitacion') || isCapacitacionCompany(companyRaw, docCol, inv)) {
                                 company = 'Capacitación';
                             } else if (cStr.includes('ganadera')) {
                                 company = 'GANADERA NORTE NEUQUINO';
@@ -1079,9 +1092,9 @@
                         const companyRaw = findRowValue(r, ['empresa', 'razon social empresa']);
 
                         let company = defaultCompany;
-                        if (companyRaw) {
-                            const cStr = String(companyRaw).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-                            if (cStr.includes('capacitacion')) {
+                        if (companyRaw || isCapacitacionCompany(companyRaw, receipt, '')) {
+                            const cStr = String(companyRaw || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                            if (cStr.includes('capacitacion') || isCapacitacionCompany(companyRaw, receipt, '')) {
                                 company = 'Capacitación';
                             } else if (cStr.includes('ganadera')) {
                                 company = 'GANADERA NORTE NEUQUINO';
@@ -1116,7 +1129,7 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // NEW: Strict Mapped Handler for Live Debt Snapshot Reporte (7).xlsx
+        // Strict Mapped Handler for Live Debt Snapshot Reporte (7).xlsx
         function handleLiveDebtFile(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1144,9 +1157,9 @@
                         const companyRaw = findRowValue(r, ['empresa']);
 
                         let company = defaultCompany;
-                        if (companyRaw) {
-                            const cStr = String(companyRaw).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-                            if (cStr.includes('capacitacion')) {
+                        if (companyRaw || isCapacitacionCompany(companyRaw, docCol, inv)) {
+                            const cStr = String(companyRaw || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                            if (cStr.includes('capacitacion') || isCapacitacionCompany(companyRaw, docCol, inv)) {
                                 company = 'Capacitación';
                             } else if (cStr.includes('ganadera')) {
                                 company = 'GANADERA NORTE NEUQUINO';
@@ -1203,11 +1216,11 @@
         function filterByCompanyData(items) {
             if (window.globalCompanyFilter === 'ALL') return items;
             return items.filter(item => {
-                const comp = (item.empresa || 'GANADERA NORTE NEUQUINO').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                const isCap = isCapacitacionCompany(item.empresa, item.documento, item.factura);
                 if (window.globalCompanyFilter === 'CAPACITACION') {
-                    return comp.includes('capacitacion');
+                    return isCap;
                 } else if (window.globalCompanyFilter === 'GANADERA') {
-                    return comp.includes('ganadera') || !comp.includes('capacitacion');
+                    return !isCap;
                 }
                 return true;
             });
@@ -1333,9 +1346,9 @@
             });
 
             // Calculate Historical Empirical Percentages
-            const empiricalW1Rate = historicalTotalInvoiced > 0 ? Math.min(0.9, historicalRecoveredW1 / historicalTotalInvoiced) : 0.5;
-            const empiricalW2Rate = historicalTotalInvoiced > 0 ? Math.min(0.5, historicalRecoveredW2 / historicalTotalInvoiced) : 0.3;
-            const empiricalLaterRate = historicalTotalInvoiced > 0 ? Math.min(0.3, historicalRecoveredLater / historicalTotalInvoiced) : 0.2;
+            const empiricalW1Rate = historicalTotalInvoiced > 0 ? Math.min(0.9, historicalRecoveredW1 / historicalTotalInvoiced) : 0.6;
+            const empiricalW2Rate = historicalTotalInvoiced > 0 ? Math.min(0.5, historicalRecoveredW2 / historicalTotalInvoiced) : 0.12;
+            const empiricalLaterRate = historicalTotalInvoiced > 0 ? Math.min(0.3, historicalRecoveredLater / historicalTotalInvoiced) : 0.19;
 
             window.empiricalRates = {
                 w1: Math.max(0.2, empiricalW1Rate),
@@ -1884,7 +1897,7 @@
                 const tr = document.createElement('tr');
                 tr.className = i.isExcluded ? 'bg-slate-100/80 opacity-75' : 'hover:bg-slate-50';
                 
-                const isCap = isCapacitacionCompany(i.empresa, i.documento);
+                const isCap = isCapacitacionCompany(i.empresa, i.documento, i.factura);
                 const compBadge = isCap ? `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">💵 Capacitación</span>` : `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-bold text-[10px]">🏦 Ganadera</span>`;
 
                 const stClass = i.isExcluded ? 'bg-slate-200 text-slate-700' : (i.estado === 'Pagada' ? 'bg-emerald-100 text-emerald-800' : i.estado === 'Pago parcial' ? 'bg-amber-100 text-amber-800' : i.estado === 'Nota de Crédito' ? 'bg-indigo-100 text-indigo-800' : 'bg-rose-100 text-rose-800');
@@ -2023,12 +2036,23 @@
             if (!window.reconciliationResult) return;
             const { invoiceDetails, clientSummaries } = window.reconciliationResult;
 
-            const openInvoices = invoiceDetails.filter(i => !i.isExcluded && i.saldo > 0);
+            // Channel Filter
+            const forecastChannelElem = document.getElementById('filter-forecast-channel');
+            const forecastChannel = forecastChannelElem ? forecastChannelElem.value : 'ALL';
+
+            let openInvoices = invoiceDetails.filter(i => !i.isExcluded && i.saldo > 0);
+            
+            if (forecastChannel === 'CAPACITACION') {
+                openInvoices = openInvoices.filter(i => isCapacitacionCompany(i.empresa, i.documento, i.factura));
+            } else if (forecastChannel === 'GANADERA') {
+                openInvoices = openInvoices.filter(i => !isCapacitacionCompany(i.empresa, i.documento, i.factura));
+            }
+
             const totalPendingAll = openInvoices.reduce((sum, i) => sum + i.saldo, 0);
             const today = new Date();
 
             // Calculate Historical Empirical Recovery Factor
-            const emp = window.empiricalRates || { w1: 0.5, w2: 0.3, later: 0.2 };
+            const emp = window.empiricalRates || { w1: 0.6, w2: 0.12, later: 0.19 };
 
             // Update Empirical Display Badges
             if (document.getElementById('empirical-rate-w1')) document.getElementById('empirical-rate-w1').textContent = `${Math.round(emp.w1 * 100)}% de cobro real`;
@@ -2060,7 +2084,7 @@
                 const estPayDate = new Date(dEmis.getTime() + daysReal * 86400 * 1000);
                 const daysDiff = Math.round((estPayDate - today) / (86400 * 1000));
 
-                const isCapacitacion = isCapacitacionCompany(inv.empresa, inv.documento);
+                const isCapacitacion = isCapacitacionCompany(inv.empresa, inv.documento, inv.factura);
 
                 let bucket = 'LATER';
                 let action = 'Realizar seguimiento de crédito.';
