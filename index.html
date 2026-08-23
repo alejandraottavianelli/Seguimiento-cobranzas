@@ -122,7 +122,7 @@
                 </button>
                 <button onclick="switchTab('tab-terms')" id="nav-tab-terms" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center">
                     <svg class="w-4 h-4 mr-1.5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    4. Plazos Reales & Límites de Crédito
+                    4. Plazos Reales vs Pactados
                 </button>
                 <button onclick="switchTab('tab-imputation')" id="nav-tab-imputation" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center">
                     <svg class="w-4 h-4 mr-1.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
@@ -370,19 +370,17 @@
             </div>
         </section>
 
-        <!-- Plazos Reales vs Pactados & Límites de Crédito Tab -->
+        <!-- Plazos Reales vs Pactados Tab -->
         <section id="tab-terms" class="space-y-6 hidden">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h3 class="text-base font-bold text-slate-800">Evaluación de Crédito: Plazos Reales & Límites Sugeridos (Tope 15 Días)</h3>
-                        <p class="text-xs text-slate-500">Calcula el Límite de Crédito Aceptable basado en los Días Activos del cliente (sin diluir clientes nuevos) ajustado por conducta.</p>
+                        <h3 class="text-base font-bold text-slate-800">Comportamiento por Cliente: Plazo Real vs Pactado</h3>
+                        <p class="text-xs text-slate-500">Mide si los clientes abonan en el plazo contractual acordado o presentan desvíos sistemáticos.</p>
                     </div>
                     <div class="flex items-center space-x-2 w-full sm:w-auto">
                         <select id="filter-terms-status" onchange="renderTermsTable()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
-                            <option value="ALL">Todos los Clientes</option>
-                            <option value="EXCEEDED">🚨 Límite de Crédito Excedido</option>
-                            <option value="OK">🟢 Crédito Disponible OK</option>
+                            <option value="ALL">Todos los Estados</option>
                             <option value="EN_PLAZO">En Plazo / Al Día</option>
                             <option value="ATRASADO">Atrasado con Deuda</option>
                         </select>
@@ -398,27 +396,27 @@
                                     Cliente <span id="sort-icon-terms-cliente">↕</span>
                                 </th>
                                 <th class="py-3 px-4 text-center sort-header" onclick="sortTermsTable('tipoCliente')">
-                                    Mercado <span id="sort-icon-terms-tipoCliente">↕</span>
+                                    Mercado / Tipo <span id="sort-icon-terms-tipoCliente">↕</span>
                                 </th>
                                 <th class="py-3 px-4 text-right sort-header" onclick="sortTermsTable('proyectado')">
-                                    Ventas Ene-Hoy <span id="sort-icon-terms-proyectado">↕</span>
+                                    Proyectado <span id="sort-icon-terms-proyectado">↕</span>
                                 </th>
-                                <th class="py-3 px-4 text-right sort-header" onclick="sortTermsTable('diferencia')">
-                                    Deuda Actual <span id="sort-icon-terms-diferencia">↕</span>
+                                <th class="py-3 px-4 text-right sort-header" onclick="sortTermsTable('cobrado')">
+                                    Cobrado <span id="sort-icon-terms-cobrado">↕</span>
                                 </th>
                                 <th class="py-3 px-4 text-center sort-header" onclick="sortTermsTable('plazoPactado')">
-                                    Pactado <span id="sort-icon-terms-plazoPactado">↕</span>
+                                    Plazo Pactado <span id="sort-icon-terms-plazoPactado">↕</span>
                                 </th>
                                 <th class="py-3 px-4 text-center sort-header" onclick="sortTermsTable('plazoPromedioReal')">
-                                    Real Prom. <span id="sort-icon-terms-plazoPromedioReal">↕</span>
+                                    Plazo Real Prom. <span id="sort-icon-terms-plazoPromedioReal">↕</span>
                                 </th>
                                 <th class="py-3 px-4 text-center sort-header" onclick="sortTermsTable('desvioDias')">
-                                    Desvío <span id="sort-icon-terms-desvioDias">↕</span>
+                                    Desvío (Días) <span id="sort-icon-terms-desvioDias">↕</span>
                                 </th>
-                                <th class="py-3 px-4 text-right sort-header" onclick="sortTermsTable('limiteSugerido')">
-                                    Límite Crédito (15d Activo) <span id="sort-icon-terms-limiteSugerido">↕</span>
+                                <th class="py-3 px-4 text-center sort-header" onclick="sortTermsTable('cumplimientoPct')">
+                                    Cumplimiento <span id="sort-icon-terms-cumplimientoPct">↕</span>
                                 </th>
-                                <th class="py-3 px-4 text-center">Estado Crédito</th>
+                                <th class="py-3 px-4 text-center">Estado</th>
                             </tr>
                         </thead>
                         <tbody id="tbody-client-terms" class="divide-y divide-slate-100 font-medium">
@@ -1255,14 +1253,11 @@
 
             salesFilteredConduct.forEach(s => {
                 const normKey = normalizeClientName(s.cliente) || 'cliente_desconocido';
-                if (!clientConductMap[normKey]) clientConductMap[normKey] = { displayName: s.cliente, sales: [], real: [], minDate: null, maxDate: null };
+                if (!clientConductMap[normKey]) clientConductMap[normKey] = { displayName: s.cliente, sales: [], real: [] };
                 const isExcluded = !!window.excludedInvoices[s.factura];
                 
                 const dEmis = parseExcelDate(s.dEmision);
                 const dVto = parseExcelDate(s.dVto);
-
-                if (!clientConductMap[normKey].minDate || dEmis < clientConductMap[normKey].minDate) clientConductMap[normKey].minDate = dEmis;
-                if (!clientConductMap[normKey].maxDate || dEmis > clientConductMap[normKey].maxDate) clientConductMap[normKey].maxDate = dEmis;
 
                 clientConductMap[normKey].sales.push({ 
                     ...s, 
@@ -1281,22 +1276,17 @@
 
             realFilteredConduct.forEach(r => {
                 const normKey = normalizeClientName(r.cliente) || 'cliente_desconocido';
-                if (!clientConductMap[normKey]) clientConductMap[normKey] = { displayName: r.cliente, sales: [], real: [], minDate: null, maxDate: null };
+                if (!clientConductMap[normKey]) clientConductMap[normKey] = { displayName: r.cliente, sales: [], real: [] };
                 clientConductMap[normKey].real.push({ ...r, fechaCobro: parseExcelDate(r.fechaCobro) });
             });
 
             const invoiceDetailsHistory = [];
             const clientConductStats = {};
-            const today = new Date();
 
             Object.keys(clientConductMap).forEach(normKey => {
                 const group = clientConductMap[normKey];
                 const clientName = group.displayName;
                 const agreedDays = getClientAgreedDays(clientName);
-
-                // Calculate Client Active Days (First purchase to Today)
-                const firstEmis = group.minDate || today;
-                const activeDays = Math.max(15, Math.round((today - firstEmis) / (86400 * 1000)));
 
                 // Apply Credit Notes
                 let creditNotesTotal = group.sales.filter(s => s.importe < 0 && !s.isExcluded).reduce((sum, s) => sum + Math.abs(s.importe), 0);
@@ -1349,8 +1339,7 @@
                     avgRealDays,
                     compliancePct,
                     totalSales,
-                    totalReal,
-                    activeDays
+                    totalReal
                 };
 
                 group.sales.forEach(s => invoiceDetailsHistory.push(s));
@@ -1395,7 +1384,7 @@
                 if (syncBanner) syncBanner.classList.add('hidden');
             }
 
-            // Build Client Summaries & Credit Limits (Active Days Limit Logic)
+            // Build Client Summaries
             const clientSummaries = [];
             const summaryGroupMap = {};
 
@@ -1408,22 +1397,8 @@
             Object.keys(summaryGroupMap).forEach(normKey => {
                 const clientName = summaryGroupMap[normKey].cliente;
                 const openDebt = summaryGroupMap[normKey].openDebt;
-                const stats = clientConductStats[normKey] || { agreedDays: getClientAgreedDays(clientName), avgRealDays: getClientAgreedDays(clientName), compliancePct: 100, totalSales: openDebt, totalReal: 0, activeDays: 90 };
+                const stats = clientConductStats[normKey] || { agreedDays: getClientAgreedDays(clientName), avgRealDays: getClientAgreedDays(clientName), compliancePct: 100, totalSales: openDebt, totalReal: 0 };
                 const clientType = getClientType(clientName);
-
-                // Credit Limit 15 Days Calculation based on CLIENT ACTIVE DAYS
-                const activeDaysCount = Math.max(15, stats.activeDays || 90);
-                const dailyAvgSales = (stats.totalSales || openDebt) / activeDaysCount;
-                const base15DayLimit = dailyAvgSales * 15;
-
-                // Conduct Penalty Factor
-                let riskFactor = 1.0;
-                const delayDays = stats.avgRealDays - stats.agreedDays;
-                if (delayDays > 15) riskFactor = 0.25;
-                else if (delayDays > 7) riskFactor = 0.50;
-                else if (delayDays > 3) riskFactor = 0.80;
-
-                const limiteSugerido = Math.round(base15DayLimit * riskFactor);
 
                 clientSummaries.push({
                     cliente: clientName,
@@ -1433,10 +1408,8 @@
                     diferencia: openDebt,
                     plazoPactado: stats.agreedDays,
                     plazoPromedioReal: stats.avgRealDays,
-                    desvioDias: delayDays,
-                    cumplimientoPct: stats.compliancePct,
-                    limiteSugerido: limiteSugerido,
-                    creditoExcedido: openDebt > limiteSugerido && limiteSugerido > 0
+                    desvioDias: stats.avgRealDays - stats.agreedDays,
+                    cumplimientoPct: stats.compliancePct
                 });
             });
 
@@ -1847,8 +1820,6 @@
             let filtered = clientSummaries.filter(c => {
                 const hasPendingDebt = c.diferencia > 0;
                 const matchStatus = statusFilter === 'ALL' || 
-                                    (statusFilter === 'EXCEEDED' && c.creditoExcedido) ||
-                                    (statusFilter === 'OK' && !c.creditoExcedido && hasPendingDebt) ||
                                     (statusFilter === 'EN_PLAZO' && !hasPendingDebt) || 
                                     (statusFilter === 'ATRASADO' && hasPendingDebt);
                 const matchSearch = c.cliente.toLowerCase().includes(search) || 
@@ -1870,7 +1841,7 @@
             });
 
             // Update Sort Icons
-            ['cliente', 'tipoCliente', 'proyectado', 'diferencia', 'plazoPactado', 'plazoPromedioReal', 'desvioDias', 'limiteSugerido'].forEach(cKey => {
+            ['cliente', 'tipoCliente', 'proyectado', 'cobrado', 'plazoPactado', 'plazoPromedioReal', 'desvioDias', 'cumplimientoPct'].forEach(cKey => {
                 const icon = document.getElementById(`sort-icon-terms-${cKey}`);
                 if (icon) {
                     if (window.termsSort.col === cKey) icon.textContent = window.termsSort.dir === 'asc' ? '↑' : '↓';
@@ -1880,22 +1851,22 @@
 
             filtered.forEach(c => {
                 const tr = document.createElement('tr');
-                tr.className = c.creditoExcedido ? 'bg-rose-50/60 hover:bg-rose-100/60' : 'hover:bg-slate-50';
+                tr.className = 'hover:bg-slate-50';
                 
-                const creditBadge = c.creditoExcedido ? 
-                    `<span class="px-2 py-0.5 bg-rose-600 text-white rounded font-extrabold text-[10px] shadow-sm">🚨 EXCEDIDO</span>` : 
-                    `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">🟢 DISPONIBLE</span>`;
+                const isDebtOverdue = c.diferencia > 0 && c.desvioDias > 0;
+                const badgeClass = !isDebtOverdue ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800';
+                const statusLabel = !isDebtOverdue ? 'En Plazo / Al Día' : 'Atrasado';
 
                 tr.innerHTML = `
                     <td class="py-3 px-4 font-bold text-slate-800">${c.cliente}</td>
                     <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-[11px] font-semibold">${c.tipoCliente || 'General'}</span></td>
                     <td class="py-3 px-4 text-right">${formatMoney(c.proyectado)}</td>
-                    <td class="py-3 px-4 text-right font-bold text-rose-600">${formatMoney(c.diferencia)}</td>
-                    <td class="py-3 px-4 text-center font-semibold text-indigo-600">${c.plazoPactado}d</td>
-                    <td class="py-3 px-4 text-center font-bold">${c.plazoPromedioReal}d</td>
+                    <td class="py-3 px-4 text-right font-bold text-emerald-600">${formatMoney(c.cobrado)}</td>
+                    <td class="py-3 px-4 text-center font-semibold text-indigo-600">${c.plazoPactado} días</td>
+                    <td class="py-3 px-4 text-center font-bold">${c.plazoPromedioReal} días</td>
                     <td class="py-3 px-4 text-center font-bold ${c.desvioDias > 0 ? 'text-rose-600' : 'text-emerald-600'}">${c.desvioDias > 0 ? '+' : ''}${c.desvioDias}d</td>
-                    <td class="py-3 px-4 text-right font-black text-brand-700">${formatMoney(c.limiteSugerido)}</td>
-                    <td class="py-3 px-4 text-center">${creditBadge}</td>
+                    <td class="py-3 px-4 text-center font-bold">${c.cumplimientoPct}%</td>
+                    <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">${statusLabel}</span></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -2129,8 +2100,8 @@
                     bucket = 'NEXT_WEEK';
                     nextWeekRaw += inv.saldo;
                     nextWeekCnt++;
-                    if (isCapacitacion) nextWeekCash += inv.saldo * factorW2;
-                    else nextWeekBank += inv.saldo * factorW2;
+                    if (isCapacitacion) thisWeekCash += inv.saldo * factorW2;
+                    else thisWeekBank += inv.saldo * factorW2;
                     action = 'Confirmar fecha pactada para próxima semana.';
                 } else {
                     laterRaw += inv.saldo;
