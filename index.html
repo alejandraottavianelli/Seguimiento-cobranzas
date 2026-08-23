@@ -726,7 +726,7 @@
         }
 
         /**
-         * Enhanced Capacitación Detection Rule
+         * Robust Capacitación & Canal Detection
          */
         function isCapacitacionCompany(empresaStr, docStr, facturaStr) {
             if (window.globalCompanyFilter === 'CAPACITACION') return true;
@@ -2100,8 +2100,8 @@
                     bucket = 'NEXT_WEEK';
                     nextWeekRaw += inv.saldo;
                     nextWeekCnt++;
-                    if (isCapacitacion) thisWeekCash += inv.saldo * factorW2;
-                    else thisWeekBank += inv.saldo * factorW2;
+                    if (isCapacitacion) nextWeekCash += inv.saldo * factorW2;
+                    else nextWeekBank += inv.saldo * factorW2;
                     action = 'Confirmar fecha pactada para próxima semana.';
                 } else {
                     laterRaw += inv.saldo;
