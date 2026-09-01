@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Módulo Multiempresa de Conciliación, Plazos Reales y Cash Flow Híbrido</title>
+    <title>Módulo Multiempresa de Conciliación, Plazos Reales, DSO & Cash Flow</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -55,11 +55,11 @@
 
                 <!-- Control Actions -->
                 <div class="flex items-center space-x-2">
-                    <!-- NEW: Live API Sync Button -->
+                    <!-- Live API Sync Button -->
                     <button onclick="syncWithOrquestadorAPI()" id="btn-api-sync" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow transition flex items-center space-x-1.5">
                         <svg class="w-4 h-4 animate-spin hidden" id="spinner-api" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         <svg class="w-4 h-4" id="icon-api" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        <span>🔄 Sincronizar Orquestador API</span>
+                        <span>🔄 Sincronizar API Orquestador</span>
                     </button>
 
                     <!-- Backup Export & Import Buttons -->
@@ -95,7 +95,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 py-1">
                 <button onclick="switchTab('tab-upload')" id="nav-tab-upload" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-white bg-slate-700 shadow-sm flex items-center">
                     <svg class="w-4 h-4 mr-1.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                    1. Cargar Archivos & Saldos
+                    1. Cargar Archivos & Histórico
                 </button>
                 <button onclick="switchTab('tab-executive')" id="nav-tab-executive" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center">
                     <svg class="w-4 h-4 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 30.555A9.001 9.001 0 1020 12h-9v8.555z"></path></svg>
@@ -136,9 +136,9 @@
                     <div>
                         <h2 class="text-lg font-bold text-slate-800 flex items-center">
                             <svg class="w-5 h-5 mr-2 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                            Importación Multiempresa (Sincronización API o 3 Archivos Excel)
+                            Gestión Híbrida: Histórico de Conducta + Foto de Saldos Vivos
                         </h2>
-                        <p class="text-xs text-slate-500 mt-1">Use el botón verde superior para sincronizar automáticamente con Finnegans e Interbanking, o suba los archivos de respaldo.</p>
+                        <p class="text-xs text-slate-500 mt-1">El historial (Ene-Hoy) aprende los días reales de pago de cada cliente. La API del Orquestador o el Reporte de Deuda Viva actualiza la caja actual.</p>
                     </div>
                 </div>
 
@@ -148,10 +148,10 @@
                         <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         </div>
-                        <h3 class="text-xs font-bold text-slate-800 mb-1">1. Facturas Emitidas</h3>
-                        <p class="text-[11px] text-slate-500 mb-3 max-w-xs">Análisis de Facturación</p>
+                        <h3 class="text-xs font-bold text-slate-800 mb-1">1. Histórico de Facturas Emitidas</h3>
+                        <p class="text-[11px] text-slate-500 mb-3 max-w-xs">Base de Inteligencia (Ganadera + Capacitación)</p>
                         <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium px-3 py-1.5 border border-slate-300 rounded-lg shadow-sm transition">
-                            <span id="sales-filename">Seleccionar Facturas...</span>
+                            <span id="sales-filename">Cargar Historial Facturas...</span>
                             <input type="file" id="sales-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleSalesFile(event)">
                         </label>
                         <div id="sales-status" class="mt-2 text-[11px] text-emerald-600 font-semibold hidden"></div>
@@ -162,10 +162,10 @@
                         <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         </div>
-                        <h3 class="text-xs font-bold text-slate-800 mb-1">2. Cobranzas Recibidas</h3>
-                        <p class="text-[11px] text-slate-500 mb-3 max-w-xs">Recibos de Cobro (Interbanking)</p>
+                        <h3 class="text-xs font-bold text-slate-800 mb-1">2. Histórico de Cobranzas / Recibos</h3>
+                        <p class="text-[11px] text-slate-500 mb-3 max-w-xs">Base de Pagos (Interbanking + Efectivo)</p>
                         <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium px-3 py-1.5 border border-slate-300 rounded-lg shadow-sm transition">
-                            <span id="real-filename">Seleccionar Cobranzas...</span>
+                            <span id="real-filename">Cargar Historial Cobranzas...</span>
                             <input type="file" id="real-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleRealFile(event)">
                         </label>
                         <div id="real-status" class="mt-2 text-[11px] text-emerald-600 font-semibold hidden"></div>
@@ -176,10 +176,10 @@
                         <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         </div>
-                        <h3 class="text-xs font-bold text-amber-900 mb-1">3. Deuda Viva en la Calle</h3>
-                        <p class="text-[11px] text-amber-700 mb-3 max-w-xs">Foto Oficial Finnegans</p>
+                        <h3 class="text-xs font-bold text-amber-900 mb-1">3. Deuda Viva en la Calle (Lunes)</h3>
+                        <p class="text-[11px] text-amber-700 mb-3 max-w-xs">Foto Oficial Finnegans / Excel de Resguardo</p>
                         <label class="cursor-pointer bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition">
-                            <span id="live-debt-filename">Cargar Reporte Deuda...</span>
+                            <span id="live-debt-filename">Cargar Deuda Viva...</span>
                             <input type="file" id="live-debt-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleLiveDebtFile(event)">
                         </label>
                         <div id="live-debt-status" class="mt-2 text-[11px] text-amber-800 font-bold hidden"></div>
@@ -194,54 +194,51 @@
             <div id="sync-banner" class="bg-amber-50 border border-amber-200 rounded-xl p-3 flex justify-between items-center hidden text-xs text-amber-900 font-semibold">
                 <span class="flex items-center">
                     <svg class="w-4 h-4 mr-2 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Sincronizado con Orquestador API (Datos Vivos en Tiempo Real)
+                    Sincronizado con Deuda Viva en la Calle (Saldos Abiertos Finnegans / Orquestador API)
                 </span>
                 <span id="sync-banner-monto" class="font-bold text-amber-800">$ 0</span>
             </div>
 
-            <!-- Top KPI Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+            <!-- Top KPI Cards with DSO Total -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Facturado</p>
-                        <h3 id="kpi-facturado" class="text-2xl font-black text-slate-800 mt-1">$ 0</h3>
-                        <p id="kpi-facturas-count" class="text-xs text-slate-500 mt-1">0 Facturas emitidas</p>
-                    </div>
-                    <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Total Facturado</p>
+                        <h3 id="kpi-facturado" class="text-xl font-black text-slate-800 mt-1">$ 0</h3>
+                        <p id="kpi-facturas-count" class="text-[11px] text-slate-500 mt-1">0 Comprobantes</p>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+                <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Cobrado (Interbanking)</p>
-                        <h3 id="kpi-cobrado" class="text-2xl font-black text-emerald-600 mt-1">$ 0</h3>
-                        <p id="kpi-recibos-count" class="text-xs text-emerald-700 mt-1">0 Recibos aplicados</p>
-                    </div>
-                    <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Total Cobrado</p>
+                        <h3 id="kpi-cobrado" class="text-xl font-black text-emerald-600 mt-1">$ 0</h3>
+                        <p id="kpi-recibos-count" class="text-[11px] text-emerald-700 mt-1">0 Recibos aplicados</p>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+                <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Deuda Viva en la Calle</p>
-                        <h3 id="kpi-pendiente" class="text-2xl font-black text-rose-600 mt-1">$ 0</h3>
-                        <p id="kpi-recupero-pct" class="text-xs text-slate-500 mt-1">Recuperación: 0%</p>
-                    </div>
-                    <div class="p-3 bg-rose-50 text-rose-600 rounded-xl">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Deuda Viva Calle</p>
+                        <h3 id="kpi-pendiente" class="text-xl font-black text-rose-600 mt-1">$ 0</h3>
+                        <p id="kpi-recupero-pct" class="text-[11px] text-slate-500 mt-1">Recuperación: 0%</p>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+                <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Plazo Medio Real</p>
-                        <h3 id="kpi-plazo-promedio" class="text-2xl font-black text-indigo-600 mt-1">0 días</h3>
-                        <p id="kpi-desvio-promedio" class="text-xs text-indigo-700 mt-1">Pactado: 30d promedio</p>
+                        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Plazo Real Prom.</p>
+                        <h3 id="kpi-plazo-promedio" class="text-xl font-black text-indigo-600 mt-1">0 días</h3>
+                        <p id="kpi-desvio-promedio" class="text-[11px] text-indigo-700 mt-1">Pactado: 30d prom.</p>
                     </div>
-                    <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
+
+                <!-- NEW: DSO Total Indicator Card -->
+                <div class="bg-indigo-900 text-white rounded-xl p-4 shadow-sm flex items-center justify-between border border-indigo-800">
+                    <div>
+                        <p class="text-[10px] font-extrabold uppercase tracking-wider text-amber-300">DSO Total Empresa</p>
+                        <h3 id="kpi-dso-total" class="text-xl font-black text-white mt-1">0 Días</h3>
+                        <p class="text-[10px] text-indigo-200 mt-1">Días Venta en Calle</p>
                     </div>
                 </div>
             </div>
@@ -249,7 +246,7 @@
             <!-- Visual Charts Row -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-bold text-slate-800 mb-4">Estado de Imputación de Facturas</h3>
+                    <h3 class="text-sm font-bold text-slate-800 mb-4">Estado de Imputación de Facturas (Ganadera + Capacitación)</h3>
                     <div class="h-64 relative">
                         <canvas id="chart-status"></canvas>
                     </div>
@@ -690,6 +687,9 @@
             return s;
         }
 
+        /**
+         * Robust Capacitación & Canal Detection
+         */
         function isCapacitacionCompany(empresaStr, docStr, facturaStr) {
             if (window.globalCompanyFilter === 'CAPACITACION') return true;
             const combined = (String(empresaStr || '') + ' ' + String(docStr || '') + ' ' + String(facturaStr || '')).toLowerCase();
@@ -739,7 +739,7 @@
         }
 
         /**
-         * Live Synchronizer with Orquestador API (Automatic Login & Fallback)
+         * Live Synchronizer with Orquestador API (Preserves Historical Behavior)
          */
         async function syncWithOrquestadorAPI() {
             const btn = document.getElementById('btn-api-sync');
@@ -753,12 +753,10 @@
             showToast('Conectando con Orquestador API...', 'info');
 
             try {
-                // Step 1: Ensure Authentication (Try API Key then fallback to User/Pass login)
                 let headers = { "X-API-Key": API_KEY_DEFAULT };
                 let testRes = await fetch(`${ORQUESTADOR_BASE_URL}/clientes?limit=1`, { headers });
 
                 if (testRes.status === 401) {
-                    // Fallback Option C: Login with user/pass
                     const formBody = new URLSearchParams({ "username": "alejandra", "password": "vV7apCBlD0O0p3pAXs8y" });
                     const loginRes = await fetch(`${ORQUESTADOR_BASE_URL}/auth/login`, {
                         method: "POST",
@@ -771,16 +769,15 @@
                     headers = { "Authorization": `Bearer ${apiAuthToken}` };
                 }
 
-                // Step 2: Fetch Live Open Debt Invoices
+                // Fetch Live Open Debt Invoices
                 const invRes = await fetch(`${ORQUESTADOR_BASE_URL}/facturas?limit=1000&solo_pendientes=true`, { headers });
                 if (!invRes.ok) throw new Error("Error al consultar facturas pendientes.");
                 const liveInvoices = await invRes.json();
 
-                // Step 3: Fetch Interbanking Bank Receipts / Credits
+                // Fetch Interbanking Bank Receipts / Credits
                 const recRes = await fetch(`${ORQUESTADOR_BASE_URL}/interbanking/movimientos?limit=1000&debit_credit_type=C`, { headers });
                 const liveReceipts = recRes.ok ? await recRes.json() : [];
 
-                // Step 4: Map API Data into App Structure
                 let totalLiveDebt = 0;
                 window.rawLiveDebt = liveInvoices.map(i => {
                     const amt = parseMoney(i.balance || i.total);
@@ -801,13 +798,14 @@
                 });
 
                 if (liveReceipts.length > 0) {
-                    window.rawReal = liveReceipts.map(r => ({
+                    const mappedReceipts = liveReceipts.map(r => ({
                         cliente: String(r.depositor_description || r.customer_cuit || 'CLIENTE S/D').trim(),
                         fechaCobro: parseExcelDate(r.movement_date || r.process_date),
                         importeCobrado: Math.abs(parseMoney(r.amount)),
                         recibo: String(r.voucher_number || r.interbanking_id || 'REC-IB').trim(),
                         empresa: 'GANADERA NORTE NEUQUINO'
                     }));
+                    window.rawReal = window.rawReal.concat(mappedReceipts);
                 }
 
                 runReconciliation();
@@ -827,7 +825,6 @@
             if (!row) return '';
             const keys = Object.keys(row);
 
-            // Step 1: Exact Normalized Key Match
             for (const term of terms) {
                 const cleanT = cleanStr(term);
                 for (const k of keys) {
@@ -844,7 +841,6 @@
                 }
             }
 
-            // Step 2: Partial Normalized Key Match
             for (const term of terms) {
                 const cleanT = cleanStr(term);
                 for (const k of keys) {
@@ -1295,9 +1291,11 @@
                 realToProcess = window.historicalBatches[window.activePeriod].real || [];
             }
 
+            // Apply Company Filter to History
             const salesFilteredConduct = filterByCompanyData(salesToProcess);
             const realFilteredConduct = filterByCompanyData(realToProcess);
 
+            // Reconcile Historical Accounts for Executive Summary and Empirical Recovery Rates
             const clientConductMap = {};
             let historicalTotalInvoiced = 0;
             let historicalRecoveredW1 = 0;
@@ -1341,6 +1339,7 @@
                 const clientName = group.displayName;
                 const agreedDays = getClientAgreedDays(clientName);
 
+                // Apply Credit Notes
                 let creditNotesTotal = group.sales.filter(s => s.importe < 0 && !s.isExcluded).reduce((sum, s) => sum + Math.abs(s.importe), 0);
                 if (creditNotesTotal > 0) {
                     group.sales.filter(s => s.importe > 0 && !s.isExcluded).forEach(s => {
@@ -1355,6 +1354,7 @@
 
                 let realPayDaysSum = 0, realPayCount = 0;
 
+                // Match Receipts and Calculate Empirical Weekly Recovery
                 group.real.forEach(rec => {
                     let amountToApply = rec.importeCobrado;
                     for (let s of group.sales) {
@@ -1396,6 +1396,7 @@
                 group.sales.forEach(s => invoiceDetailsHistory.push(s));
             });
 
+            // Calculate Historical Empirical Percentages
             const empiricalW1Rate = historicalTotalInvoiced > 0 ? Math.min(0.9, historicalRecoveredW1 / historicalTotalInvoiced) : 0.6;
             const empiricalW2Rate = historicalTotalInvoiced > 0 ? Math.min(0.5, historicalRecoveredW2 / historicalTotalInvoiced) : 0.12;
             const empiricalLaterRate = historicalTotalInvoiced > 0 ? Math.min(0.3, historicalRecoveredLater / historicalTotalInvoiced) : 0.19;
@@ -1406,10 +1407,12 @@
                 later: Math.max(0.05, empiricalLaterRate)
             };
 
+            // Reconcile Active Open Invoices for Route and Forecast
             let finalInvoiceList = [];
             const hasLiveSnapshot = window.rawLiveDebt && window.rawLiveDebt.length > 0;
 
             if (hasLiveSnapshot) {
+                // Live Open Debt Snapshot Mode
                 let liveFiltered = filterByCompanyData(window.rawLiveDebt);
                 finalInvoiceList = liveFiltered.map(i => {
                     const isExcluded = !!window.excludedInvoices[i.factura];
@@ -1432,6 +1435,7 @@
                 if (syncBanner) syncBanner.classList.add('hidden');
             }
 
+            // Build Client Summaries
             const clientSummaries = [];
             const summaryGroupMap = {};
 
@@ -1614,6 +1618,11 @@
             const recuperoPct = totalFacturado > 0 ? Math.round((totalCobrado / totalFacturado) * 100) : 0;
             const avgDays = clientSummaries.length > 0 ? Math.round(clientSummaries.reduce((s, c) => s + c.plazoPromedioReal, 0) / clientSummaries.length) : 30;
 
+            // Calculate DSO Total (Deuda Pendiente / Ventas Diarias Promedio)
+            const totalDaysInPeriod = 240; // Ene-Ago (240d)
+            const dailyAvgSales = totalFacturado > 0 ? (totalFacturado / totalDaysInPeriod) : 1;
+            const dsoTotal = Math.round(totalPendiente / dailyAvgSales);
+
             const elemFact = document.getElementById('kpi-facturado');
             if (elemFact) elemFact.textContent = formatMoney(totalFacturado);
             
@@ -1634,6 +1643,9 @@
 
             const elemPlazo = document.getElementById('kpi-plazo-promedio');
             if (elemPlazo) elemPlazo.textContent = `${avgDays} días`;
+
+            const elemDSO = document.getElementById('kpi-dso-total');
+            if (elemDSO) elemDSO.textContent = `${dsoTotal} Días`;
         }
 
         function renderCharts() {
@@ -1705,7 +1717,6 @@
             }
         }
 
-        // Render Ruta de Cobranzas por Reparto
         function renderRouteModule() {
             if (!window.reconciliationResult) return;
             const { invoiceDetails, clientSummaries } = window.reconciliationResult;
@@ -2181,7 +2192,7 @@
 
             if (document.getElementById('pred-next-week-amount')) document.getElementById('pred-next-week-amount').textContent = formatMoney(nextWeekAmt);
             if (document.getElementById('pred-next-week-count')) document.getElementById('pred-next-week-count').textContent = `${nextWeekCnt} Facturas esperadas (${nextWeekPct}% del saldo a tasa ${Math.round(factorW2*100)}%)`;
-            if (document.getElementById('pred-next-week-breakdown')) document.getElementById('pred-next-week-breakdown').textContent = `💵 Efectivo: ${formatMoney(nextWeekCash)} | 🏦 Bancos: ${formatMoney(nextWeekBank)}`;
+            if (document.getElementById('pred-next-week-breakdown')) document.getElementById('pred-next-week-breakdown').textContent = `💵 Efectivo: ${formatMoney(thisWeekCash)} | 🏦 Bancos: ${formatMoney(thisWeekBank)}`;
 
             if (document.getElementById('pred-later-amount')) document.getElementById('pred-later-amount').textContent = formatMoney(laterAmt);
             if (document.getElementById('pred-later-count')) document.getElementById('pred-later-count').textContent = `${laterCnt} Facturas esperadas (${laterPct}% del saldo a tasa ${Math.round(factorLater*100)}%)`;
