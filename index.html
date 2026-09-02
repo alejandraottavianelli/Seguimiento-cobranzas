@@ -82,6 +82,17 @@
                         </select>
                     </div>
 
+                    <!-- Period Filter -->
+                    <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs">
+                        <span class="text-slate-400 mr-2 flex items-center">
+                            <svg class="w-4 h-4 mr-1 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            Período:
+                        </span>
+                        <select id="global-period-select" onchange="changeActivePeriod(this.value)" class="bg-transparent text-amber-300 font-semibold focus:outline-none cursor-pointer">
+                            <option value="ALL" class="bg-slate-900 text-white">Todos los Meses (Histórico Acumulado)</option>
+                        </select>
+                    </div>
+
                     <!-- Client Terms Modal Button -->
                     <button onclick="openTermsModal()" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium shadow transition flex items-center">
                         Plazos Pactados
@@ -827,13 +838,14 @@
                 window.rawLiveDebt = openInvoicesMapped;
 
                 if (liveReceipts.length > 0) {
-                    window.rawReal = liveReceipts.map(r => ({
+                    const mappedReceipts = liveReceipts.map(r => ({
                         cliente: String(r.depositor_description || r.customer_cuit || 'CLIENTE S/D').trim(),
                         fechaCobro: parseExcelDate(r.movement_date || r.process_date),
                         importeCobrado: Math.abs(parseMoney(r.amount)),
                         recibo: String(r.voucher_number || r.interbanking_id || 'REC-IB').trim(),
                         empresa: 'GANADERA NORTE NEUQUINO'
                     }));
+                    window.rawReal = window.rawReal.concat(mappedReceipts);
                 }
 
                 window.historicalBatches['API-VIVA'] = {
@@ -1412,8 +1424,8 @@
                     }
                 });
 
-                const avgRealDays = realPayCount > 0 ? Math.round(realPayDaysSum / realPayCount) : agreedDays;
-                const compliancePct = totalSales > 0 ? Math.min(100, Math.round((totalReal / totalSales) * 100)) : (agreedDays ? 100 : 0);
+                const avgRealDays = realPayCount > 0 ? Math.round(realPayDaysSum / realPayCount) : (agreedDays ? agreedDays : 30);
+                const compliancePct = totalSales > 0 ? Math.min(100, Math.round((totalReal / totalSales) * 100)) : (realPayCount > 0 ? 100 : 0);
 
                 clientConductStats[normKey] = {
                     displayName: clientName,
@@ -1745,7 +1757,6 @@
             }
         }
 
-        // Render Ruta de Cobranzas por Reparto
         function renderRouteModule() {
             if (!window.reconciliationResult) return;
             const { invoiceDetails, clientSummaries } = window.reconciliationResult;
@@ -2221,7 +2232,7 @@
 
             if (document.getElementById('pred-next-week-amount')) document.getElementById('pred-next-week-amount').textContent = formatMoney(nextWeekAmt);
             if (document.getElementById('pred-next-week-count')) document.getElementById('pred-next-week-count').textContent = `${nextWeekCnt} Facturas esperadas (${nextWeekPct}% del saldo a tasa ${Math.round(factorW2*100)}%)`;
-            if (document.getElementById('pred-next-week-breakdown')) document.getElementById('pred-next-week-breakdown').textContent = `💵 Efectivo: ${formatMoney(thisWeekCash)} | 🏦 Bancos: ${formatMoney(thisWeekBank)}`;
+            if (document.getElementById('pred-next-week-breakdown')) document.getElementById('pred-next-week-breakdown').textContent = `💵 Efectivo: ${formatMoney(nextWeekCash)} | 🏦 Bancos: ${formatMoney(nextWeekBank)}`;
 
             if (document.getElementById('pred-later-amount')) document.getElementById('pred-later-amount').textContent = formatMoney(laterAmt);
             if (document.getElementById('pred-later-count')) document.getElementById('pred-later-count').textContent = `${laterCnt} Facturas esperadas (${laterPct}% del saldo a tasa ${Math.round(factorLater*100)}%)`;
