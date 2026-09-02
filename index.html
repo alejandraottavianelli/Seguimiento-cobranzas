@@ -1413,7 +1413,7 @@
                 });
 
                 const avgRealDays = realPayCount > 0 ? Math.round(realPayDaysSum / realPayCount) : agreedDays;
-                const compliancePct = totalSales > 0 ? Math.min(100, Math.round((totalReal / totalSales) * 100)) : 100;
+                const compliancePct = totalSales > 0 ? Math.min(100, Math.round((totalReal / totalSales) * 100)) : (agreedDays ? 100 : 0);
 
                 clientConductStats[normKey] = {
                     displayName: clientName,
@@ -2221,7 +2221,7 @@
 
             if (document.getElementById('pred-next-week-amount')) document.getElementById('pred-next-week-amount').textContent = formatMoney(nextWeekAmt);
             if (document.getElementById('pred-next-week-count')) document.getElementById('pred-next-week-count').textContent = `${nextWeekCnt} Facturas esperadas (${nextWeekPct}% del saldo a tasa ${Math.round(factorW2*100)}%)`;
-            if (document.getElementById('pred-next-week-breakdown')) document.getElementById('pred-next-week-breakdown').textContent = `💵 Efectivo: ${formatMoney(nextWeekCash)} | 🏦 Bancos: ${formatMoney(nextWeekBank)}`;
+            if (document.getElementById('pred-next-week-breakdown')) document.getElementById('pred-next-week-breakdown').textContent = `💵 Efectivo: ${formatMoney(thisWeekCash)} | 🏦 Bancos: ${formatMoney(thisWeekBank)}`;
 
             if (document.getElementById('pred-later-amount')) document.getElementById('pred-later-amount').textContent = formatMoney(laterAmt);
             if (document.getElementById('pred-later-count')) document.getElementById('pred-later-count').textContent = `${laterCnt} Facturas esperadas (${laterPct}% del saldo a tasa ${Math.round(factorLater*100)}%)`;
