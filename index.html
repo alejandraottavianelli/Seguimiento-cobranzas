@@ -230,20 +230,21 @@
         function normalizeClientName(s) { return cleanStr(s).replace(/[^a-z0-9\s]/g, ' ').replace(/\b(s a|s r l|s h)\b/g, '').replace(/\s+/g, ' ').trim(); }
         function formatMoney(num) { return '$ ' + Math.round(num || 0).toLocaleString('es-AR'); }
 
-        // Parsea cualquier tipo de fecha proveniente de Excel
+        // Convierte números de serie de Excel o cadenas de texto a objetos Date
         function parseExcelDate(val) {
             if (!val) return new Date();
             if (val instanceof Date) return isNaN(val.getTime()) ? new Date() : val;
-            if (typeof val === 'number') {
-                // Si viene como número de serie de Excel (ej: 46023)
-                if (val > 10000 && val < 60000) {
-                    return new Date(Math.round((val - 25569) * 86400 * 1000));
-                }
+            
+            // Si viene como número o como cadena numérica (ej: "46023")
+            const num = Number(val);
+            if (!isNaN(num) && num > 10000 && num < 60000) {
+                return new Date(Math.round((num - 25569) * 86400 * 1000));
             }
+
             const str = String(val).trim();
             const parts = str.split(/[-/.]/);
             if (parts.length === 3) {
-                if (parts[0].length === 4) return new Date(parts[0], parseInt(parts[1]) - 1, parseInt(parts[2]));
+                if (parts[0].length === 4) return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
                 return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
             }
             const d = new Date(str);
@@ -350,7 +351,7 @@
         }
 
         function processAndSavePeriod() {
-            // Agrupar automáticamente por la columna Fecha en AAAA-MM
+            // Agrupar por la columna Fecha convertida a AAAA-MM
             window.rawSales.forEach(s => {
                 const periodKey = extractPeriodKey(s.dEmision);
                 if (!window.historicalBatches[periodKey]) window.historicalBatches[periodKey] = { sales: [], real: [] };
