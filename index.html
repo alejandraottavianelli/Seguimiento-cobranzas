@@ -111,7 +111,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-6">
                     <div>
                         <h2 class="text-lg font-bold text-slate-800">Procesamiento de Archivos Excel</h2>
-                        <p class="text-xs text-slate-500 mt-1">Cargue los archivos. El sistema detectará automáticamente todos los meses presentes.</p>
+                        <p class="text-xs text-slate-500 mt-1">Cargue los archivos. El sistema agrupará la información por la columna <b>Fecha</b> en formato AAAA-MM.</p>
                     </div>
                     <div class="flex items-center space-x-3 bg-slate-50 p-2 rounded-lg border border-slate-200">
                         <label class="text-xs font-semibold text-slate-600">Empresa por defecto:</label>
@@ -214,7 +214,7 @@
             </div>
         </section>
 
-        <!-- Pestañas restantes simplificadas pero funcionales -->
+        <!-- Secciones auxiliares -->
         <section id="tab-route" class="space-y-6 hidden"><div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200"><h2 class="text-lg font-bold">Ruta de Cobranzas</h2><div id="route-repartos-list" class="mt-4 space-y-2"></div><div id="tbody-reparto-detail" class="mt-4"></div></div></section>
         <section id="tab-terms" class="space-y-6 hidden"><div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200"><h2 class="text-lg font-bold">Plazos Reales vs Pactados</h2><table class="w-full text-xs text-left mt-4"><thead><tr class="bg-slate-50 font-bold"><th>Cliente</th><th>Facturado</th><th>Cobrado</th><th>Plazo Real</th></tr></thead><tbody id="tbody-client-terms"></tbody></table></div></section>
         <section id="tab-imputation" class="space-y-6 hidden"><div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200"><h2 class="text-lg font-bold">Detalle de Imputación</h2><table class="w-full text-xs text-left mt-4"><thead><tr class="bg-slate-50 font-bold"><th>Cliente</th><th>Comprobante</th><th>Importe</th><th>Saldo</th></tr></thead><tbody id="tbody-imputation"></tbody></table></div></section>
@@ -230,25 +230,32 @@
         function normalizeClientName(s) { return cleanStr(s).replace(/[^a-z0-9\s]/g, ' ').replace(/\b(s a|s r l|s h)\b/g, '').replace(/\s+/g, ' ').trim(); }
         function formatMoney(num) { return '$ ' + Math.round(num || 0).toLocaleString('es-AR'); }
 
+        // Parsea cualquier tipo de fecha proveniente de Excel
         function parseExcelDate(val) {
             if (!val) return new Date();
             if (val instanceof Date) return isNaN(val.getTime()) ? new Date() : val;
-            if (typeof val === 'number') return new Date(Math.round((val - 25569) * 86400 * 1000));
+            if (typeof val === 'number') {
+                // Si viene como número de serie de Excel (ej: 46023)
+                if (val > 10000 && val < 60000) {
+                    return new Date(Math.round((val - 25569) * 86400 * 1000));
+                }
+            }
             const str = String(val).trim();
             const parts = str.split(/[-/.]/);
             if (parts.length === 3) {
-                if (parts[0].length === 4) return new Date(parts[0], parseInt(parts[1]) - 1, parts[2]);
-                return new Date(parts[2], parseInt(parts[1]) - 1, parseInt(parts[0]));
+                if (parts[0].length === 4) return new Date(parts[0], parseInt(parts[1]) - 1, parseInt(parts[2]));
+                return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
             }
             const d = new Date(str);
             return isNaN(d.getTime()) ? new Date() : d;
         }
 
-        function extractPeriodKey(dateObj) {
-            const d = parseExcelDate(dateObj);
-            const y = d.getFullYear();
-            const m = String(d.getMonth() + 1).padStart(2, '0');
-            return `${y}-${m}`;
+        // Extrae exactamente la clave Año-Mes (ejemplo: "2026-01")
+        function extractPeriodKey(dateVal) {
+            const d = parseExcelDate(dateVal);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            return `${year}-${month}`;
         }
 
         function findRowValue(row, terms) {
@@ -287,10 +294,10 @@
                 const json = parseExcelSheet(workbook.Sheets[workbook.SheetNames[0]]);
                 window.rawSales = json.map(r => ({
                     cliente: findRowValue(r, ['cliente', 'razon social', 'razon']) || 'CLIENTE S/D',
-                    factura: findRowValue(r, ['comprobante', 'factura', 'nro comp']) || 'F-000',
-                    dEmision: parseExcelDate(findRowValue(r, ['fecha comprobante', 'fecha emision', 'fecha'])),
+                    factura: findRowValue(r, ['nro comp', 'comprobante', 'factura']) || 'F-000',
+                    dEmision: parseExcelDate(findRowValue(r, ['fecha', 'fecha comprobante', 'fecha emision'])),
                     dVto: parseExcelDate(findRowValue(r, ['fecha vto', 'vencimiento'])),
-                    importe: parseFloat(findRowValue(r, ['importe ppal', 'total', 'importe']) || 0),
+                    importe: parseFloat(findRowValue(r, ['total', 'importe ppal', 'bruto', 'importe']) || 0),
                     vendedor: findRowValue(r, ['vendedor', 'documento']) || 'General',
                     empresa: findRowValue(r, ['empresa']) || 'Ganadera'
                 }));
@@ -309,9 +316,9 @@
                 const json = parseExcelSheet(workbook.Sheets[workbook.SheetNames[0]]);
                 window.rawReal = json.map(r => ({
                     cliente: findRowValue(r, ['cliente', 'razon social', 'razon']) || 'CLIENTE S/D',
-                    fechaCobro: parseExcelDate(findRowValue(r, ['fecha comprobante', 'fecha cobro', 'fecha'])),
-                    importeCobrado: Math.abs(parseFloat(findRowValue(r, ['importe ppal', 'importe', 'monto']) || 0)),
-                    recibo: findRowValue(r, ['comprobante', 'recibo']) || 'REC-000',
+                    fechaCobro: parseExcelDate(findRowValue(r, ['fecha', 'fecha comprobante', 'fecha cobro'])),
+                    importeCobrado: Math.abs(parseFloat(findRowValue(r, ['t. cta. cte.', 'total', 'importe ppal', 'importe']) || 0)),
+                    recibo: findRowValue(r, ['número comprobante', 'comprobante', 'recibo']) || 'REC-000',
                     empresa: findRowValue(r, ['empresa']) || 'Ganadera'
                 }));
                 showToast(`Se leyeron ${window.rawReal.length} recibos.`, 'success');
@@ -343,22 +350,22 @@
         }
 
         function processAndSavePeriod() {
-            // Auto-detect all periods inside rawSales and rawReal
+            // Agrupar automáticamente por la columna Fecha en AAAA-MM
             window.rawSales.forEach(s => {
-                const p = extractPeriodKey(s.dEmision);
-                if (!window.historicalBatches[p]) window.historicalBatches[p] = { sales: [], real: [] };
-                window.historicalBatches[p].sales.push(s);
+                const periodKey = extractPeriodKey(s.dEmision);
+                if (!window.historicalBatches[periodKey]) window.historicalBatches[periodKey] = { sales: [], real: [] };
+                window.historicalBatches[periodKey].sales.push(s);
             });
             window.rawReal.forEach(r => {
-                const p = extractPeriodKey(r.fechaCobro);
-                if (!window.historicalBatches[p]) window.historicalBatches[p] = { sales: [], real: [] };
-                window.historicalBatches[p].real.push(r);
+                const periodKey = extractPeriodKey(r.fechaCobro);
+                if (!window.historicalBatches[periodKey]) window.historicalBatches[periodKey] = { sales: [], real: [] };
+                window.historicalBatches[periodKey].real.push(r);
             });
 
             updatePeriodSelectors('ALL');
             window.activePeriod = 'ALL';
             runReconciliation();
-            showToast('¡Datos conciliados y períodos auto-detectados!', 'success');
+            showToast('¡Facturas y cobranzas agrupadas por mes exitosamente!', 'success');
         }
 
         function updatePeriodSelectors(selected) {
@@ -402,7 +409,7 @@
             const liveDebt = (window.rawLiveDebt && window.rawLiveDebt.length > 0) ? window.rawLiveDebt : activeSales;
             const totalPendiente = liveDebt.reduce((sum, i) => sum + (i.saldo || i.importe || 0), 0);
 
-            const dailyAvg = totalFacturado > 0 ? (totalFacturado / 240) : 1;
+            const dailyAvg = totalFacturado > 0 ? (totalFacturado / 30) : 1;
             const dso = Math.round(totalPendiente / dailyAvg);
 
             document.getElementById('kpi-facturado').textContent = formatMoney(totalFacturado);
