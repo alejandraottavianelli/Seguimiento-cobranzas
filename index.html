@@ -89,7 +89,19 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-6">
                     <div>
                         <h2 class="text-lg font-bold text-slate-800">Carga de Archivos de Ventas, Cobranzas y Deuda</h2>
-                        <p class="text-xs text-slate-500 mt-1">Seleccione los archivos Excel o CSV correspondientes.</p>
+                        <p class="text-xs text-slate-500 mt-1">Seleccione los archivos Excel/CSV o importe/exporte la copia de seguridad.</p>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <button onclick="exportBackupJSON()" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs font-bold rounded-lg transition flex items-center gap-1 shadow-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Exportar Backup (JSON)
+                        </button>
+                        <label class="cursor-pointer px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-300 text-xs font-bold rounded-lg transition flex items-center gap-1 shadow-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            Importar Backup
+                            <input type="file" id="backup-file-input" accept=".json" class="hidden" onchange="importBackupJSON(event)">
+                        </label>
                     </div>
                 </div>
 
@@ -174,7 +186,7 @@
             </div>
         </section>
 
-        <section id="tab-route" class="hidden space-y-6"><div class="bg-white p-6 rounded-xl border border-slate-200 text-slate-500">Pestaña 3: Ruta de Cobranzas (Procesando ajustada para siguiente paso)</div></section>
+        <section id="tab-route" class="hidden space-y-6"><div class="bg-white p-6 rounded-xl border border-slate-200 text-slate-500">Pestaña 3: Ruta de Cobranzas</div></section>
         <section id="tab-terms" class="hidden space-y-6"><div class="bg-white p-6 rounded-xl border border-slate-200 text-slate-500">Pestaña 4: Plazos Reales vs Pactados</div></section>
         <section id="tab-imputation" class="hidden space-y-6"><div class="bg-white p-6 rounded-xl border border-slate-200 text-slate-500">Pestaña 5: Detalle Imputación</div></section>
         <section id="tab-alerts" class="hidden space-y-6"><div class="bg-white p-6 rounded-xl border border-slate-200 text-slate-500">Pestaña 6: Alertas & Ranking</div></section>
@@ -302,6 +314,60 @@
             showToast('¡Procesado con éxito!', 'success');
         }
 
+        /* --- FUNCIONES DE EXPORTAR E IMPORTAR COPIA DE SEGURIDAD (JSON) --- */
+        function exportBackupJSON() {
+            const backupData = {
+                version: "1.0",
+                exportDate: new Date().toISOString(),
+                historicalBatches: window.historicalBatches,
+                rawSales: window.rawSales,
+                rawReal: window.rawReal,
+                rawLiveDebt: window.rawLiveDebt
+            };
+            const jsonStr = JSON.stringify(backupData, null, 2);
+            const blob = new Blob([jsonStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_conciliacion_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Copia de seguridad exportada con éxito.', 'success');
+        }
+
+        function importBackupJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.historicalBatches) window.historicalBatches = data.historicalBatches;
+                    if (data.rawSales) window.rawSales = data.rawSales;
+                    if (data.rawReal) window.rawReal = data.rawReal;
+                    if (data.rawLiveDebt) window.rawLiveDebt = data.rawLiveDebt;
+
+                    updatePeriodSelectors('ALL');
+                    window.activePeriod = 'ALL';
+                    runReconciliation();
+                    showToast('Copia de seguridad restaurada con éxito.', 'success');
+                } catch (err) {
+                    showToast('Error al leer el archivo JSON de copia de seguridad.', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearAllBatches() {
+            window.historicalBatches = {};
+            window.rawSales = [];
+            window.rawReal = [];
+            window.rawLiveDebt = [];
+            updatePeriodSelectors('ALL');
+            runReconciliation();
+            showToast('Memoria limpiada por completo.', 'success');
+        }
+
         function updatePeriodSelectors(selected) {
             const sel = document.getElementById('global-period-select');
             sel.innerHTML = '<option value="ALL">Todos los Meses (Acumulado)</option>';
@@ -337,7 +403,6 @@
                 activeReal = window.historicalBatches[window.activePeriod].real || [];
             }
 
-            // Aplicar filtro de empresa si no es ALL
             if (window.globalCompanyFilter === 'GANADERA') {
                 activeSales = activeSales.filter(s => (s.empresa || '').toLowerCase().includes('ganadera'));
                 activeReal = activeReal.filter(r => (r.empresa || '').toLowerCase().includes('ganadera'));
@@ -351,19 +416,16 @@
             const liveDebt = (window.rawLiveDebt && window.rawLiveDebt.length > 0) ? window.rawLiveDebt : activeSales;
             const totalPendiente = liveDebt.reduce((sum, i) => sum + (i.saldo || i.importe || 0), 0);
 
-            // 1. Totales y Contadores
             document.getElementById('kpi-facturado').textContent = formatMoney(totalFacturado);
             document.getElementById('kpi-facturas-count').textContent = `${activeSales.length} Comprobantes`;
 
             document.getElementById('kpi-cobrado').textContent = formatMoney(totalCobrado);
             document.getElementById('kpi-recibos-count').textContent = `${activeReal.length} Recibos`;
 
-            // 2. Deuda Viva & Recuperación
             document.getElementById('kpi-pendiente').textContent = formatMoney(totalPendiente);
             const recuperoPct = totalFacturado > 0 ? Math.round((totalCobrado / totalFacturado) * 100) : 0;
             document.getElementById('kpi-recupero-pct').textContent = `Recuperación: ${recuperoPct}% del facturado`;
 
-            // 3. DSO Unificado
             const dailyAvg = totalFacturado > 0 ? (totalFacturado / 30) : 1;
             const dso = Math.round(totalPendiente / dailyAvg);
             document.getElementById('kpi-dso-total').textContent = `${dso} Días`;
@@ -373,7 +435,6 @@
         }
 
         function renderCharts(sales, real, cobrado, pendiente) {
-            // Chart 1: Estado de Imputación (Torta)
             const canvasStatus = document.getElementById('chart-status');
             if (canvasStatus) {
                 const ctx = canvasStatus.getContext('2d');
@@ -395,7 +456,6 @@
                 });
             }
 
-            // Chart 2: Facturado vs Cobrado por Reparto / Vendedor (Barras)
             const canvasSellers = document.getElementById('chart-sellers');
             if (canvasSellers) {
                 const sellersMap = {};
@@ -459,7 +519,7 @@
         function showToast(msg, type) {
             const container = document.getElementById('toast-container');
             const div = document.createElement('div');
-            div.className = `p-3 rounded text-white text-xs font-bold shadow ${type==='success'?'bg-emerald-600':'bg-slate-800'}`;
+            div.className = `p-3 rounded text-white text-xs font-bold shadow ${type==='success'?'bg-emerald-600':type==='error'?'bg-rose-600':'bg-slate-800'}`;
             div.textContent = msg;
             container.appendChild(div);
             setTimeout(() => div.remove(), 3000);
