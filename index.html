@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Módulo Multiempresa de Conciliación, Plazos Reales, DSO & Cash Flow</title>
+    <title>Módulo Multiempresa de Conciliación, Plazos Reales & Cash Flow</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -109,8 +109,8 @@
             <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-6">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800">Carga de Archivos de Ventas, Cobranzas y Deuda</h2>
-                        <p class="text-xs text-slate-500 mt-1">Seleccione los archivos Excel/CSV o importe/exporte la copia de seguridad.</p>
+                        <h2 class="text-lg font-bold text-slate-800">Procesamiento de Archivos Excel</h2>
+                        <p class="text-xs text-slate-500 mt-1">Cargue los archivos de Ventas, Cobranzas y Deuda Viva en la Calle.</p>
                     </div>
                 </div>
 
@@ -146,7 +146,7 @@
                 <div class="pt-6 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-semibold text-slate-500">Meses Detectados:</span>
+                            <span class="text-xs font-semibold text-slate-500">Meses Detectados en la Base:</span>
                             <button onclick="clearAllBatches()" class="text-[11px] text-rose-600 hover:underline font-semibold ml-3">Limpiar Memoria</button>
                         </div>
                         <div id="period-badges-container" class="flex flex-wrap gap-2"></div>
@@ -180,7 +180,7 @@
                 <div class="bg-indigo-900 text-white rounded-xl p-4 shadow-sm border border-indigo-800">
                     <p class="text-[10px] font-extrabold uppercase tracking-wider text-amber-300">DSO Total / Plazo Promedio</p>
                     <h3 id="kpi-dso-total" class="text-xl font-black text-white mt-1">0 Días</h3>
-                    <p id="kpi-desvio-promedio" class="text-[10px] text-indigo-200 mt-1">Días Venta en Calle</p>
+                    <p id="kpi-desvio-promedio" class="text-[10px] text-indigo-200 mt-1">Plazo Promedio Real Estimado: -- días</p>
                 </div>
             </div>
 
@@ -401,6 +401,15 @@
             return normalized.includes('capacitacion') || normalized.includes('x-99999') || normalized.includes('cap-');
         }
 
+        // Extraer código de reparto limpio (ej: "RTO 42 - Factura de Venta" -> "RTO 42")
+        function extractRepartoCode(str) {
+            if (!str) return 'General';
+            const match = String(str).match(/RTO\s*\d+/i);
+            if (match) return match[0].toUpperCase();
+            const cleaned = String(str).split('-')[0].trim();
+            return cleaned || 'General';
+        }
+
         function parseExcelDate(val) {
             if (!val) return new Date();
             if (val instanceof Date) return isNaN(val.getTime()) ? new Date() : val;
@@ -425,15 +434,27 @@
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
         }
 
+        // Búsqueda inteligente de columnas dando prioridad a Vendedor / Reparto
         function findRowValue(row, terms) {
             if (!row) return '';
             const keys = Object.keys(row);
+            
+            // Si buscamos 'vendedor', no tomar 'documento' salvo que no exista otra
+            for (const t of terms) {
+                const ct = cleanStr(t);
+                for (const k of keys) {
+                    const ck = cleanStr(k);
+                    if (ct === 'vendedor' && ck.includes('documento')) continue;
+                    if (ct === 'cliente' && (ck.includes('codigo') || ck.includes('code'))) continue;
+                    if (ct === ck) { const v = row[k]; if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim(); }
+                }
+            }
             for (const t of terms) {
                 const ct = cleanStr(t);
                 for (const k of keys) {
                     const ck = cleanStr(k);
                     if (ct === 'cliente' && (ck.includes('codigo') || ck.includes('code'))) continue;
-                    if (ct === ck || ck.includes(ct)) { const v = row[k]; if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim(); }
+                    if (ck.includes(ct)) { const v = row[k]; if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim(); }
                 }
             }
             return '';
@@ -455,7 +476,7 @@
                     dEmision: parseExcelDate(findRowValue(r, ['fecha', 'fecha comprobante', 'fecha emision'])),
                     dVto: parseExcelDate(findRowValue(r, ['fecha vto', 'vencimiento'])),
                     importe: parseFloat(findRowValue(r, ['total', 'importe ppal', 'bruto', 'importe']) || 0),
-                    vendedor: findRowValue(r, ['vendedor', 'documento']) || 'General',
+                    vendedor: extractRepartoCode(findRowValue(r, ['vendedor', 'documento', 'reparto'])),
                     empresa: findRowValue(r, ['empresa']) || 'Ganadera'
                 }));
                 showToast(`Se leyeron ${window.rawSales.length} facturas.`, 'success');
@@ -476,7 +497,7 @@
                     fechaCobro: parseExcelDate(findRowValue(r, ['fecha', 'fecha comprobante', 'fecha cobro'])),
                     importeCobrado: Math.abs(parseFloat(findRowValue(r, ['t. cta. cte.', 'total', 'importe ppal', 'importe']) || 0)),
                     recibo: findRowValue(r, ['número comprobante', 'comprobante', 'recibo']) || 'REC-000',
-                    vendedor: findRowValue(r, ['vendedor', 'documento']) || 'General',
+                    vendedor: extractRepartoCode(findRowValue(r, ['vendedor', 'documento', 'reparto'])),
                     empresa: findRowValue(r, ['empresa']) || 'Ganadera'
                 }));
                 showToast(`Se leyeron ${window.rawReal.length} recibos.`, 'success');
@@ -498,7 +519,7 @@
                     dEmision: parseExcelDate(findRowValue(r, ['fecha comprobante', 'fecha'])),
                     dVto: parseExcelDate(findRowValue(r, ['fecha vto', 'vencimiento'])),
                     saldo: parseFloat(findRowValue(r, ['importe ppal', 'saldo', 'total']) || 0),
-                    vendedor: findRowValue(r, ['vendedor', 'documento']) || 'General',
+                    vendedor: extractRepartoCode(findRowValue(r, ['vendedor', 'documento', 'reparto'])),
                     empresa: findRowValue(r, ['empresa']) || 'Ganadera'
                 }));
                 runReconciliation();
@@ -594,7 +615,6 @@
             activeReal.forEach(r => {
                 const norm = normalizeClientName(r.cliente);
                 if (!clientMap[norm]) clientMap[norm] = { cliente: r.cliente, sales: [], real: [] };
-                // Asignar el vendedor del cliente si no lo tenía
                 if (!r.vendedor || r.vendedor === 'General') {
                     r.vendedor = clientSellerMap[norm] || 'General';
                 }
@@ -612,7 +632,7 @@
                 grp.real.forEach(r => {
                     grp.sales.forEach(s => {
                         const diff = Math.round((r.fechaCobro - s.dEmision) / (86400 * 1000));
-                        if (diff >= 0) { daysSum += diff; count++; }
+                        if (diff >= 0 && diff < 365) { daysSum += diff; count++; }
                     });
                 });
 
@@ -624,8 +644,8 @@
                     proyectado: totSales,
                     cobrado: totReal,
                     plazoPactado: agreed,
-                    plazoPromedioReal: avgReal,
-                    desvioDias: avgReal - agreed,
+                    plazoPromedioReal: isNaN(avgReal) ? agreed : avgReal,
+                    desvioDias: (isNaN(avgReal) ? agreed : avgReal) - agreed,
                     cumplimientoPct: compliance
                 });
             });
@@ -635,7 +655,7 @@
             const liveDebt = (window.rawLiveDebt && window.rawLiveDebt.length > 0) ? window.rawLiveDebt : activeSales;
             const totalPendiente = liveDebt.reduce((sum, i) => sum + (i.saldo || i.importe || 0), 0);
 
-            // DSO Corregido según período activo (días reales del período)
+            // DSO Corregido según período activo
             const numMonths = (window.activePeriod === 'ALL') ? Math.max(1, Object.keys(window.historicalBatches).length) : 1;
             const totalDaysInPeriod = numMonths * 30;
             const dailyAvg = totalFacturado > 0 ? (totalFacturado / totalDaysInPeriod) : 1;
@@ -652,7 +672,10 @@
             document.getElementById('kpi-recupero-pct').textContent = `Recuperación: ${recuperoPct}% del facturado`;
 
             document.getElementById('kpi-dso-total').textContent = `${dso} Días`;
-            const avgPlazoGlobal = clientSummaries.length > 0 ? Math.round(clientSummaries.reduce((s, c) => s + c.plazoPromedioReal, 0) / clientSummaries.length) : 15;
+            
+            // Evitar el NaN en la etiqueta de texto
+            const validSummaries = clientSummaries.filter(c => !isNaN(c.plazoPromedioReal));
+            const avgPlazoGlobal = validSummaries.length > 0 ? Math.round(validSummaries.reduce((s, c) => s + c.plazoPromedioReal, 0) / validSummaries.length) : dso;
             document.getElementById('kpi-desvio-promedio').textContent = `Plazo Promedio Real Estimado: ${avgPlazoGlobal} días`;
 
             window.reconciliationResult = { invoiceDetails: liveDebt, invoiceDetailsHistory: activeSales, clientSummaries };
@@ -691,12 +714,12 @@
             if (canvasSellers) {
                 const sellersMap = {};
                 sales.forEach(s => {
-                    const v = s.vendedor || 'General';
+                    const v = extractRepartoCode(s.vendedor);
                     if (!sellersMap[v]) sellersMap[v] = { facturado: 0, cobrado: 0 };
                     sellersMap[v].facturado += s.importe || 0;
                 });
                 real.forEach(r => {
-                    const v = r.vendedor || 'General';
+                    const v = extractRepartoCode(r.vendedor);
                     if (!sellersMap[v]) sellersMap[v] = { facturado: 0, cobrado: 0 };
                     sellersMap[v].cobrado += r.importeCobrado || 0;
                 });
@@ -733,7 +756,7 @@
 
             const repartos = {};
             (window.reconciliationResult.invoiceDetails || []).forEach(i => {
-                const v = i.vendedor || 'General';
+                const v = extractRepartoCode(i.vendedor);
                 if (!repartos[v]) repartos[v] = { total: 0, count: 0 };
                 repartos[v].total += (i.saldo || i.importe || 0);
                 repartos[v].count++;
@@ -765,7 +788,7 @@
             const subElem = document.getElementById('selected-reparto-sub');
 
             if (!window.reconciliationResult) return;
-            const invoices = (window.reconciliationResult.invoiceDetails || []).filter(i => (i.vendedor || 'General') === repartoName);
+            const invoices = (window.reconciliationResult.invoiceDetails || []).filter(i => extractRepartoCode(i.vendedor) === repartoName);
             const totalReparto = invoices.reduce((sum, i) => sum + (i.saldo || i.importe || 0), 0);
 
             if (titleElem) titleElem.textContent = `Detalle de Reparto: ${repartoName}`;
@@ -814,7 +837,7 @@
             }
         }
 
-        // Pestaña 6: Alertas & Rankings Top/Worst 10
+        // Pestaña 6: Alertas & Rankings
         function renderAlertsAndRanking() {
             const container = document.getElementById('alerts-container');
             const topDiv = document.getElementById('ranking-top');
@@ -947,7 +970,7 @@
             }
         }
 
-        // Importación de Copia de Seguridad JSON
+        // Importación de Copia de Seguridad JSON corregida y flexible
         function importBackupJSON(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -960,11 +983,12 @@
                     if (data.excludedInvoices) window.excludedInvoices = data.excludedInvoices;
                     if (data.rawLiveDebt) window.rawLiveDebt = data.rawLiveDebt;
 
-                    updatePeriodSelectors(Object.keys(window.historicalBatches)[0] || 'ALL');
+                    updatePeriodSelectors('ALL');
+                    window.activePeriod = 'ALL';
                     runReconciliation();
-                    showToast('Copia de Seguridad restaurada al 100%.', 'success');
+                    showToast('Copia de Seguridad restaurada con éxito.', 'success');
                 } catch (err) {
-                    showToast('El archivo de respaldo no es válido.', 'error');
+                    showToast('Error al leer el archivo JSON de copia de seguridad.', 'error');
                 }
             };
             reader.readAsText(file);
