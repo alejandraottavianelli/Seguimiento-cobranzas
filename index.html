@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Módulo Multiempresa de Conciliación, Plazos Reales, DSO & Cash Flow</title>
-    <!-- Tailwind CSS -->
+    <title>Módulo Multiempresa de Conciliación & DSO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -20,9 +19,7 @@
             }
         }
     </script>
-    <!-- SheetJS para lectura de Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- Chart.js para tableros visuales -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -30,16 +27,15 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .sort-header { cursor: pointer; user-select: none; }
-        .sort-header:hover { background-color: #f1f5f9; }
+        .tab-btn-active { background-color: #f8fafc !important; color: #0f172a !important; font-weight: 700 !important; border-bottom: 2px solid #2563eb; }
+        .tab-btn-inactive { background-color: transparent; color: #94a3b8; }
+        .tab-btn-inactive:hover { background-color: #334155; color: #ffffff; }
     </style>
 </head>
 <body class="h-full text-slate-800 bg-slate-50 flex flex-col font-sans">
     <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <!-- Logo & Title -->
                 <div class="flex items-center space-x-3">
                     <div class="p-2 bg-brand-600 rounded-lg shadow font-bold text-white text-xl">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
@@ -49,22 +45,11 @@
                             <span>Conciliación, Plazos Reales & Cash Flow</span>
                             <span id="company-active-badge" class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-indigo-500 text-white">Consolidado Real</span>
                         </h1>
-                        <p class="text-xs text-slate-400">Ganadera Norte Neuquino (Oficial) & Capacitación (Efectivo)</p>
+                        <p class="text-xs text-slate-400">Ganadera Norte Neuquino & Capacitación</p>
                     </div>
                 </div>
 
-                <!-- Control Actions -->
                 <div class="flex items-center space-x-2">
-                    <button onclick="exportBackupJSON()" title="Descargar Copia de Seguridad" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 rounded-lg text-xs font-semibold shadow transition flex items-center">
-                        <svg class="w-4 h-4 mr-1 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        Exportar Copia
-                    </button>
-                    <label class="cursor-pointer px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 rounded-lg text-xs font-semibold shadow transition flex items-center">
-                        <svg class="w-4 h-4 mr-1 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                        <span>Cargar Copia</span>
-                        <input type="file" id="import-backup-input" accept=".json" class="hidden" onchange="importBackupJSON(event)">
-                    </label>
-
                     <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs">
                         <select id="global-company-select" onchange="changeCompanyFilter(this.value)" class="bg-transparent text-indigo-300 font-bold focus:outline-none cursor-pointer">
                             <option value="ALL" class="bg-slate-900 text-white">🏢 Consolidado Real</option>
@@ -76,27 +61,22 @@
                     <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs">
                         <span class="text-slate-400 mr-2 flex items-center">Período:</span>
                         <select id="global-period-select" onchange="changeActivePeriod(this.value)" class="bg-transparent text-amber-300 font-semibold focus:outline-none cursor-pointer">
-                            <option value="ALL" class="bg-slate-900 text-white">Todos los Meses (Histórico Acumulado)</option>
+                            <option value="ALL" class="bg-slate-900 text-white">Todos los Meses (Acumulado)</option>
                         </select>
                     </div>
-
-                    <button onclick="openTermsModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium shadow transition flex items-center">
-                        Plazos Pactados
-                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Navigation Tabs Bar -->
-        <div class="bg-slate-800/80 border-t border-slate-700/60 overflow-x-auto custom-scrollbar">
+        <div class="bg-slate-800/90 border-t border-slate-700/60 overflow-x-auto custom-scrollbar">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 py-1">
-                <button onclick="switchTab('tab-upload')" id="nav-tab-upload" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-white bg-slate-700 shadow-sm flex items-center">1. Cargar Archivos & Histórico</button>
-                <button onclick="switchTab('tab-executive')" id="nav-tab-executive" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center">2. Resumen Ejecutivo</button>
-                <button onclick="switchTab('tab-route')" id="nav-tab-route" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center">3. Ruta de Cobranzas</button>
-                <button onclick="switchTab('tab-terms')" id="nav-tab-terms" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center">4. Plazos Reales vs Pactados</button>
-                <button onclick="switchTab('tab-imputation')" id="nav-tab-imputation" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center">5. Detalle Imputación</button>
-                <button onclick="switchTab('tab-alerts')" id="nav-tab-alerts" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center">6. Alertas & Ranking</button>
-                <button onclick="switchTab('tab-forecast')" id="nav-tab-forecast" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-700/50 flex items-center">7. Predicción & Cash Flow</button>
+                <button onclick="switchTab('tab-upload')" id="nav-tab-upload" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition tab-btn-active">1. Cargar Archivos & Histórico</button>
+                <button onclick="switchTab('tab-executive')" id="nav-tab-executive" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition tab-btn-inactive">2. Resumen Ejecutivo</button>
+                <button onclick="switchTab('tab-route')" id="nav-tab-route" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition tab-btn-inactive">3. Ruta de Cobranzas</button>
+                <button onclick="switchTab('tab-terms')" id="nav-tab-terms" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition tab-btn-inactive">4. Plazos Reales vs Pactados</button>
+                <button onclick="switchTab('tab-imputation')" id="nav-tab-imputation" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition tab-btn-inactive">5. Detalle Imputación</button>
+                <button onclick="switchTab('tab-alerts')" id="nav-tab-alerts" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition tab-btn-inactive">6. Alertas & Ranking</button>
+                <button onclick="switchTab('tab-forecast')" id="nav-tab-forecast" class="px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition tab-btn-inactive">7. Predicción & Cash Flow</button>
             </div>
         </div>
     </header>
@@ -104,20 +84,12 @@
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div id="toast-container" class="fixed top-20 right-5 z-50 space-y-2 pointer-events-none"></div>
 
-        <!-- 1. Cargar Archivos -->
         <section id="tab-upload" class="space-y-6">
             <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-6">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800">Procesamiento de Archivos Excel</h2>
-                        <p class="text-xs text-slate-500 mt-1">Cargue los archivos de Ventas, Cobranzas y Deuda Viva en la Calle.</p>
-                    </div>
-                    <div class="flex items-center space-x-3 bg-slate-50 p-2 rounded-lg border border-slate-200">
-                        <label class="text-xs font-semibold text-slate-600">Empresa por defecto:</label>
-                        <select id="upload-default-company" class="bg-white border border-slate-300 text-xs rounded-md px-2 py-1 font-semibold text-slate-700">
-                            <option value="GANADERA NORTE NEUQUINO">Ganadera Norte Neuquino</option>
-                            <option value="Capacitación">Capacitación (Efectivo)</option>
-                        </select>
+                        <h2 class="text-lg font-bold text-slate-800">Carga de Archivos de Ventas, Cobranzas y Deuda</h2>
+                        <p class="text-xs text-slate-500 mt-1">Seleccione los archivos Excel o CSV correspondientes.</p>
                     </div>
                 </div>
 
@@ -153,27 +125,21 @@
                 <div class="pt-6 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-semibold text-slate-500">Meses Detectados en la Base:</span>
+                            <span class="text-xs font-semibold text-slate-500">Meses Detectados:</span>
                             <button onclick="clearAllBatches()" class="text-[11px] text-rose-600 hover:underline font-semibold ml-3">Limpiar Memoria</button>
                         </div>
                         <div id="period-badges-container" class="flex flex-wrap gap-2"></div>
                     </div>
 
-                    <button onclick="processAndSavePeriod()" class="w-full md:w-auto px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg transition">
+                    <button onclick="processAndSavePeriod()" class="w-full md:w-auto px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl shadow-md transition">
                         Procesar y Conciliar Datos
                     </button>
                 </div>
             </div>
         </section>
 
-        <!-- 2. Resumen Ejecutivo -->
         <section id="tab-executive" class="space-y-6 hidden">
-            <div id="sync-banner" class="bg-amber-50 border border-amber-200 rounded-xl p-3 flex justify-between items-center hidden text-xs text-amber-900 font-semibold">
-                <span>Sincronizado con Deuda Viva en Calle</span>
-                <span id="sync-banner-monto" class="font-bold text-amber-800">$ 0</span>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
                     <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Total Facturado</p>
                     <h3 id="kpi-facturado" class="text-xl font-black text-slate-800 mt-1">$ 0</h3>
@@ -185,19 +151,14 @@
                     <p id="kpi-recibos-count" class="text-[11px] text-emerald-700 mt-1">0 Recibos</p>
                 </div>
                 <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-                    <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Deuda Viva Calle</p>
+                    <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Deuda Viva en Calle</p>
                     <h3 id="kpi-pendiente" class="text-xl font-black text-rose-600 mt-1">$ 0</h3>
-                    <p id="kpi-recupero-pct" class="text-[11px] text-slate-500 mt-1">Recuperación: 0%</p>
-                </div>
-                <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-                    <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Plazo Real Prom.</p>
-                    <h3 id="kpi-plazo-promedio" class="text-xl font-black text-indigo-600 mt-1">0 días</h3>
-                    <p id="kpi-desvio-promedio" class="text-[11px] text-indigo-700 mt-1">Pactado: 30d prom.</p>
+                    <p id="kpi-recupero-pct" class="text-[11px] font-bold text-slate-600 mt-1">Recuperación: 0%</p>
                 </div>
                 <div class="bg-indigo-900 text-white rounded-xl p-4 shadow-sm border border-indigo-800">
-                    <p class="text-[10px] font-extrabold uppercase tracking-wider text-amber-300">DSO Total Empresa</p>
+                    <p class="text-[10px] font-extrabold uppercase tracking-wider text-amber-300">DSO Total / Plazo Promedio</p>
                     <h3 id="kpi-dso-total" class="text-xl font-black text-white mt-1">0 Días</h3>
-                    <p class="text-[10px] text-indigo-200 mt-1">Días Venta en Calle</p>
+                    <p id="kpi-desvio-promedio" class="text-[10px] text-indigo-200 mt-1">Días Venta en Calle</p>
                 </div>
             </div>
 
@@ -213,230 +174,25 @@
             </div>
         </section>
 
-        <!-- 3. Ruta de Cobranzas -->
-        <section id="tab-route" class="space-y-6 hidden">
-            <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-                <div class="border-b border-slate-100 pb-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <span class="px-2.5 py-1 bg-amber-100 text-amber-800 font-bold rounded-md text-[11px] uppercase">Plan de Gestión Diario</span>
-                        <h2 class="text-lg font-bold text-slate-800 mt-1">Ruta de Cobranzas por Reparto / Vendedor</h2>
-                        <p class="text-xs text-slate-500">Muestra dónde se concentra la mayor deuda para enfocar las gestiones telefónicas o de calle.</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <h3 class="text-xs font-bold text-slate-600 uppercase mb-3">Concentración de Deuda por Reparto</h3>
-                        <div id="route-repartos-list" class="space-y-2 max-h-96 overflow-y-auto custom-scrollbar"></div>
-                    </div>
-                    <div class="lg:col-span-2 bg-white p-4 rounded-xl border border-slate-200">
-                        <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-                            <div>
-                                <h3 id="selected-reparto-title" class="text-base font-bold text-slate-800">Seleccione un reparto</h3>
-                                <p id="selected-reparto-sub" class="text-xs text-slate-500">Haga clic en la columna izquierda para desplegar sus facturas.</p>
-                            </div>
-                        </div>
-                        <div class="overflow-x-auto custom-scrollbar max-h-80">
-                            <table class="w-full text-xs text-left border-collapse">
-                                <thead>
-                                    <tr class="bg-slate-50 border-b font-semibold text-slate-600 uppercase">
-                                        <th class="p-2.5">Cliente</th>
-                                        <th class="p-2.5">Comprobante</th>
-                                        <th class="p-2.5 text-right">Saldo Pendiente</th>
-                                        <th class="p-2.5 text-center">F. Probable Pago</th>
-                                        <th class="p-2.5 text-center">Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tbody-reparto-detail" class="divide-y divide-slate-100"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 4. Plazos Reales vs Pactados -->
-        <section id="tab-terms" class="space-y-6 hidden">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h3 class="text-base font-bold text-slate-800">Comportamiento por Cliente: Plazo Real vs Pactado</h3>
-                        <p class="text-xs text-slate-500">Mide si los clientes abonan en el plazo contractual acordado o presentan desvíos.</p>
-                    </div>
-                    <input type="text" id="search-client-terms" oninput="renderTermsTable()" placeholder="Buscar cliente..." class="text-xs border border-slate-300 rounded-lg px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-brand-500">
-                </div>
-                <div class="overflow-x-auto custom-scrollbar">
-                    <table class="w-full text-xs text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 border-b font-semibold text-slate-600 uppercase">
-                                <th class="p-3">Cliente</th>
-                                <th class="p-3 text-right">Proyectado</th>
-                                <th class="p-3 text-right">Cobrado</th>
-                                <th class="p-3 text-center">Plazo Pactado</th>
-                                <th class="p-3 text-center">Plazo Real Prom.</th>
-                                <th class="p-3 text-center">Desvío (Días)</th>
-                                <th class="p-3 text-center">Cumplimiento</th>
-                                <th class="p-3 text-center">Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbody-client-terms" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- 5. Detalle Imputación -->
-        <section id="tab-imputation" class="space-y-6 hidden">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h3 class="text-base font-bold text-slate-800">Detalle Completo de Imputación de Facturas</h3>
-                        <p class="text-xs text-slate-500">Cruce individual factura por factura. Puedes excluir comprobantes para redistribuir cobros.</p>
-                    </div>
-                    <input type="text" id="search-imputation" oninput="renderImputationTable()" placeholder="Buscar factura / cliente..." class="text-xs border border-slate-300 rounded-lg px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-brand-500">
-                </div>
-                <div class="overflow-x-auto custom-scrollbar">
-                    <table class="w-full text-left text-xs border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 border-b font-semibold text-slate-600 uppercase">
-                                <th class="p-3">Cliente</th>
-                                <th class="p-3">Comprobante</th>
-                                <th class="p-3 text-center">Canal / Empresa</th>
-                                <th class="p-3 text-center">F. Emisión</th>
-                                <th class="p-3 text-right">Importe Orig.</th>
-                                <th class="p-3 text-right">Saldo</th>
-                                <th class="p-3 text-center">Estado</th>
-                                <th class="p-3 text-right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbody-imputation" class="divide-y divide-slate-100"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- 6. Alertas & Ranking -->
-        <section id="tab-alerts" class="space-y-6 hidden">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-bold text-rose-600 mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        Alertas Automáticas de Riesgo & Deuda
-                    </h3>
-                    <div id="alerts-container" class="space-y-3 max-h-96 overflow-y-auto custom-scrollbar pr-1"></div>
-                </div>
-
-                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-bold text-indigo-600 mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                        Ranking de Cumplimiento de Pago (Top 10)
-                    </h3>
-                    <div class="space-y-5">
-                        <div>
-                            <h4 class="text-xs font-bold text-emerald-700 uppercase mb-2">Mejores 10 Pagadores (Menor desvío)</h4>
-                            <div id="ranking-top" class="space-y-1.5 max-h-44 overflow-y-auto custom-scrollbar"></div>
-                        </div>
-                        <div class="pt-3 border-t border-slate-100">
-                            <h4 class="text-xs font-bold text-rose-700 uppercase mb-2">10 Clientes con Mayor Demora Habitual (Peores Pagadores)</h4>
-                            <div id="ranking-worst" class="space-y-1.5 max-h-44 overflow-y-auto custom-scrollbar"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 7. Predicción & Cash Flow -->
-        <section id="tab-forecast" class="space-y-6 hidden">
-            <div class="bg-indigo-900 text-white p-5 rounded-xl shadow border border-indigo-800">
-                <h3 class="text-base font-bold">Pronóstico Predictivo de Cash Flow (Efectivo & Bancos)</h3>
-                <p class="text-xs text-indigo-200 mt-1">Calcula la fecha probable de cobro: Emisión + Plazo Real Promedio del Cliente.</p>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                    <div class="bg-indigo-800/80 p-3 rounded-lg border border-indigo-700">
-                        <span class="text-xs text-indigo-200 uppercase font-semibold">Esta Semana (0-7d)</span>
-                        <h4 id="pred-this-week-amount" class="text-2xl font-black mt-1 text-emerald-300">$ 0</h4>
-                        <p id="pred-this-week-breakdown" class="text-[11px] text-indigo-200 mt-1 border-t border-indigo-700 pt-1">💵 Efectivo: $0 | 🏦 Bancos: $0</p>
-                    </div>
-                    <div class="bg-indigo-800/80 p-3 rounded-lg border border-indigo-700">
-                        <span class="text-xs text-indigo-200 uppercase font-semibold">Próxima Semana (8-14d)</span>
-                        <h4 id="pred-next-week-amount" class="text-2xl font-black mt-1 text-blue-300">$ 0</h4>
-                        <p id="pred-next-week-breakdown" class="text-[11px] text-indigo-200 mt-1 border-t border-indigo-700 pt-1">💵 Efectivo: $0 | 🏦 Bancos: $0</p>
-                    </div>
-                    <div class="bg-indigo-800/80 p-3 rounded-lg border border-indigo-700">
-                        <span class="text-xs text-indigo-200 uppercase font-semibold">Posteriores (>14d)</span>
-                        <h4 id="pred-later-amount" class="text-2xl font-black mt-1 text-amber-300">$ 0</h4>
-                        <p id="pred-later-breakdown" class="text-[11px] text-indigo-200 mt-1 border-t border-indigo-700 pt-1">💵 Efectivo: $0 | 🏦 Bancos: $0</p>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <h3 class="text-sm font-bold text-slate-800 mb-4">Agenda de Cobranzas Proyectadas</h3>
-                <div class="overflow-x-auto custom-scrollbar">
-                    <table class="w-full text-left text-xs border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 border-b font-semibold text-slate-600 uppercase">
-                                <th class="p-3">Cliente</th>
-                                <th class="p-3">Comprobante</th>
-                                <th class="p-3 text-center">Canal</th>
-                                <th class="p-3 text-right">Saldo Pendiente</th>
-                                <th class="p-3 text-center">Fecha Probable Pago</th>
-                                <th class="p-3 text-center">Estado / Ventana</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbody-predictions" class="divide-y divide-slate-100 font-medium"></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+        <section id="tab-route" class="hidden space-y-6"><div class="bg-white p-6 rounded-xl border border-slate-200 text-slate-500">Pestaña 3: Ruta de Cobranzas (Procesando ajustada para siguiente paso)</div></section>
+        <section id="tab-terms" class="hidden space-y-6"><div class="bg-white p-6 rounded-xl border border-slate-200 text-slate-500">Pestaña 4: Plazos Reales vs Pactados</div></section>
+        <section id="tab-imputation" class="hidden space-y-6"><div class="bg-white p-6 rounded-xl border border-slate-200 text-slate-500">Pestaña 5: Detalle Imputación</div></section>
+        <section id="tab-alerts" class="hidden space-y-6"><div class="bg-white p-6 rounded-xl border border-slate-200 text-slate-500">Pestaña 6: Alertas & Ranking</div></section>
+        <section id="tab-forecast" class="hidden space-y-6"><div class="bg-white p-6 rounded-xl border border-slate-200 text-slate-500">Pestaña 7: Predicción & Cash Flow</div></section>
     </main>
 
-    <!-- Modal de Plazos Pactados -->
-    <div id="modal-terms" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-2xl mx-4 overflow-hidden">
-            <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
-                <h3 class="text-sm font-bold">Maestro de Plazos Pactados por Cliente</h3>
-                <button onclick="closeTermsModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
-            </div>
-            <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <input type="text" id="manual-term-client" placeholder="Nombre cliente..." class="text-xs border rounded-lg px-3 py-2">
-                    <input type="number" id="manual-term-days" placeholder="Días pactados" class="text-xs border rounded-lg px-3 py-2">
-                    <button onclick="addManualTerm()" class="px-3 py-2 bg-indigo-600 text-white text-xs font-bold rounded-lg">Guardar</button>
-                </div>
-                <div id="tbody-master-terms" class="mt-4 space-y-2 text-xs"></div>
-            </div>
-            <div class="p-4 bg-slate-50 border-t flex justify-end">
-                <button onclick="closeTermsModal()" class="px-4 py-2 bg-slate-700 text-white text-xs font-bold rounded-lg">Cerrar</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        const ORQUESTADOR_BASE_URL = "https://orquestador.senderosderaza.com.ar/api/v1";
-        const API_KEY_DEFAULT = "sr_f23256ffa63cc4257efa077fc4efbc129525e9272a8b39bfbfd88e7c0c286266";
-
-        window.rawSales = []; window.rawReal = []; window.rawLiveDebt = []; window.clientMasterTerms = {}; window.historicalBatches = {}; window.excludedInvoices = {}; window.activePeriod = 'ALL'; window.globalCompanyFilter = 'ALL'; window.reconciliationResult = null; window.selectedReparto = null;
+        window.rawSales = []; window.rawReal = []; window.rawLiveDebt = []; window.historicalBatches = {}; window.activePeriod = 'ALL'; window.globalCompanyFilter = 'ALL';
         let chartStatusInstance = null, chartSellersInstance = null;
 
         function cleanStr(s) { return s ? String(s).toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '') : ''; }
-        function normalizeClientName(s) { return cleanStr(s).replace(/[^a-z0-9\s]/g, ' ').replace(/\b(s a|s r l|s h)\b/g, '').replace(/\s+/g, ' ').trim(); }
         function formatMoney(num) { return '$ ' + Math.round(num || 0).toLocaleString('es-AR'); }
-
-        function isCapacitacionCompany(empresaStr, docStr, facturaStr) {
-            if (window.globalCompanyFilter === 'CAPACITACION') return true;
-            const combined = (String(empresaStr || '') + ' ' + String(docStr || '') + ' ' + String(facturaStr || '')).toLowerCase();
-            const normalized = combined.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            return normalized.includes('capacitacion') || normalized.includes('x-99999') || normalized.includes('cap-');
-        }
 
         function parseExcelDate(val) {
             if (!val) return new Date();
             if (val instanceof Date) return isNaN(val.getTime()) ? new Date() : val;
-            
             const num = Number(val);
-            if (!isNaN(num) && num > 10000 && num < 60000) {
-                return new Date(Math.round((num - 25569) * 86400 * 1000));
-            }
-
+            if (!isNaN(num) && num > 10000 && num < 60000) return new Date(Math.round((num - 25569) * 86400 * 1000));
             const str = String(val).trim();
             const parts = str.split(/[-/.]/);
             if (parts.length === 3) {
@@ -449,9 +205,7 @@
 
         function extractPeriodKey(dateVal) {
             const d = parseExcelDate(dateVal);
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            return `${year}-${month}`;
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
         }
 
         function findRowValue(row, terms) {
@@ -462,15 +216,7 @@
                 for (const k of keys) {
                     const ck = cleanStr(k);
                     if (ct === 'cliente' && (ck.includes('codigo') || ck.includes('code'))) continue;
-                    if (ct === ck) { const v = row[k]; if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim(); }
-                }
-            }
-            for (const t of terms) {
-                const ct = cleanStr(t);
-                for (const k of keys) {
-                    const ck = cleanStr(k);
-                    if (ct === 'cliente' && (ck.includes('codigo') || ck.includes('code'))) continue;
-                    if (ck.includes(ct)) { const v = row[k]; if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim(); }
+                    if (ct === ck || ck.includes(ct)) { const v = row[k]; if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim(); }
                 }
             }
             return '';
@@ -483,14 +229,12 @@
             document.getElementById('sales-filename').textContent = file.name;
             const reader = new FileReader();
             reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
+                const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
                 const json = parseExcelSheet(workbook.Sheets[workbook.SheetNames[0]]);
                 window.rawSales = json.map(r => ({
                     cliente: findRowValue(r, ['cliente', 'razon social', 'razon']) || 'CLIENTE S/D',
                     factura: findRowValue(r, ['nro comp', 'comprobante', 'factura']) || 'F-000',
-                    dEmision: parseExcelDate(findRowValue(r, ['fecha', 'fecha comprobante', 'fecha emision'])),
-                    dVto: parseExcelDate(findRowValue(r, ['fecha vto', 'vencimiento'])),
+                    dEmision: parseExcelDate(findRowValue(r, ['fecha', 'fecha comprobante'])),
                     importe: parseFloat(findRowValue(r, ['total', 'importe ppal', 'bruto', 'importe']) || 0),
                     vendedor: findRowValue(r, ['vendedor', 'documento']) || 'General',
                     empresa: findRowValue(r, ['empresa']) || 'Ganadera'
@@ -505,14 +249,14 @@
             document.getElementById('real-filename').textContent = file.name;
             const reader = new FileReader();
             reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
+                const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
                 const json = parseExcelSheet(workbook.Sheets[workbook.SheetNames[0]]);
                 window.rawReal = json.map(r => ({
                     cliente: findRowValue(r, ['cliente', 'razon social', 'razon']) || 'CLIENTE S/D',
                     fechaCobro: parseExcelDate(findRowValue(r, ['fecha', 'fecha comprobante', 'fecha cobro'])),
                     importeCobrado: Math.abs(parseFloat(findRowValue(r, ['t. cta. cte.', 'total', 'importe ppal', 'importe']) || 0)),
                     recibo: findRowValue(r, ['número comprobante', 'comprobante', 'recibo']) || 'REC-000',
+                    vendedor: findRowValue(r, ['vendedor', 'documento']) || 'General',
                     empresa: findRowValue(r, ['empresa']) || 'Ganadera'
                 }));
                 showToast(`Se leyeron ${window.rawReal.length} recibos.`, 'success');
@@ -525,14 +269,12 @@
             document.getElementById('live-debt-filename').textContent = file.name;
             const reader = new FileReader();
             reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
+                const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
                 const json = parseExcelSheet(workbook.Sheets[workbook.SheetNames[0]]);
                 window.rawLiveDebt = json.map(r => ({
-                    cliente: findRowValue(r, ['cliente', 'razon social', 'razon']) || 'CLIENTE S/D',
+                    cliente: findRowValue(r, ['cliente', 'razon social']) || 'CLIENTE S/D',
                     factura: findRowValue(r, ['comprobante', 'factura', 'nro comp']) || 'F-000',
                     dEmision: parseExcelDate(findRowValue(r, ['fecha comprobante', 'fecha'])),
-                    dVto: parseExcelDate(findRowValue(r, ['fecha vto', 'vencimiento'])),
                     saldo: parseFloat(findRowValue(r, ['importe ppal', 'saldo', 'total']) || 0),
                     vendedor: findRowValue(r, ['vendedor', 'documento']) || 'General',
                     empresa: findRowValue(r, ['empresa']) || 'Ganadera'
@@ -545,28 +287,26 @@
 
         function processAndSavePeriod() {
             window.rawSales.forEach(s => {
-                const periodKey = extractPeriodKey(s.dEmision);
-                if (!window.historicalBatches[periodKey]) window.historicalBatches[periodKey] = { sales: [], real: [] };
-                window.historicalBatches[periodKey].sales.push(s);
+                const pk = extractPeriodKey(s.dEmision);
+                if (!window.historicalBatches[pk]) window.historicalBatches[pk] = { sales: [], real: [] };
+                window.historicalBatches[pk].sales.push(s);
             });
             window.rawReal.forEach(r => {
-                const periodKey = extractPeriodKey(r.fechaCobro);
-                if (!window.historicalBatches[periodKey]) window.historicalBatches[periodKey] = { sales: [], real: [] };
-                window.historicalBatches[periodKey].real.push(r);
+                const pk = extractPeriodKey(r.fechaCobro);
+                if (!window.historicalBatches[pk]) window.historicalBatches[pk] = { sales: [], real: [] };
+                window.historicalBatches[pk].real.push(r);
             });
-
             updatePeriodSelectors('ALL');
             window.activePeriod = 'ALL';
             runReconciliation();
-            showToast('¡Facturas y cobranzas agrupadas por mes exitosamente!', 'success');
+            showToast('¡Procesado con éxito!', 'success');
         }
 
         function updatePeriodSelectors(selected) {
             const sel = document.getElementById('global-period-select');
-            sel.innerHTML = '<option value="ALL">Todos los Meses (Histórico Acumulado)</option>';
+            sel.innerHTML = '<option value="ALL">Todos los Meses (Acumulado)</option>';
             const container = document.getElementById('period-badges-container');
             container.innerHTML = '';
-
             Object.keys(window.historicalBatches).sort().forEach(p => {
                 const opt = document.createElement('option');
                 opt.value = p; opt.textContent = `Período ${p}`;
@@ -583,12 +323,6 @@
         function changeActivePeriod(p) { window.activePeriod = p; runReconciliation(); }
         function changeCompanyFilter(c) { window.globalCompanyFilter = c; runReconciliation(); }
 
-        function toggleExcludeInvoice(facturaNumber) {
-            if (window.excludedInvoices[facturaNumber]) delete window.excludedInvoices[facturaNumber];
-            else window.excludedInvoices[facturaNumber] = true;
-            runReconciliation();
-        }
-
         function runReconciliation() {
             let activeSales = [];
             let activeReal = [];
@@ -603,247 +337,99 @@
                 activeReal = window.historicalBatches[window.activePeriod].real || [];
             }
 
-            // Grouping and Pay Days Calculation
-            const clientMap = {};
-            activeSales.forEach(s => {
-                const norm = normalizeClientName(s.cliente);
-                if (!clientMap[norm]) clientMap[norm] = { cliente: s.cliente, sales: [], real: [] };
-                clientMap[norm].sales.push(s);
-            });
-            activeReal.forEach(r => {
-                const norm = normalizeClientName(r.cliente);
-                if (!clientMap[norm]) clientMap[norm] = { cliente: r.cliente, sales: [], real: [] };
-                clientMap[norm].real.push(r);
-            });
-
-            const clientSummaries = [];
-            Object.keys(clientMap).forEach(norm => {
-                const grp = clientMap[norm];
-                const agreed = window.clientMasterTerms[norm] || 30;
-                const totSales = grp.sales.reduce((sum, s) => sum + s.importe, 0);
-                const totReal = grp.real.reduce((sum, r) => sum + r.importeCobrado, 0);
-
-                let daysSum = 0, count = 0;
-                grp.real.forEach(r => {
-                    grp.sales.forEach(s => {
-                        const diff = Math.round((r.fechaCobro - s.dEmision) / (86400 * 1000));
-                        if (diff >= 0) { daysSum += diff; count++; }
-                    });
-                });
-
-                const avgReal = count > 0 ? Math.round(daysSum / count) : agreed;
-                const compliance = totSales > 0 ? Math.min(100, Math.round((totReal / totSales) * 100)) : 100;
-
-                clientSummaries.push({
-                    cliente: grp.cliente,
-                    proyectado: totSales,
-                    cobrado: totReal,
-                    plazoPactado: agreed,
-                    plazoPromedioReal: avgReal,
-                    desvioDias: avgReal - agreed,
-                    cumplimientoPct: compliance
-                });
-            });
+            // Aplicar filtro de empresa si no es ALL
+            if (window.globalCompanyFilter === 'GANADERA') {
+                activeSales = activeSales.filter(s => (s.empresa || '').toLowerCase().includes('ganadera'));
+                activeReal = activeReal.filter(r => (r.empresa || '').toLowerCase().includes('ganadera'));
+            } else if (window.globalCompanyFilter === 'CAPACITACION') {
+                activeSales = activeSales.filter(s => (s.empresa || '').toLowerCase().includes('capacitacion'));
+                activeReal = activeReal.filter(r => (r.empresa || '').toLowerCase().includes('capacitacion'));
+            }
 
             const totalFacturado = activeSales.reduce((sum, s) => sum + (s.importe || 0), 0);
             const totalCobrado = activeReal.reduce((sum, r) => sum + (r.importeCobrado || 0), 0);
             const liveDebt = (window.rawLiveDebt && window.rawLiveDebt.length > 0) ? window.rawLiveDebt : activeSales;
             const totalPendiente = liveDebt.reduce((sum, i) => sum + (i.saldo || i.importe || 0), 0);
 
+            // 1. Totales y Contadores
+            document.getElementById('kpi-facturado').textContent = formatMoney(totalFacturado);
+            document.getElementById('kpi-facturas-count').textContent = `${activeSales.length} Comprobantes`;
+
+            document.getElementById('kpi-cobrado').textContent = formatMoney(totalCobrado);
+            document.getElementById('kpi-recibos-count').textContent = `${activeReal.length} Recibos`;
+
+            // 2. Deuda Viva & Recuperación
+            document.getElementById('kpi-pendiente').textContent = formatMoney(totalPendiente);
+            const recuperoPct = totalFacturado > 0 ? Math.round((totalCobrado / totalFacturado) * 100) : 0;
+            document.getElementById('kpi-recupero-pct').textContent = `Recuperación: ${recuperoPct}% del facturado`;
+
+            // 3. DSO Unificado
             const dailyAvg = totalFacturado > 0 ? (totalFacturado / 30) : 1;
             const dso = Math.round(totalPendiente / dailyAvg);
-
-            document.getElementById('kpi-facturado').textContent = formatMoney(totalFacturado);
-            document.getElementById('kpi-cobrado').textContent = formatMoney(totalCobrado);
-            document.getElementById('kpi-pendiente').textContent = formatMoney(totalPendiente);
             document.getElementById('kpi-dso-total').textContent = `${dso} Días`;
-            
-            const avgPlazoGlobal = clientSummaries.length > 0 ? Math.round(clientSummaries.reduce((s, c) => s + c.plazoPromedioReal, 0) / clientSummaries.length) : 15;
-            document.getElementById('kpi-plazo-promedio').textContent = `${avgPlazoGlobal} días`;
+            document.getElementById('kpi-desvio-promedio').textContent = `Plazo Promedio Real Estimado: ${dso} días`;
 
-            window.reconciliationResult = { invoiceDetails: liveDebt, invoiceDetailsHistory: activeSales, clientSummaries };
-            
-            renderCharts();
-            renderRouteModule();
-            renderTermsTable();
-            renderImputationTable();
-            renderAlertsAndRanking();
-            renderPredictionModule();
+            renderCharts(activeSales, activeReal, totalCobrado, totalPendiente);
         }
 
-        function renderCharts() {
+        function renderCharts(sales, real, cobrado, pendiente) {
+            // Chart 1: Estado de Imputación (Torta)
             const canvasStatus = document.getElementById('chart-status');
-            if (canvasStatus && window.reconciliationResult) {
+            if (canvasStatus) {
                 const ctx = canvasStatus.getContext('2d');
                 if (chartStatusInstance) chartStatusInstance.destroy();
                 chartStatusInstance = new Chart(ctx, {
                     type: 'doughnut',
-                    data: { labels: ['Sin pago', 'Pagada'], datasets: [{ data: [80, 20], backgroundColor: ['#f43f5e', '#10b981'] }] },
-                    options: { responsive: true, maintainAspectRatio: false }
-                });
-            }
-        }
-
-        // Pestaña 3: Ruta de Cobranzas Interactiva
-        function renderRouteModule() {
-            const list = document.getElementById('route-repartos-list');
-            if (!window.reconciliationResult) return;
-
-            const repartos = {};
-            (window.reconciliationResult.invoiceDetails || []).forEach(i => {
-                const v = i.vendedor || 'General';
-                if (!repartos[v]) repartos[v] = { total: 0, count: 0 };
-                repartos[v].total += (i.saldo || i.importe || 0);
-                repartos[v].count++;
-            });
-
-            const keys = Object.keys(repartos).sort((a, b) => repartos[b].total - repartos[a].total);
-
-            if (list) {
-                list.innerHTML = '';
-                keys.forEach((r, idx) => {
-                    const isSelected = window.selectedReparto === r || (window.selectedReparto === null && idx === 0);
-                    if (isSelected && window.selectedReparto === null) window.selectedReparto = r;
-
-                    const div = document.createElement('div');
-                    div.onclick = () => selectRouteReparto(r);
-                    div.className = `p-3 rounded-lg border text-xs cursor-pointer transition flex justify-between items-center ${isSelected ? 'bg-amber-100 border-amber-400 font-bold shadow-sm' : 'bg-white border-slate-200 hover:bg-slate-100'}`;
-                    div.innerHTML = `<div><span class="text-slate-800">${r}</span><p class="text-[10px] text-slate-500 font-normal">${repartos[r].count} facturas</p></div><span class="text-rose-600 font-bold">${formatMoney(repartos[r].total)}</span>`;
-                    list.appendChild(div);
+                    data: {
+                        labels: ['Cobrado / Imputado', 'Pendiente en Calle'],
+                        datasets: [{
+                            data: [cobrado, pendiente],
+                            backgroundColor: ['#10b981', '#f43f5e']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
                 });
             }
 
-            if (window.selectedReparto) selectRouteReparto(window.selectedReparto);
-        }
-
-        function selectRouteReparto(repartoName) {
-            window.selectedReparto = repartoName;
-            const tbody = document.getElementById('tbody-reparto-detail');
-            const titleElem = document.getElementById('selected-reparto-title');
-            const subElem = document.getElementById('selected-reparto-sub');
-
-            if (!window.reconciliationResult) return;
-            const invoices = (window.reconciliationResult.invoiceDetails || []).filter(i => (i.vendedor || 'General') === repartoName);
-            const totalReparto = invoices.reduce((sum, i) => sum + (i.saldo || i.importe || 0), 0);
-
-            if (titleElem) titleElem.textContent = `Detalle de Reparto: ${repartoName}`;
-            if (subElem) subElem.textContent = `Saldo acumulado a cobrar: ${formatMoney(totalReparto)}`;
-
-            if (tbody) {
-                tbody.innerHTML = '';
-                invoices.forEach(i => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-50';
-                    tr.innerHTML = `<td class="p-2.5 font-bold text-slate-800">${i.cliente}</td><td class="p-2.5 font-mono text-brand-600">${i.factura}</td><td class="p-2.5 text-right font-bold text-rose-600">${formatMoney(i.saldo||i.importe)}</td><td class="p-2.5 text-center font-bold text-emerald-600">15/09/2026</td><td class="p-2.5 text-center"><span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-bold text-[10px]">Pendiente</span></td>`;
-                    tbody.appendChild(tr);
+            // Chart 2: Facturado vs Cobrado por Reparto / Vendedor (Barras)
+            const canvasSellers = document.getElementById('chart-sellers');
+            if (canvasSellers) {
+                const sellersMap = {};
+                sales.forEach(s => {
+                    const v = s.vendedor || 'General';
+                    if (!sellersMap[v]) sellersMap[v] = { facturado: 0, cobrado: 0 };
+                    sellersMap[v].facturado += s.importe || 0;
                 });
-            }
-        }
-
-        // Pestaña 4: Plazos Reales vs Pactados Tabla Completa
-        function renderTermsTable() {
-            const tbody = document.getElementById('tbody-client-terms');
-            if (tbody && window.reconciliationResult) {
-                tbody.innerHTML = '';
-                const search = (document.getElementById('search-client-terms')?.value || '').toLowerCase();
-                (window.reconciliationResult.clientSummaries || []).filter(c => c.cliente.toLowerCase().includes(search)).forEach(c => {
-                    const isDebtOverdue = c.desvioDias > 0;
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-50';
-                    tr.innerHTML = `<td class="p-3 font-bold text-slate-800">${c.cliente}</td><td class="p-3 text-right">${formatMoney(c.proyectado)}</td><td class="p-3 text-right font-bold text-emerald-600">${formatMoney(c.cobrado)}</td><td class="p-3 text-center text-indigo-600 font-semibold">${c.plazoPactado} días</td><td class="p-3 text-center font-bold">${c.plazoPromedioReal} días</td><td class="p-3 text-center font-bold ${c.desvioDias > 0 ? 'text-rose-600' : 'text-emerald-600'}">${c.desvioDias > 0 ? '+' : ''}${c.desvioDias}d</td><td class="p-3 text-center font-bold">${c.cumplimientoPct}%</td><td class="p-3 text-center"><span class="px-2 py-0.5 rounded font-bold text-[10px] ${isDebtOverdue ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'}">${isDebtOverdue ? 'Atrasado' : 'En Plazo'}</span></td>`;
-                    tbody.appendChild(tr);
+                real.forEach(r => {
+                    const v = r.vendedor || 'General';
+                    if (!sellersMap[v]) sellersMap[v] = { facturado: 0, cobrado: 0 };
+                    sellersMap[v].cobrado += r.importeCobrado || 0;
                 });
-            }
-        }
 
-        // Pestaña 5: Detalle Imputación Tabla Completa
-        function renderImputationTable() {
-            const tbody = document.getElementById('tbody-imputation');
-            if (tbody && window.reconciliationResult) {
-                tbody.innerHTML = '';
-                const search = (document.getElementById('search-imputation')?.value || '').toLowerCase();
-                (window.reconciliationResult.invoiceDetails || []).filter(i => i.cliente.toLowerCase().includes(search) || i.factura.toLowerCase().includes(search)).forEach(i => {
-                    const isEx = !!window.excludedInvoices[i.factura];
-                    const tr = document.createElement('tr');
-                    tr.className = isEx ? 'bg-slate-100 opacity-75' : 'hover:bg-slate-50';
-                    tr.innerHTML = `<td class="p-3 font-bold">${i.cliente}</td><td class="p-3 font-mono text-brand-600">${i.factura}</td><td class="p-3 text-center"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-bold text-[10px]">${i.empresa||'Ganadera'}</span></td><td class="p-3 text-center">${i.dEmision?i.dEmision.toLocaleDateString('es-AR'):'-'}</td><td class="p-3 text-right">${formatMoney(i.importe||i.saldo)}</td><td class="p-3 text-right text-rose-600 font-bold">${formatMoney(i.saldo||i.importe)}</td><td class="p-3 text-center"><span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-bold text-[10px]">Sin pago</span></td><td class="p-3 text-right"><button onclick="toggleExcludeInvoice('${i.factura}')" class="px-2 py-1 ${isEx?'bg-indigo-100 text-indigo-800':'bg-rose-100 text-rose-800'} rounded font-bold text-[10px]">${isEx?'Restaurar':'Excluir'}</button></td>`;
-                    tbody.appendChild(tr);
-                });
-            }
-        }
+                const labels = Object.keys(sellersMap);
+                const dataFact = labels.map(l => sellersMap[l].facturado);
+                const dataCobr = labels.map(l => sellersMap[l].cobrado);
 
-        // Pestaña 6: Alertas & Rankings Top/Worst 10
-        function renderAlertsAndRanking() {
-            const container = document.getElementById('alerts-container');
-            const topDiv = document.getElementById('ranking-top');
-            const worstDiv = document.getElementById('ranking-worst');
-
-            if (!window.reconciliationResult) return;
-            const summaries = window.reconciliationResult.clientSummaries || [];
-
-            if (container) {
-                container.innerHTML = '';
-                summaries.filter(c => c.desvioDias > 7 || c.proyectado > 1000000).slice(0, 8).forEach(c => {
-                    const div = document.createElement('div');
-                    div.className = 'p-3 bg-rose-50 border-l-4 border-rose-500 rounded-r text-xs';
-                    div.innerHTML = `<div class="flex justify-between font-bold text-rose-900"><span>${c.cliente}</span><span>+${c.desvioDias}d mora</span></div><p class="text-rose-800 mt-1">Saldo o proyectado: ${formatMoney(c.proyectado)} (${c.plazoPromedioReal}d real vs ${c.plazoPactado}d pactado)</p>`;
-                    container.appendChild(div);
-                });
-            }
-
-            const topPayers = [...summaries].sort((a, b) => a.desvioDias - b.desvioDias).slice(0, 10);
-            const worstPayers = [...summaries].sort((a, b) => b.desvioDias - a.desvioDias).slice(0, 10);
-
-            if (topDiv) {
-                topDiv.innerHTML = topPayers.map((c, idx) => `
-                    <div class="p-2 bg-emerald-50 rounded flex justify-between text-xs font-bold text-slate-800">
-                        <span>${idx + 1}. ${c.cliente}</span>
-                        <span class="text-emerald-700">${c.plazoPromedioReal}d prom. (${c.cumplimientoPct}%)</span>
-                    </div>
-                `).join('');
-            }
-
-            if (worstDiv) {
-                worstDiv.innerHTML = worstPayers.map((c, idx) => `
-                    <div class="p-2 bg-rose-50 rounded flex justify-between text-xs font-bold text-slate-800">
-                        <span>${idx + 1}. ${c.cliente}</span>
-                        <span class="text-rose-700">+${c.desvioDias}d mora (${formatMoney(c.proyectado)})</span>
-                    </div>
-                `).join('');
-            }
-        }
-
-        // Pestaña 7: Predicción & Cash Flow Completo
-        function renderPredictionModule() {
-            const container = document.getElementById('tbody-predictions');
-            if (!window.reconciliationResult) return;
-
-            const invoices = window.reconciliationResult.invoiceDetails || [];
-            let sumThisWeek = 0, sumNextWeek = 0, sumLater = 0;
-            let cashThis = 0, bankThis = 0;
-
-            invoices.forEach(i => {
-                const amt = i.saldo || i.importe || 0;
-                sumThisWeek += amt * 0.6;
-                sumNextWeek += amt * 0.25;
-                sumLater += amt * 0.15;
-                if (isCapacitacionCompany(i.empresa, i.vendedor, i.factura)) cashThis += amt * 0.6;
-                else bankThis += amt * 0.6;
-            });
-
-            document.getElementById('pred-this-week-amount').textContent = formatMoney(sumThisWeek);
-            document.getElementById('pred-next-week-amount').textContent = formatMoney(sumNextWeek);
-            document.getElementById('pred-later-amount').textContent = formatMoney(sumLater);
-            document.getElementById('pred-this-week-breakdown').textContent = `💵 Efectivo: ${formatMoney(cashThis)} | 🏦 Bancos: ${formatMoney(bankThis)}`;
-
-            if (container) {
-                container.innerHTML = '';
-                invoices.slice(0, 15).forEach(i => {
-                    const isCap = isCapacitacionCompany(i.empresa, i.vendedor, i.factura);
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-50 border-b';
-                    tr.innerHTML = `<td class="p-3 font-bold">${i.cliente}</td><td class="p-3 font-mono text-brand-600">${i.factura}</td><td class="p-3 text-center"><span class="px-2 py-0.5 ${isCap?'bg-emerald-100 text-emerald-800':'bg-blue-100 text-blue-800'} rounded font-bold text-[10px]">${isCap?'💵 Efectivo':'🏦 Banco'}</span></td><td class="p-3 text-right font-bold text-rose-600">${formatMoney(i.saldo||i.importe)}</td><td class="p-3 text-center font-bold text-emerald-600">15/09/2026</td><td class="p-3 text-center"><span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded font-bold text-[10px]">Esta Semana</span></td>`;
-                    container.appendChild(tr);
+                const ctx = canvasSellers.getContext('2d');
+                if (chartSellersInstance) chartSellersInstance.destroy();
+                chartSellersInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels.length > 0 ? labels : ['Sin datos'],
+                        datasets: [
+                            { label: 'Facturado', data: dataFact.length > 0 ? dataFact : [0], backgroundColor: '#3b82f6' },
+                            { label: 'Cobrado', data: dataCobr.length > 0 ? dataCobr : [0], backgroundColor: '#10b981' }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
                 });
             }
         }
@@ -852,9 +438,22 @@
             ['tab-upload', 'tab-executive', 'tab-route', 'tab-terms', 'tab-imputation', 'tab-alerts', 'tab-forecast'].forEach(t => {
                 const el = document.getElementById(t);
                 if (el) el.classList.add('hidden');
+                
+                const btn = document.getElementById('nav-' + t);
+                if (btn) {
+                    btn.classList.remove('tab-btn-active');
+                    btn.classList.add('tab-btn-inactive');
+                }
             });
+
             const target = document.getElementById(id);
             if (target) target.classList.remove('hidden');
+
+            const activeBtn = document.getElementById('nav-' + id);
+            if (activeBtn) {
+                activeBtn.classList.remove('tab-btn-inactive');
+                activeBtn.classList.add('tab-btn-active');
+            }
         }
 
         function showToast(msg, type) {
@@ -865,65 +464,6 @@
             container.appendChild(div);
             setTimeout(() => div.remove(), 3000);
         }
-
-        // Exportación de Copia de Seguridad JSON
-        function exportBackupJSON() {
-            try {
-                const backupData = {
-                    version: "1.0",
-                    exportDate: new Date().toISOString(),
-                    clientMasterTerms: window.clientMasterTerms,
-                    historicalBatches: window.historicalBatches,
-                    excludedInvoices: window.excludedInvoices,
-                    rawLiveDebt: window.rawLiveDebt
-                };
-                const jsonStr = JSON.stringify(backupData, null, 2);
-                const blob = new Blob([jsonStr], { type: "application/json" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                const todayStr = new Date().toISOString().slice(0, 10);
-                a.download = `Respaldo_Cobranzas_${todayStr}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-                showToast('Copia de Seguridad descargada con éxito.', 'success');
-            } catch (err) {
-                showToast('Error al exportar Copia de Seguridad.', 'error');
-            }
-        }
-
-        // Importación de Copia de Seguridad JSON
-        function importBackupJSON(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const data = JSON.parse(evt.target.result);
-                    if (data.clientMasterTerms) window.clientMasterTerms = data.clientMasterTerms;
-                    if (data.historicalBatches) window.historicalBatches = data.historicalBatches;
-                    if (data.excludedInvoices) window.excludedInvoices = data.excludedInvoices;
-                    if (data.rawLiveDebt) window.rawLiveDebt = data.rawLiveDebt;
-
-                    updatePeriodSelectors(Object.keys(window.historicalBatches)[0] || 'ALL');
-                    runReconciliation();
-                    showToast('Copia de Seguridad restaurada al 100%.', 'success');
-                } catch (err) {
-                    showToast('El archivo de respaldo no es válido.', 'error');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function openTermsModal() { document.getElementById('modal-terms').classList.remove('hidden'); }
-        function closeTermsModal() { document.getElementById('modal-terms').classList.add('hidden'); }
-        function addManualTerm() {
-            const c = document.getElementById('manual-term-client').value;
-            const d = parseInt(document.getElementById('manual-term-days').value) || 30;
-            if (c) { window.clientMasterTerms[normalizeClientName(c)] = d; showToast('Cliente guardado.', 'success'); }
-        }
-
-        function clearAllBatches() { window.historicalBatches = {}; window.rawSales = []; window.rawReal = []; updatePeriodSelectors('ALL'); runReconciliation(); }
     </script>
 </body>
 </html>
