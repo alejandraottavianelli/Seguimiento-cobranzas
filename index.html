@@ -190,7 +190,7 @@
                     <div class="h-64 relative"><canvas id="chart-status"></canvas></div>
                 </div>
                 <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-bold text-slate-800 mb-4">Facturado vs Cobrado por Vendedor / Reparto</h3>
+                    <h3 class="text-sm font-bold text-slate-800 mb-4">Facturado vs Cobrado por Reparto / Vendedor</h3>
                     <div class="h-64 relative"><canvas id="chart-sellers"></canvas></div>
                 </div>
             </div>
@@ -403,11 +403,10 @@
 
         // Extraer código de reparto limpio (ej: "RTO 42 - Factura de Venta" -> "RTO 42")
         function extractRepartoCode(str) {
-            if (!str) return 'General';
+            if (!str) return '';
             const match = String(str).match(/RTO\s*\d+/i);
             if (match) return match[0].toUpperCase();
-            const cleaned = String(str).split('-')[0].trim();
-            return cleaned || 'General';
+            return '';
         }
 
         function parseExcelDate(val) {
@@ -434,12 +433,11 @@
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
         }
 
-        // Búsqueda inteligente de columnas dando prioridad a Vendedor / Reparto
+        // Búsqueda inteligente dando máxima prioridad a Vendedor / Reparto
         function findRowValue(row, terms) {
             if (!row) return '';
             const keys = Object.keys(row);
             
-            // Si buscamos 'vendedor', no tomar 'documento' salvo que no exista otra
             for (const t of terms) {
                 const ct = cleanStr(t);
                 for (const k of keys) {
@@ -476,7 +474,7 @@
                     dEmision: parseExcelDate(findRowValue(r, ['fecha', 'fecha comprobante', 'fecha emision'])),
                     dVto: parseExcelDate(findRowValue(r, ['fecha vto', 'vencimiento'])),
                     importe: parseFloat(findRowValue(r, ['total', 'importe ppal', 'bruto', 'importe']) || 0),
-                    vendedor: extractRepartoCode(findRowValue(r, ['vendedor', 'documento', 'reparto'])),
+                    vendedor: extractRepartoCode(findRowValue(r, ['vendedor', 'reparto'])) || extractRepartoCode(findRowValue(r, ['documento'])) || 'General',
                     empresa: findRowValue(r, ['empresa']) || 'Ganadera'
                 }));
                 showToast(`Se leyeron ${window.rawSales.length} facturas.`, 'success');
@@ -497,7 +495,8 @@
                     fechaCobro: parseExcelDate(findRowValue(r, ['fecha', 'fecha comprobante', 'fecha cobro'])),
                     importeCobrado: Math.abs(parseFloat(findRowValue(r, ['t. cta. cte.', 'total', 'importe ppal', 'importe']) || 0)),
                     recibo: findRowValue(r, ['número comprobante', 'comprobante', 'recibo']) || 'REC-000',
-                    vendedor: extractRepartoCode(findRowValue(r, ['vendedor', 'documento', 'reparto'])),
+                    // Importante: No forzar el RTO del comprobante de recibo para permitir match por cliente
+                    vendedor: extractRepartoCode(findRowValue(r, ['vendedor', 'reparto'])),
                     empresa: findRowValue(r, ['empresa']) || 'Ganadera'
                 }));
                 showToast(`Se leyeron ${window.rawReal.length} recibos.`, 'success');
@@ -519,7 +518,7 @@
                     dEmision: parseExcelDate(findRowValue(r, ['fecha comprobante', 'fecha'])),
                     dVto: parseExcelDate(findRowValue(r, ['fecha vto', 'vencimiento'])),
                     saldo: parseFloat(findRowValue(r, ['importe ppal', 'saldo', 'total']) || 0),
-                    vendedor: extractRepartoCode(findRowValue(r, ['vendedor', 'documento', 'reparto'])),
+                    vendedor: extractRepartoCode(findRowValue(r, ['vendedor', 'reparto'])) || extractRepartoCode(findRowValue(r, ['documento'])) || 'General',
                     empresa: findRowValue(r, ['empresa']) || 'Ganadera'
                 }));
                 runReconciliation();
@@ -615,6 +614,8 @@
             activeReal.forEach(r => {
                 const norm = normalizeClientName(r.cliente);
                 if (!clientMap[norm]) clientMap[norm] = { cliente: r.cliente, sales: [], real: [] };
+                
+                // Match automático de cobro al reparto de ventas del cliente
                 if (!r.vendedor || r.vendedor === 'General') {
                     r.vendedor = clientSellerMap[norm] || 'General';
                 }
@@ -639,13 +640,14 @@
                 const avgReal = count > 0 ? Math.round(daysSum / count) : agreed;
                 const compliance = totSales > 0 ? Math.min(100, Math.round((totReal / totSales) * 100)) : 100;
 
+                const validAvg = isNaN(avgReal) ? agreed : avgReal;
                 clientSummaries.push({
                     cliente: grp.cliente,
                     proyectado: totSales,
                     cobrado: totReal,
                     plazoPactado: agreed,
-                    plazoPromedioReal: isNaN(avgReal) ? agreed : avgReal,
-                    desvioDias: (isNaN(avgReal) ? agreed : avgReal) - agreed,
+                    plazoPromedioReal: validAvg,
+                    desvioDias: validAvg - agreed,
                     cumplimientoPct: compliance
                 });
             });
@@ -673,10 +675,10 @@
 
             document.getElementById('kpi-dso-total').textContent = `${dso} Días`;
             
-            // Evitar el NaN en la etiqueta de texto
+            // Protección contra NaN en el subtítulo del KPI
             const validSummaries = clientSummaries.filter(c => !isNaN(c.plazoPromedioReal));
             const avgPlazoGlobal = validSummaries.length > 0 ? Math.round(validSummaries.reduce((s, c) => s + c.plazoPromedioReal, 0) / validSummaries.length) : dso;
-            document.getElementById('kpi-desvio-promedio').textContent = `Plazo Promedio Real Estimado: ${avgPlazoGlobal} días`;
+            document.getElementById('kpi-desvio-promedio').textContent = `Plazo Promedio Real Estimado: ${isNaN(avgPlazoGlobal) ? dso : avgPlazoGlobal} días`;
 
             window.reconciliationResult = { invoiceDetails: liveDebt, invoiceDetailsHistory: activeSales, clientSummaries };
             
@@ -714,12 +716,12 @@
             if (canvasSellers) {
                 const sellersMap = {};
                 sales.forEach(s => {
-                    const v = extractRepartoCode(s.vendedor);
+                    const v = extractRepartoCode(s.vendedor) || 'General';
                     if (!sellersMap[v]) sellersMap[v] = { facturado: 0, cobrado: 0 };
                     sellersMap[v].facturado += s.importe || 0;
                 });
                 real.forEach(r => {
-                    const v = extractRepartoCode(r.vendedor);
+                    const v = extractRepartoCode(r.vendedor) || 'General';
                     if (!sellersMap[v]) sellersMap[v] = { facturado: 0, cobrado: 0 };
                     sellersMap[v].cobrado += r.importeCobrado || 0;
                 });
@@ -756,7 +758,7 @@
 
             const repartos = {};
             (window.reconciliationResult.invoiceDetails || []).forEach(i => {
-                const v = extractRepartoCode(i.vendedor);
+                const v = extractRepartoCode(i.vendedor) || 'General';
                 if (!repartos[v]) repartos[v] = { total: 0, count: 0 };
                 repartos[v].total += (i.saldo || i.importe || 0);
                 repartos[v].count++;
@@ -788,7 +790,7 @@
             const subElem = document.getElementById('selected-reparto-sub');
 
             if (!window.reconciliationResult) return;
-            const invoices = (window.reconciliationResult.invoiceDetails || []).filter(i => extractRepartoCode(i.vendedor) === repartoName);
+            const invoices = (window.reconciliationResult.invoiceDetails || []).filter(i => (extractRepartoCode(i.vendedor) || 'General') === repartoName);
             const totalReparto = invoices.reduce((sum, i) => sum + (i.saldo || i.importe || 0), 0);
 
             if (titleElem) titleElem.textContent = `Detalle de Reparto: ${repartoName}`;
