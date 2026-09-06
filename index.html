@@ -104,7 +104,7 @@
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div id="toast-container" class="fixed top-20 right-5 z-50 space-y-2 pointer-events-none"></div>
 
-        <!-- 1. Cargar Archivos -->
+        <!-- 1. Cargar Archivos (INTACTA) -->
         <section id="tab-upload" class="space-y-6">
             <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-6">
@@ -159,7 +159,7 @@
             </div>
         </section>
 
-        <!-- 2. Resumen Ejecutivo -->
+        <!-- 2. Resumen Ejecutivo (INTACTA) -->
         <section id="tab-executive" class="space-y-6 hidden">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
@@ -196,42 +196,71 @@
             </div>
         </section>
 
-        <!-- 3. Ruta de Cobranzas -->
+        <!-- 3. Ruta de Cobranzas (ACTUALIZADA Y PERFECCIONADA) -->
         <section id="tab-route" class="space-y-6 hidden">
             <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-                <div class="border-b border-slate-100 pb-4 mb-6">
-                    <span class="px-2.5 py-1 bg-amber-100 text-amber-800 font-bold rounded-md text-[11px] uppercase">Plan de Gestión Diario</span>
-                    <h2 class="text-lg font-bold text-slate-800 mt-1">Ruta de Cobranzas por Reparto / Vendedor</h2>
-                    <p class="text-xs text-slate-500">Muestra dónde se concentra la mayor deuda para enfocar las gestiones de cobro.</p>
-                </div>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <h3 class="text-xs font-bold text-slate-600 uppercase mb-3">Concentración de Deuda</h3>
-                        <div id="route-repartos-list" class="space-y-2 max-h-96 overflow-y-auto custom-scrollbar"></div>
+                <div class="border-b border-slate-100 pb-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <span class="px-2.5 py-1 bg-amber-100 text-amber-800 font-bold rounded-md text-[11px] uppercase">Plan de Gestión Diario</span>
+                        <h2 class="text-lg font-bold text-slate-800 mt-1">Ruta de Cobranzas & Riesgo por Reparto</h2>
+                        <p class="text-xs text-slate-500">Evalúa la concentración de deuda, el porcentaje expuesto sobre la venta total y el DSO específico de cada reparto.</p>
                     </div>
-                    <div class="lg:col-span-2 bg-white p-4 rounded-xl border border-slate-200">
-                        <h3 id="selected-reparto-title" class="text-base font-bold text-slate-800 mb-1">Seleccione un reparto</h3>
-                        <p id="selected-reparto-sub" class="text-xs text-slate-500 mb-4">Haga clic en la lista de la izquierda.</p>
-                        <div class="overflow-x-auto custom-scrollbar max-h-80">
-                            <table class="w-full text-xs text-left border-collapse">
-                                <thead>
-                                    <tr class="bg-slate-50 border-b font-semibold text-slate-600 uppercase">
-                                        <th class="p-2.5">Cliente</th>
-                                        <th class="p-2.5">Comprobante</th>
-                                        <th class="p-2.5 text-right">Saldo Pendiente</th>
-                                        <th class="p-2.5 text-center">F. Probable Pago</th>
-                                        <th class="p-2.5 text-center">Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tbody-reparto-detail" class="divide-y divide-slate-100"></tbody>
-                            </table>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Columna Izquierda: Selector de Repartos con Métricas -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-xs font-bold text-slate-600 uppercase">Repartos / Vendedores</h3>
+                            <span class="text-[10px] text-slate-400 font-semibold">% Deuda / Venta</span>
+                        </div>
+                        <div id="route-repartos-list" class="space-y-2.5 max-h-[500px] overflow-y-auto custom-scrollbar pr-1"></div>
+                    </div>
+
+                    <!-- Columna Derecha: Tarjeta de Métricas y Detalle del Reparto Seleccionado -->
+                    <div class="lg:col-span-2 space-y-4">
+                        <!-- Tarjeta KPI del Reparto Seleccionado -->
+                        <div class="bg-slate-900 text-white p-5 rounded-xl border border-slate-800 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <h3 id="selected-reparto-title" class="text-base font-bold text-amber-300">Seleccione un reparto</h3>
+                                <p id="selected-reparto-sub" class="text-xs text-slate-400 mt-0.5">Haga clic en la lista</p>
+                            </div>
+                            <div class="border-l border-slate-800 pl-4">
+                                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">DSO del Reparto</span>
+                                <h4 id="selected-reparto-dso" class="text-xl font-black text-white mt-0.5">0 Días</h4>
+                                <p id="selected-reparto-mora-sub" class="text-[11px] text-indigo-300">Mora promedio de cobro</p>
+                            </div>
+                            <div class="border-l border-slate-800 pl-4">
+                                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">% Deuda s/ Venta</span>
+                                <h4 id="selected-reparto-pct" class="text-xl font-black text-rose-400 mt-0.5">0%</h4>
+                                <p id="selected-reparto-vta-sub" class="text-[11px] text-slate-400">Facturado: $0</p>
+                            </div>
+                        </div>
+
+                        <!-- Grilla de Comprobantes Pendientes -->
+                        <div class="bg-white p-4 rounded-xl border border-slate-200">
+                            <h4 class="text-xs font-bold text-slate-700 uppercase mb-3">Comprobantes Pendientes de Cobro</h4>
+                            <div class="overflow-x-auto custom-scrollbar max-h-80">
+                                <table class="w-full text-xs text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-50 border-b font-semibold text-slate-600 uppercase">
+                                            <th class="p-2.5">Cliente</th>
+                                            <th class="p-2.5">Comprobante</th>
+                                            <th class="p-2.5 text-right">Saldo Pendiente</th>
+                                            <th class="p-2.5 text-center">F. Probable Pago</th>
+                                            <th class="p-2.5 text-center">Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-reparto-detail" class="divide-y divide-slate-100"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- 4. Plazos Reales vs Pactados -->
+        <!-- 4. Plazos Reales vs Pactados (INTACTA) -->
         <section id="tab-terms" class="space-y-6 hidden">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -261,7 +290,7 @@
             </div>
         </section>
 
-        <!-- 5. Detalle Imputación -->
+        <!-- 5. Detalle Imputación (INTACTA) -->
         <section id="tab-imputation" class="space-y-6 hidden">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -291,7 +320,7 @@
             </div>
         </section>
 
-        <!-- 6. Alertas & Ranking -->
+        <!-- 6. Alertas & Ranking (INTACTA) -->
         <section id="tab-alerts" class="space-y-6 hidden">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
@@ -321,7 +350,7 @@
             </div>
         </section>
 
-        <!-- 7. Predicción & Cash Flow -->
+        <!-- 7. Predicción & Cash Flow (INTACTA) -->
         <section id="tab-forecast" class="space-y-6 hidden">
             <div class="bg-indigo-900 text-white p-5 rounded-xl shadow border border-indigo-800">
                 <h3 class="text-base font-bold">Pronóstico Predictivo de Cash Flow (Efectivo & Bancos)</h3>
@@ -433,7 +462,6 @@
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
         }
 
-        // Búsqueda inteligente dando máxima prioridad a Vendedor / Reparto
         function findRowValue(row, terms) {
             if (!row) return '';
             const keys = Object.keys(row);
@@ -495,7 +523,6 @@
                     fechaCobro: parseExcelDate(findRowValue(r, ['fecha', 'fecha comprobante', 'fecha cobro'])),
                     importeCobrado: Math.abs(parseFloat(findRowValue(r, ['t. cta. cte.', 'total', 'importe ppal', 'importe']) || 0)),
                     recibo: findRowValue(r, ['número comprobante', 'comprobante', 'recibo']) || 'REC-000',
-                    // Importante: No forzar el RTO del comprobante de recibo para permitir match por cliente
                     vendedor: extractRepartoCode(findRowValue(r, ['vendedor', 'reparto'])),
                     empresa: findRowValue(r, ['empresa']) || 'Ganadera'
                 }));
@@ -583,8 +610,8 @@
                     activeReal = activeReal.concat(b.real || []);
                 });
             } else if (window.historicalBatches[window.activePeriod]) {
-                activeSales = window.historicalBatches[window.activePeriod].sales || [];
-                activeReal = window.historicalBatches[window.activePeriod].real || [];
+                activeSales = activeSales.concat(window.historicalBatches[window.activePeriod].sales || []);
+                activeReal = activeReal.concat(window.historicalBatches[window.activePeriod].real || []);
             }
 
             if (window.globalCompanyFilter === 'GANADERA') {
@@ -675,7 +702,6 @@
 
             document.getElementById('kpi-dso-total').textContent = `${dso} Días`;
             
-            // Protección contra NaN en el subtítulo del KPI
             const validSummaries = clientSummaries.filter(c => !isNaN(c.plazoPromedioReal));
             const avgPlazoGlobal = validSummaries.length > 0 ? Math.round(validSummaries.reduce((s, c) => s + c.plazoPromedioReal, 0) / validSummaries.length) : dso;
             document.getElementById('kpi-desvio-promedio').textContent = `Plazo Promedio Real Estimado: ${isNaN(avgPlazoGlobal) ? dso : avgPlazoGlobal} días`;
@@ -683,7 +709,7 @@
             window.reconciliationResult = { invoiceDetails: liveDebt, invoiceDetailsHistory: activeSales, clientSummaries };
             
             renderCharts(activeSales, activeReal, totalCobrado, totalPendiente);
-            renderRouteModule();
+            renderRouteModule(activeSales);
             renderTermsTable();
             renderImputationTable();
             renderAlertsAndRanking();
@@ -750,21 +776,30 @@
             }
         }
 
-        // Pestaña 3: Ruta de Cobranzas
-        function renderRouteModule() {
+        // Pestaña 3: Ruta de Cobranzas con Métricas Avanzadas y Selector de Color
+        function renderRouteModule(activeSales) {
             const list = document.getElementById('route-repartos-list');
-            const tbody = document.getElementById('tbody-reparto-detail');
             if (!window.reconciliationResult) return;
 
-            const repartos = {};
-            (window.reconciliationResult.invoiceDetails || []).forEach(i => {
-                const v = extractRepartoCode(i.vendedor) || 'General';
-                if (!repartos[v]) repartos[v] = { total: 0, count: 0 };
-                repartos[v].total += (i.saldo || i.importe || 0);
-                repartos[v].count++;
+            const salesList = activeSales || (window.reconciliationResult.invoiceDetailsHistory || []);
+            const repartosMap = {};
+
+            // Acumular ventas por reparto
+            salesList.forEach(s => {
+                const v = extractRepartoCode(s.vendedor) || 'General';
+                if (!repartosMap[v]) repartosMap[v] = { deuda: 0, venta: 0, count: 0 };
+                repartosMap[v].venta += (s.importe || 0);
             });
 
-            const keys = Object.keys(repartos).sort((a, b) => repartos[b].total - repartos[a].total);
+            // Acumular deuda viva por reparto
+            (window.reconciliationResult.invoiceDetails || []).forEach(i => {
+                const v = extractRepartoCode(i.vendedor) || 'General';
+                if (!repartosMap[v]) repartosMap[v] = { deuda: 0, venta: 0, count: 0 };
+                repartosMap[v].deuda += (i.saldo || i.importe || 0);
+                repartosMap[v].count++;
+            });
+
+            const keys = Object.keys(repartosMap).sort((a, b) => repartosMap[b].deuda - repartosMap[a].deuda);
 
             if (list) {
                 list.innerHTML = '';
@@ -772,29 +807,64 @@
                     const isSelected = window.selectedReparto === r || (window.selectedReparto === null && idx === 0);
                     if (isSelected && window.selectedReparto === null) window.selectedReparto = r;
 
+                    const data = repartosMap[r];
+                    const pctDeudaSobreVenta = data.venta > 0 ? Math.min(100, Math.round((data.deuda / data.venta) * 100)) : (data.deuda > 0 ? 100 : 0);
+                    const isHighRisk = pctDeudaSobreVenta > 50;
+
                     const div = document.createElement('div');
-                    div.onclick = () => selectRouteReparto(r);
-                    div.className = `p-3 rounded-lg border text-xs cursor-pointer transition flex justify-between items-center ${isSelected ? 'bg-amber-100 border-amber-400 font-bold shadow-sm' : 'bg-white border-slate-200 hover:bg-slate-100'}`;
-                    div.innerHTML = `<div><span class="text-slate-800">${r}</span><p class="text-[10px] text-slate-500 font-normal">${repartos[r].count} facturas</p></div><span class="text-rose-600 font-bold">${formatMoney(repartos[r].total)}</span>`;
+                    div.onclick = () => selectRouteReparto(r, data);
+                    div.className = `p-3 rounded-xl border text-xs cursor-pointer transition flex justify-between items-center ${isSelected ? 'bg-amber-600 border-amber-700 text-white shadow-md font-bold' : 'bg-white border-slate-200 hover:bg-slate-100 text-slate-800'}`;
+                    
+                    div.innerHTML = `
+                        <div>
+                            <div class="flex items-center space-x-1.5">
+                                <span class="font-bold ${isSelected ? 'text-white' : 'text-slate-900'}">${r}</span>
+                                ${isHighRisk ? `<span class="px-1.5 py-0.5 text-[9px] rounded font-extrabold ${isSelected ? 'bg-rose-900 text-rose-200' : 'bg-rose-100 text-rose-800'} uppercase">Riesgo</span>` : ''}
+                            </div>
+                            <p class="text-[10px] ${isSelected ? 'text-amber-100' : 'text-slate-500'} font-normal mt-0.5">${data.count} facturas pend.</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="${isSelected ? 'text-white' : 'text-rose-600'} font-black text-sm">${formatMoney(data.deuda)}</span>
+                            <p class="text-[10px] ${isSelected ? 'text-amber-200' : 'text-slate-500'} font-semibold mt-0.5">${pctDeudaSobreVenta}% de la venta</p>
+                        </div>
+                    `;
                     list.appendChild(div);
                 });
             }
 
-            if (window.selectedReparto) selectRouteReparto(window.selectedReparto);
+            if (window.selectedReparto && repartosMap[window.selectedReparto]) {
+                selectRouteReparto(window.selectedReparto, repartosMap[window.selectedReparto]);
+            }
         }
 
-        function selectRouteReparto(repartoName) {
+        function selectRouteReparto(repartoName, repartoData) {
             window.selectedReparto = repartoName;
+            
+            // Re-renderizar la lista para actualizar el resaltado de color naranja oscuro
+            renderRouteModule();
+
             const tbody = document.getElementById('tbody-reparto-detail');
             const titleElem = document.getElementById('selected-reparto-title');
             const subElem = document.getElementById('selected-reparto-sub');
+            const dsoElem = document.getElementById('selected-reparto-dso');
+            const pctElem = document.getElementById('selected-reparto-pct');
+            const vtaElem = document.getElementById('selected-reparto-vta-sub');
 
             if (!window.reconciliationResult) return;
             const invoices = (window.reconciliationResult.invoiceDetails || []).filter(i => (extractRepartoCode(i.vendedor) || 'General') === repartoName);
             const totalReparto = invoices.reduce((sum, i) => sum + (i.saldo || i.importe || 0), 0);
 
-            if (titleElem) titleElem.textContent = `Detalle de Reparto: ${repartoName}`;
-            if (subElem) subElem.textContent = `Saldo acumulado a cobrar: ${formatMoney(totalReparto)}`;
+            const numMonths = (window.activePeriod === 'ALL') ? Math.max(1, Object.keys(window.historicalBatches).length) : 1;
+            const ventaTotal = repartoData ? repartoData.venta : totalReparto;
+            const ventaDiariaReparto = ventaTotal > 0 ? (ventaTotal / (numMonths * 30)) : 1;
+            const dsoReparto = Math.round(totalReparto / ventaDiariaReparto);
+            const pctExpo = ventaTotal > 0 ? Math.min(100, Math.round((totalReparto / ventaTotal) * 100)) : (totalReparto > 0 ? 100 : 0);
+
+            if (titleElem) titleElem.textContent = `Reparto: ${repartoName}`;
+            if (subElem) subElem.textContent = `Deuda acumulada: ${formatMoney(totalReparto)}`;
+            if (dsoElem) dsoElem.textContent = `${dsoReparto} Días`;
+            if (pctElem) pctElem.textContent = `${pctExpo}%`;
+            if (vtaElem) vtaElem.textContent = `Venta total: ${formatMoney(ventaTotal)}`;
 
             if (tbody) {
                 tbody.innerHTML = '';
@@ -972,7 +1042,7 @@
             }
         }
 
-        // Importación de Copia de Seguridad JSON corregida y flexible
+        // Importación de Copia de Seguridad JSON
         function importBackupJSON(event) {
             const file = event.target.files[0];
             if (!file) return;
