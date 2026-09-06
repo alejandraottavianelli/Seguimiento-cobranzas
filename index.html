@@ -159,7 +159,7 @@
             </div>
         </section>
 
-        <!-- 2. Resumen Ejecutivo (RESTAURADA E INTACTA) -->
+        <!-- 2. Resumen Ejecutivo -->
         <section id="tab-executive" class="space-y-6 hidden">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
@@ -190,13 +190,13 @@
                     <div class="h-64 relative"><canvas id="chart-status"></canvas></div>
                 </div>
                 <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-bold text-slate-800 mb-4">Facturado vs Cobrado por Vendedor / Reparto</h3>
+                    <h3 class="text-sm font-bold text-slate-800 mb-4">Facturado vs Cobrado por Reparto / Vendedor</h3>
                     <div class="h-64 relative"><canvas id="chart-sellers"></canvas></div>
                 </div>
             </div>
         </section>
 
-        <!-- 3. Ruta de Cobranzas (CORREGIDA) -->
+        <!-- 3. Ruta de Cobranzas -->
         <section id="tab-route" class="space-y-6 hidden">
             <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div class="border-b border-slate-100 pb-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -428,7 +428,7 @@
             return normalized.includes('capacitacion') || normalized.includes('x-99999') || normalized.includes('cap-');
         }
 
-        // Extraer código de reparto limpio
+        // Extraer RTO XX del string de comprobante o vendedor
         function extractRepartoCode(str) {
             if (!str) return 'General';
             const match = String(str).match(/RTO\s*[-_]?\s*\d+/i);
@@ -496,15 +496,20 @@
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const json = parseExcelSheet(workbook.Sheets[workbook.SheetNames[0]]);
-                window.rawSales = json.map(r => ({
-                    cliente: findRowValue(r, ['cliente', 'razon social', 'razon']) || 'CLIENTE S/D',
-                    factura: findRowValue(r, ['nro comp', 'comprobante', 'factura']) || 'F-000',
-                    dEmision: parseExcelDate(findRowValue(r, ['fecha', 'fecha comprobante', 'fecha emision'])),
-                    dVto: parseExcelDate(findRowValue(r, ['fecha vto', 'vencimiento'])),
-                    importe: parseFloat(findRowValue(r, ['total', 'importe ppal', 'bruto', 'importe']) || 0),
-                    vendedor: extractRepartoCode(findRowValue(r, ['vendedor', 'reparto'])) || extractRepartoCode(findRowValue(r, ['documento'])) || 'General',
-                    empresa: findRowValue(r, ['empresa']) || 'Ganadera'
-                }));
+                window.rawSales = json.map(r => {
+                    const vendorRaw = findRowValue(r, ['vendedor', 'reparto']);
+                    const docRaw = findRowValue(r, ['documento', 'doc-nro int', 'comprobante', 'nro comp']);
+                    const code = extractRepartoCode(vendorRaw) || extractRepartoCode(docRaw) || 'General';
+                    return {
+                        cliente: findRowValue(r, ['cliente', 'razon social', 'razon']) || 'CLIENTE S/D',
+                        factura: findRowValue(r, ['nro comp', 'comprobante', 'factura']) || 'F-000',
+                        dEmision: parseExcelDate(findRowValue(r, ['fecha', 'fecha comprobante', 'fecha emision'])),
+                        dVto: parseExcelDate(findRowValue(r, ['fecha vto', 'vencimiento'])),
+                        importe: parseFloat(findRowValue(r, ['total', 'importe ppal', 'bruto', 'importe']) || 0),
+                        vendedor: code,
+                        empresa: findRowValue(r, ['empresa']) || 'Ganadera'
+                    };
+                });
                 showToast(`Se leyeron ${window.rawSales.length} facturas.`, 'success');
             };
             reader.readAsArrayBuffer(file);
@@ -539,15 +544,20 @@
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const json = parseExcelSheet(workbook.Sheets[workbook.SheetNames[0]]);
-                window.rawLiveDebt = json.map(r => ({
-                    cliente: findRowValue(r, ['cliente', 'razon social', 'razon']) || 'CLIENTE S/D',
-                    factura: findRowValue(r, ['comprobante', 'factura', 'nro comp']) || 'F-000',
-                    dEmision: parseExcelDate(findRowValue(r, ['fecha comprobante', 'fecha'])),
-                    dVto: parseExcelDate(findRowValue(r, ['fecha vto', 'vencimiento'])),
-                    saldo: parseFloat(findRowValue(r, ['importe ppal', 'saldo', 'total']) || 0),
-                    vendedor: extractRepartoCode(findRowValue(r, ['vendedor', 'reparto'])) || extractRepartoCode(findRowValue(r, ['documento'])) || 'General',
-                    empresa: findRowValue(r, ['empresa']) || 'Ganadera'
-                }));
+                window.rawLiveDebt = json.map(r => {
+                    const vendorRaw = findRowValue(r, ['vendedor', 'reparto']);
+                    const docRaw = findRowValue(r, ['comprobante', 'factura', 'nro comp', 'documento']);
+                    const code = extractRepartoCode(vendorRaw) || extractRepartoCode(docRaw) || 'General';
+                    return {
+                        cliente: findRowValue(r, ['cliente', 'razon social', 'razon']) || 'CLIENTE S/D',
+                        factura: findRowValue(r, ['comprobante', 'factura', 'nro comp']) || 'F-000',
+                        dEmision: parseExcelDate(findRowValue(r, ['fecha comprobante', 'fecha'])),
+                        dVto: parseExcelDate(findRowValue(r, ['fecha vto', 'vencimiento'])),
+                        saldo: parseFloat(findRowValue(r, ['importe ppal', 'saldo', 'total']) || 0),
+                        vendedor: code,
+                        empresa: findRowValue(r, ['empresa']) || 'Ganadera'
+                    };
+                });
                 runReconciliation();
                 showToast(`Deuda viva cargada: ${window.rawLiveDebt.length} registros.`, 'success');
             };
@@ -775,7 +785,7 @@
             }
         }
 
-        // Pestaña 3: Ruta de Cobranzas con renderizado estable de facturas
+        // Pestaña 3: Ruta de Cobranzas
         function renderRouteModule(activeSales) {
             const list = document.getElementById('route-repartos-list');
             if (!window.reconciliationResult) return;
@@ -869,7 +879,6 @@
 
             if (!window.reconciliationResult) return;
             
-            // Filtrar facturas vivas por reparto asignado
             const invoices = (window.reconciliationResult.invoiceDetails || []).filter(i => {
                 const code = extractRepartoCode(i.vendedor);
                 return code === repartoName || (repartoName === 'General' && (!code || code === 'General'));
