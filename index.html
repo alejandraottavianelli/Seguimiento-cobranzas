@@ -104,7 +104,7 @@
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div id="toast-container" class="fixed top-20 right-5 z-50 space-y-2 pointer-events-none"></div>
 
-        <!-- 1. Cargar Archivos (INTACTA) -->
+        <!-- 1. Cargar Archivos -->
         <section id="tab-upload" class="space-y-6">
             <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-6">
@@ -159,7 +159,7 @@
             </div>
         </section>
 
-        <!-- 2. Resumen Ejecutivo (INTACTA) -->
+        <!-- 2. Resumen Ejecutivo -->
         <section id="tab-executive" class="space-y-6 hidden">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
@@ -196,7 +196,7 @@
             </div>
         </section>
 
-        <!-- 3. Ruta de Cobranzas (ACTUALIZADA Y PERFECCIONADA) -->
+        <!-- 3. Ruta de Cobranzas -->
         <section id="tab-route" class="space-y-6 hidden">
             <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div class="border-b border-slate-100 pb-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -208,7 +208,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Columna Izquierda: Selector de Repartos con Métricas -->
+                    <!-- Columna Izquierda: Selector de Repartos -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-xs font-bold text-slate-600 uppercase">Repartos / Vendedores</h3>
@@ -217,9 +217,8 @@
                         <div id="route-repartos-list" class="space-y-2.5 max-h-[500px] overflow-y-auto custom-scrollbar pr-1"></div>
                     </div>
 
-                    <!-- Columna Derecha: Tarjeta de Métricas y Detalle del Reparto Seleccionado -->
+                    <!-- Columna Derecha: Métricas y Detalle -->
                     <div class="lg:col-span-2 space-y-4">
-                        <!-- Tarjeta KPI del Reparto Seleccionado -->
                         <div class="bg-slate-900 text-white p-5 rounded-xl border border-slate-800 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                                 <h3 id="selected-reparto-title" class="text-base font-bold text-amber-300">Seleccione un reparto</h3>
@@ -237,7 +236,6 @@
                             </div>
                         </div>
 
-                        <!-- Grilla de Comprobantes Pendientes -->
                         <div class="bg-white p-4 rounded-xl border border-slate-200">
                             <h4 class="text-xs font-bold text-slate-700 uppercase mb-3">Comprobantes Pendientes de Cobro</h4>
                             <div class="overflow-x-auto custom-scrollbar max-h-80">
@@ -260,7 +258,7 @@
             </div>
         </section>
 
-        <!-- 4. Plazos Reales vs Pactados (INTACTA) -->
+        <!-- 4. Plazos Reales vs Pactados -->
         <section id="tab-terms" class="space-y-6 hidden">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -290,7 +288,7 @@
             </div>
         </section>
 
-        <!-- 5. Detalle Imputación (INTACTA) -->
+        <!-- 5. Detalle Imputación -->
         <section id="tab-imputation" class="space-y-6 hidden">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -320,7 +318,7 @@
             </div>
         </section>
 
-        <!-- 6. Alertas & Ranking (INTACTA) -->
+        <!-- 6. Alertas & Ranking -->
         <section id="tab-alerts" class="space-y-6 hidden">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
@@ -350,7 +348,7 @@
             </div>
         </section>
 
-        <!-- 7. Predicción & Cash Flow (INTACTA) -->
+        <!-- 7. Predicción & Cash Flow -->
         <section id="tab-forecast" class="space-y-6 hidden">
             <div class="bg-indigo-900 text-white p-5 rounded-xl shadow border border-indigo-800">
                 <h3 class="text-base font-bold">Pronóstico Predictivo de Cash Flow (Efectivo & Bancos)</h3>
@@ -432,10 +430,12 @@
 
         // Extraer código de reparto limpio (ej: "RTO 42 - Factura de Venta" -> "RTO 42")
         function extractRepartoCode(str) {
-            if (!str) return '';
-            const match = String(str).match(/RTO\s*\d+/i);
-            if (match) return match[0].toUpperCase();
-            return '';
+            if (!str) return 'General';
+            const match = String(str).match(/RTO\s*[-_]?\s*\d+/i);
+            if (match) {
+                return match[0].toUpperCase().replace(/-\s*/, ' ').replace(/\s+/, ' ');
+            }
+            return 'General';
         }
 
         function parseExcelDate(val) {
@@ -776,7 +776,7 @@
             }
         }
 
-        // Pestaña 3: Ruta de Cobranzas con Métricas Avanzadas y Selector de Color
+        // Pestaña 3: Ruta de Cobranzas con Selección Persistente y Carga de Facturas
         function renderRouteModule(activeSales) {
             const list = document.getElementById('route-repartos-list');
             if (!window.reconciliationResult) return;
@@ -784,14 +784,12 @@
             const salesList = activeSales || (window.reconciliationResult.invoiceDetailsHistory || []);
             const repartosMap = {};
 
-            // Acumular ventas por reparto
             salesList.forEach(s => {
                 const v = extractRepartoCode(s.vendedor) || 'General';
                 if (!repartosMap[v]) repartosMap[v] = { deuda: 0, venta: 0, count: 0 };
                 repartosMap[v].venta += (s.importe || 0);
             });
 
-            // Acumular deuda viva por reparto
             (window.reconciliationResult.invoiceDetails || []).forEach(i => {
                 const v = extractRepartoCode(i.vendedor) || 'General';
                 if (!repartosMap[v]) repartosMap[v] = { deuda: 0, venta: 0, count: 0 };
@@ -833,16 +831,31 @@
             }
 
             if (window.selectedReparto && repartosMap[window.selectedReparto]) {
-                selectRouteReparto(window.selectedReparto, repartosMap[window.selectedReparto]);
+                updateRouteDetails(window.selectedReparto, repartosMap[window.selectedReparto]);
             }
         }
 
         function selectRouteReparto(repartoName, repartoData) {
             window.selectedReparto = repartoName;
             
-            // Re-renderizar la lista para actualizar el resaltado de color naranja oscuro
-            renderRouteModule();
+            // Actualizar la apariencia de las tarjetas
+            const list = document.getElementById('route-repartos-list');
+            if (list) {
+                const children = list.children;
+                for (let div of children) {
+                    const rName = div.querySelector('span')?.textContent;
+                    if (rName === repartoName) {
+                        div.className = 'p-3 rounded-xl border text-xs cursor-pointer transition flex justify-between items-center bg-amber-600 border-amber-700 text-white shadow-md font-bold';
+                    } else {
+                        div.className = 'p-3 rounded-xl border text-xs cursor-pointer transition flex justify-between items-center bg-white border-slate-200 hover:bg-slate-100 text-slate-800';
+                    }
+                }
+            }
 
+            updateRouteDetails(repartoName, repartoData);
+        }
+
+        function updateRouteDetails(repartoName, repartoData) {
             const tbody = document.getElementById('tbody-reparto-detail');
             const titleElem = document.getElementById('selected-reparto-title');
             const subElem = document.getElementById('selected-reparto-sub');
@@ -868,12 +881,16 @@
 
             if (tbody) {
                 tbody.innerHTML = '';
-                invoices.forEach(i => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-50';
-                    tr.innerHTML = `<td class="p-2.5 font-bold text-slate-800">${i.cliente}</td><td class="p-2.5 font-mono text-brand-600">${i.factura}</td><td class="p-2.5 text-right font-bold text-rose-600">${formatMoney(i.saldo||i.importe)}</td><td class="p-2.5 text-center font-bold text-emerald-600">15/09/2026</td><td class="p-2.5 text-center"><span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-bold text-[10px]">Pendiente</span></td>`;
-                    tbody.appendChild(tr);
-                });
+                if (invoices.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Sin comprobantes pendientes para este reparto.</td></tr>`;
+                } else {
+                    invoices.forEach(i => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-slate-50';
+                        tr.innerHTML = `<td class="p-2.5 font-bold text-slate-800">${i.cliente}</td><td class="p-2.5 font-mono text-brand-600">${i.factura}</td><td class="p-2.5 text-right font-bold text-rose-600">${formatMoney(i.saldo||i.importe)}</td><td class="p-2.5 text-center font-bold text-emerald-600">15/09/2026</td><td class="p-2.5 text-center"><span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-bold text-[10px]">Pendiente</span></td>`;
+                        tbody.appendChild(tr);
+                    });
+                }
             }
         }
 
