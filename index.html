@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Módulo Multiempresa de Conciliación, Plazos Reales & Cash Flow</title>
+    <title>Módulo Multiempresa de Conciliación, Plazos Reales, DSO & Cash Flow</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -428,7 +428,25 @@
             return normalized.includes('capacitacion') || normalized.includes('x-99999') || normalized.includes('cap-');
         }
 
-        // Extraer RTO XX del string de comprobante o vendedor
+        // Extraer RTO XX analizando Vendedor primero, luego Documento/Doc-nro int
+        function extractRepartoCodeFromObject(row) {
+            if (!row) return 'General';
+            
+            // Si ya viene seteado en el objeto
+            if (row.vendedor && row.vendedor !== 'General') {
+                const match = String(row.vendedor).match(/RTO\s*[-_]?\s*\d+/i);
+                if (match) return match[0].toUpperCase().replace(/-\s*/, ' ').replace(/\s+/, ' ');
+            }
+
+            // Buscar en el texto raw de la fila
+            const rowStr = JSON.stringify(row);
+            const match = rowStr.match(/RTO\s*[-_]?\s*\d+/i);
+            if (match) {
+                return match[0].toUpperCase().replace(/-\s*/, ' ').replace(/\s+/, ' ');
+            }
+            return 'General';
+        }
+
         function extractRepartoCode(str) {
             if (!str) return 'General';
             const match = String(str).match(/RTO\s*[-_]?\s*\d+/i);
@@ -497,9 +515,7 @@
                 const workbook = XLSX.read(data, { type: 'array' });
                 const json = parseExcelSheet(workbook.Sheets[workbook.SheetNames[0]]);
                 window.rawSales = json.map(r => {
-                    const vendorRaw = findRowValue(r, ['vendedor', 'reparto']);
-                    const docRaw = findRowValue(r, ['documento', 'doc-nro int', 'comprobante', 'nro comp']);
-                    const code = extractRepartoCode(vendorRaw) || extractRepartoCode(docRaw) || 'General';
+                    const code = extractRepartoCodeFromObject(r);
                     return {
                         cliente: findRowValue(r, ['cliente', 'razon social', 'razon']) || 'CLIENTE S/D',
                         factura: findRowValue(r, ['nro comp', 'comprobante', 'factura']) || 'F-000',
@@ -528,7 +544,7 @@
                     fechaCobro: parseExcelDate(findRowValue(r, ['fecha', 'fecha comprobante', 'fecha cobro'])),
                     importeCobrado: Math.abs(parseFloat(findRowValue(r, ['t. cta. cte.', 'total', 'importe ppal', 'importe']) || 0)),
                     recibo: findRowValue(r, ['número comprobante', 'comprobante', 'recibo']) || 'REC-000',
-                    vendedor: extractRepartoCode(findRowValue(r, ['vendedor', 'reparto'])),
+                    vendedor: 'General', // Dejar en General para forzar Match por Cliente
                     empresa: findRowValue(r, ['empresa']) || 'Ganadera'
                 }));
                 showToast(`Se leyeron ${window.rawReal.length} recibos.`, 'success');
@@ -545,9 +561,7 @@
                 const workbook = XLSX.read(data, { type: 'array' });
                 const json = parseExcelSheet(workbook.Sheets[workbook.SheetNames[0]]);
                 window.rawLiveDebt = json.map(r => {
-                    const vendorRaw = findRowValue(r, ['vendedor', 'reparto']);
-                    const docRaw = findRowValue(r, ['comprobante', 'factura', 'nro comp', 'documento']);
-                    const code = extractRepartoCode(vendorRaw) || extractRepartoCode(docRaw) || 'General';
+                    const code = extractRepartoCodeFromObject(r);
                     return {
                         cliente: findRowValue(r, ['cliente', 'razon social', 'razon']) || 'CLIENTE S/D',
                         factura: findRowValue(r, ['comprobante', 'factura', 'nro comp']) || 'F-000',
@@ -636,9 +650,16 @@
             const clientSellerMap = {};
             activeSales.forEach(s => {
                 const norm = normalizeClientName(s.cliente);
-                if (s.vendedor && s.vendedor !== 'General') {
-                    clientSellerMap[norm] = s.vendedor;
+                const code = extractRepartoCode(s.vendedor);
+                if (code && code !== 'General') {
+                    clientSellerMap[norm] = code;
                 }
+            });
+
+            // Reasignación estricta de cobranzas al reparto de la venta del cliente
+            activeReal.forEach(r => {
+                const norm = normalizeClientName(r.cliente);
+                r.vendedor = clientSellerMap[norm] || 'General';
             });
 
             // Agrupación y Cálculo de Plazos Reales
@@ -651,10 +672,6 @@
             activeReal.forEach(r => {
                 const norm = normalizeClientName(r.cliente);
                 if (!clientMap[norm]) clientMap[norm] = { cliente: r.cliente, sales: [], real: [] };
-                
-                if (!r.vendedor || r.vendedor === 'General') {
-                    r.vendedor = clientSellerMap[norm] || 'General';
-                }
                 clientMap[norm].real.push(r);
             });
 
@@ -761,7 +778,7 @@
                     sellersMap[v].cobrado += r.importeCobrado || 0;
                 });
 
-                const labels = Object.keys(sellersMap).sort((a,b) => sellersMap[b].facturado - sellersMap[a].facturado);
+                const labels = Object.keys(sellersMap).filter(k => k !== 'General' || sellersMap[k].facturado > 0).sort((a,b) => sellersMap[b].facturado - sellersMap[a].facturado);
                 const dataFact = labels.map(l => sellersMap[l].facturado);
                 const dataCobr = labels.map(l => sellersMap[l].cobrado);
 
@@ -807,7 +824,7 @@
             });
 
             window.currentRepartosMap = repartosMap;
-            const keys = Object.keys(repartosMap).sort((a, b) => repartosMap[b].deuda - repartosMap[a].deuda);
+            const keys = Object.keys(repartosMap).filter(k => k !== 'General' || repartosMap[k].deuda > 0).sort((a, b) => repartosMap[b].deuda - repartosMap[a].deuda);
 
             if (list) {
                 list.innerHTML = '';
