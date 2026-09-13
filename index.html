@@ -106,13 +106,30 @@
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div id="toast-container" class="fixed top-20 right-5 z-50 space-y-2 pointer-events-none"></div>
 
-        <!-- 1. Cargar Archivos -->
+        <!-- 1. Cargar Archivos & Conector BI -->
         <section id="tab-upload" class="space-y-6">
+            <!-- Bloque de Conexión en Tiempo Real a Finnegans Azure DW -->
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-xl p-5 shadow-md border border-indigo-800 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2 py-0.5 bg-emerald-500 text-white text-[10px] font-black rounded uppercase tracking-wider">Fase 2 - DW Azure</span>
+                        <h3 class="text-sm font-bold text-white">Sincronización Automática con Finnegans Data Warehouse</h3>
+                    </div>
+                    <p class="text-xs text-indigo-200 mt-1">Conecta con la base <code class="bg-indigo-900/80 px-1.5 py-0.5 rounded font-mono text-amber-300">finnegansbi</code> para actualizar ventas, recibos y deuda viva sin subir archivos manuales.</p>
+                </div>
+                <button onclick="syncFinnegansDW()" id="btn-sync-dw" class="w-full md:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow-md transition flex items-center justify-center gap-2 whitespace-nowrap">
+                    <svg class="w-4 h-4 animate-spin hidden" id="sync-spinner" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <svg class="w-4 h-4" id="sync-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span id="sync-btn-text">🔄 Probar Sincronización Finnegans BI</span>
+                </button>
+            </div>
+
+            <!-- Bloque de Carga Manual Excel (Resguardo) -->
             <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-6">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800">Procesamiento de Archivos Excel</h2>
-                        <p class="text-xs text-slate-500 mt-1">Cargue los archivos de Ventas, Cobranzas y Deuda Viva en la Calle.</p>
+                        <h2 class="text-lg font-bold text-slate-800">Carga Manual por Archivos Excel (Resguardo)</h2>
+                        <p class="text-xs text-slate-500 mt-1">Cargue los archivos de Ventas, Cobranzas y Deuda Viva en la Calle si prefiere operar de forma local.</p>
                     </div>
                 </div>
 
@@ -260,7 +277,7 @@
             </div>
         </section>
 
-        <!-- 4. Plazos Reales vs Pactados (CON ORDENAMIENTO DE COLUMNAS) -->
+        <!-- 4. Plazos Reales vs Pactados -->
         <section id="tab-terms" class="space-y-6 hidden">
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -424,7 +441,7 @@
         </section>
     </main>
 
-    <!-- Modal de Plazos Pactados y Sincerados (CON BUSCADOR Y EDICIÓN DIRECTA) -->
+    <!-- Modal de Plazos Pactados y Sincerados -->
     <div id="modal-terms" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl mx-4 overflow-hidden">
             <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
@@ -1023,7 +1040,6 @@
                 const search = (document.getElementById('search-client-terms')?.value || '').toLowerCase();
                 let list = (window.reconciliationResult.clientSummaries || []).filter(c => c.cliente.toLowerCase().includes(search));
 
-                // Ordenar dinámicamente
                 list.sort((a, b) => {
                     let valA = a[sortColTerms];
                     let valB = b[sortColTerms];
@@ -1036,7 +1052,6 @@
                     return 0;
                 });
 
-                // Actualizar indicadores visuales en los headers
                 ['cliente', 'proyectado', 'cobrado', 'plazoPactado', 'plazoSincerado', 'plazoPromedioReal', 'desvioDias', 'cumplimientoPct'].forEach(key => {
                     const iconElem = document.getElementById(`sort-icon-${key}`);
                     if (iconElem) {
@@ -1438,23 +1453,6 @@
             document.getElementById('modal-terms').classList.add('hidden'); 
         }
 
-        function addManualTerm() {
-            const c = document.getElementById('manual-term-client').value;
-            const pactado = parseInt(document.getElementById('manual-term-pactado').value) || 30;
-            const sincerado = parseInt(document.getElementById('manual-term-sincerado').value) || pactado;
-            
-            if (c) {
-                const norm = normalizeClientName(c);
-                window.clientMasterTerms[norm] = {
-                    pactado,
-                    sincerado
-                };
-                renderMasterTermsList();
-                runReconciliation();
-                showToast('Plazo sincerado guardado con éxito.', 'success');
-            }
-        }
-
         function updateClientTermDirect(normKey, field, value) {
             const val = parseInt(value) || 0;
             if (!window.clientMasterTerms[normKey]) {
@@ -1474,10 +1472,18 @@
             container.innerHTML = '';
             
             const searchVal = (document.getElementById('search-master-terms')?.value || '').toLowerCase();
+            
+            // Si el objeto está vacío y hay clientes reconciliados, poblar previamente con los nombres reales
+            if (Object.keys(window.clientMasterTerms).length === 0 && window.reconciliationResult && window.reconciliationResult.clientSummaries) {
+                window.reconciliationResult.clientSummaries.forEach(c => {
+                    window.clientMasterTerms[c.normName] = { pactado: c.plazoPactado, sincerado: c.plazoSincerado };
+                });
+            }
+
             const keys = Object.keys(window.clientMasterTerms).filter(k => k.includes(searchVal));
 
             if (keys.length === 0) {
-                container.innerHTML = `<p class="text-slate-400 italic p-2">Sin plazos que coincidan con la búsqueda.</p>`;
+                container.innerHTML = `<p class="text-slate-400 italic p-2 text-center">Sin plazos que coincidan con la búsqueda.</p>`;
                 return;
             }
 
