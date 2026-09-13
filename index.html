@@ -81,7 +81,7 @@
                     </div>
 
                     <button onclick="openTermsModal()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-medium shadow transition flex items-center">
-                        Plazos Pactados
+                        Plazos Pactados / Sincerados
                     </button>
                 </div>
             </div>
@@ -263,8 +263,8 @@
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h3 class="text-base font-bold text-slate-800">Comportamiento por Cliente: Plazo Real vs Pactado</h3>
-                        <p class="text-xs text-slate-500">Mide si los clientes abonan en el plazo contractual acordado o presentan desvíos.</p>
+                        <h3 class="text-base font-bold text-slate-800">Comportamiento por Cliente: Plazo Real vs Pactado / Sincerado</h3>
+                        <p class="text-xs text-slate-500">Mide si los clientes abonan en el plazo contractual acordado o en su plazo operativo sincerado.</p>
                     </div>
                     <input type="text" id="search-client-terms" oninput="renderTermsTable()" placeholder="Buscar cliente..." class="text-xs border border-slate-300 rounded-lg px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-brand-500">
                 </div>
@@ -275,7 +275,8 @@
                                 <th class="p-3">Cliente</th>
                                 <th class="p-3 text-right">Proyectado</th>
                                 <th class="p-3 text-right">Cobrado</th>
-                                <th class="p-3 text-center">Plazo Pactado</th>
+                                <th class="p-3 text-center">Pactado ERP</th>
+                                <th class="p-3 text-center">Plazo Sincerado</th>
                                 <th class="p-3 text-center">Plazo Real Prom.</th>
                                 <th class="p-3 text-center">Desvío (Días)</th>
                                 <th class="p-3 text-center">Cumplimiento</th>
@@ -318,71 +319,100 @@
             </div>
         </section>
 
-        <!-- 6. Alertas & Ranking -->
+        <!-- 6. Alertas & Ranking (REESTRUCTURADA SEGÚN REQUERIMIENTOS 3 Y 4) -->
         <section id="tab-alerts" class="space-y-6 hidden">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Columna 1: Bloqueo Comercial (Regla >= 2 Facturas) -->
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-bold text-rose-600 mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        Alertas Automáticas de Riesgo & Deuda
+                    <h3 class="text-sm font-bold text-rose-700 mb-1 flex items-center gap-1.5">
+                        <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                        Riesgo de Bloqueo Comercial
                     </h3>
-                    <div id="alerts-container" class="space-y-3 max-h-96 overflow-y-auto custom-scrollbar pr-1"></div>
+                    <p class="text-[11px] text-slate-500 mb-4">Clientes con <b>2 o más facturas impagas</b> (Suspensión sugerida de despachos).</p>
+                    <div id="alerts-lock-container" class="space-y-2.5 max-h-[420px] overflow-y-auto custom-scrollbar pr-1"></div>
                 </div>
 
+                <!-- Columna 2: Alerta por Monto Elevado (> $1.000.000) -->
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-bold text-indigo-600 mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                        Ranking de Cumplimiento de Pago (Top 10)
+                    <h3 class="text-sm font-bold text-amber-700 mb-1 flex items-center gap-1.5">
+                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Alerta por Monto Elevado
                     </h3>
-                    <div class="space-y-5">
-                        <div>
-                            <h4 class="text-xs font-bold text-emerald-700 uppercase mb-2">Mejores 10 Pagadores (Menor desvío)</h4>
-                            <div id="ranking-top" class="space-y-1.5 max-h-44 overflow-y-auto custom-scrollbar"></div>
-                        </div>
-                        <div class="pt-3 border-t border-slate-100">
-                            <h4 class="text-xs font-bold text-rose-700 uppercase mb-2">10 Clientes con Mayor Demora Habitual (Peores Pagadores)</h4>
-                            <div id="ranking-worst" class="space-y-1.5 max-h-44 overflow-y-auto custom-scrollbar"></div>
-                        </div>
+                    <p class="text-[11px] text-slate-500 mb-4">Clientes con exposición de deuda viva mayor a <b>$ 1.000.000</b>.</p>
+                    <div id="alerts-amount-container" class="space-y-2.5 max-h-[420px] overflow-y-auto custom-scrollbar pr-1"></div>
+                </div>
+
+                <!-- Columna 3: Alerta por Desvío Crítico de Días (> +7 Días) -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-bold text-indigo-700 mb-1 flex items-center gap-1.5">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Alerta por Desvío Crítico de Días
+                    </h3>
+                    <p class="text-[11px] text-slate-500 mb-4">Clientes con retraso de <b>más de 7 días</b> sobre su plazo acordado.</p>
+                    <div id="alerts-days-container" class="space-y-2.5 max-h-[420px] overflow-y-auto custom-scrollbar pr-1"></div>
+                </div>
+            </div>
+
+            <!-- Seccion de Rankings -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <h3 class="text-sm font-bold text-slate-800 mb-4">Rankings de Cumplimiento Comercial</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="text-xs font-bold text-emerald-700 uppercase mb-2">Mejores 10 Pagadores (Menor desvío)</h4>
+                        <div id="ranking-top" class="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-rose-700 uppercase mb-2">10 Clientes con Mayor Demora Habitual (Peores Pagadores)</h4>
+                        <div id="ranking-worst" class="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- 7. Predicción & Cash Flow -->
+        <!-- 7. Predicción & Cash Flow (RESTRUCTURADA Y DINÁMICA) -->
         <section id="tab-forecast" class="space-y-6 hidden">
             <div class="bg-indigo-900 text-white p-5 rounded-xl shadow border border-indigo-800">
-                <h3 class="text-base font-bold">Pronóstico Predictivo de Cash Flow (Efectivo & Bancos)</h3>
-                <p class="text-xs text-indigo-200 mt-1">Calcula la fecha probable de cobro: Emisión + Plazo Real Promedio del Cliente.</p>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-indigo-800 pb-3">
+                    <div>
+                        <h3 class="text-base font-bold">Pronóstico Predictivo de Cash Flow (Efectivo & Bancos)</h3>
+                        <p class="text-xs text-indigo-200 mt-0.5">Calculado dinámicamente: <b>Fecha Emisión + Plazo Real Promedio del Cliente</b>.</p>
+                    </div>
+                    <span class="px-2.5 py-1 bg-emerald-500 text-white text-[10px] font-black rounded-md uppercase tracking-wider">Fecha Actual: Hoy</span>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                    <div class="bg-indigo-800/80 p-3 rounded-lg border border-indigo-700">
-                        <span class="text-xs text-indigo-200 uppercase font-semibold">Esta Semana (0-7d)</span>
+                    <div class="bg-indigo-800/80 p-3.5 rounded-lg border border-indigo-700 shadow-inner">
+                        <span class="text-xs text-indigo-200 uppercase font-bold tracking-wider">Esta Semana (0 a 7 días)</span>
                         <h4 id="pred-this-week-amount" class="text-2xl font-black mt-1 text-emerald-300">$ 0</h4>
-                        <p id="pred-this-week-breakdown" class="text-[11px] text-indigo-200 mt-1 border-t border-indigo-700 pt-1">💵 Efectivo: $0 | 🏦 Bancos: $0</p>
+                        <p id="pred-this-week-breakdown" class="text-[11px] text-indigo-200 mt-2 border-t border-indigo-700/80 pt-1.5">💵 Efectivo: $0 | 🏦 Bancos: $0</p>
                     </div>
-                    <div class="bg-indigo-800/80 p-3 rounded-lg border border-indigo-700">
-                        <span class="text-xs text-indigo-200 uppercase font-semibold">Próxima Semana (8-14d)</span>
+                    <div class="bg-indigo-800/80 p-3.5 rounded-lg border border-indigo-700 shadow-inner">
+                        <span class="text-xs text-indigo-200 uppercase font-bold tracking-wider">Próxima Semana (8 a 14 días)</span>
                         <h4 id="pred-next-week-amount" class="text-2xl font-black mt-1 text-blue-300">$ 0</h4>
-                        <p id="pred-next-week-breakdown" class="text-[11px] text-indigo-200 mt-1 border-t border-indigo-700 pt-1">💵 Efectivo: $0 | 🏦 Bancos: $0</p>
+                        <p id="pred-next-week-breakdown" class="text-[11px] text-indigo-200 mt-2 border-t border-indigo-700/80 pt-1.5">💵 Efectivo: $0 | 🏦 Bancos: $0</p>
                     </div>
-                    <div class="bg-indigo-800/80 p-3 rounded-lg border border-indigo-700">
-                        <span class="text-xs text-indigo-200 uppercase font-semibold">Posteriores (>14d)</span>
+                    <div class="bg-indigo-800/80 p-3.5 rounded-lg border border-indigo-700 shadow-inner">
+                        <span class="text-xs text-indigo-200 uppercase font-bold tracking-wider">Posteriores (> 14 días)</span>
                         <h4 id="pred-later-amount" class="text-2xl font-black mt-1 text-amber-300">$ 0</h4>
-                        <p id="pred-later-breakdown" class="text-[11px] text-indigo-200 mt-1 border-t border-indigo-700 pt-1">💵 Efectivo: $0 | 🏦 Bancos: $0</p>
+                        <p id="pred-later-breakdown" class="text-[11px] text-indigo-200 mt-2 border-t border-indigo-700/80 pt-1.5">💵 Efectivo: $0 | 🏦 Bancos: $0</p>
                     </div>
                 </div>
             </div>
+
             <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <h3 class="text-sm font-bold text-slate-800 mb-4">Agenda de Cobranzas Proyectadas</h3>
+                <h3 class="text-sm font-bold text-slate-800 mb-4">Agenda Dinámica de Cobranzas Proyectadas</h3>
                 <div class="overflow-x-auto custom-scrollbar">
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr class="bg-slate-50 border-b font-semibold text-slate-600 uppercase">
                                 <th class="p-3">Cliente</th>
                                 <th class="p-3">Comprobante</th>
-                                <th class="p-3 text-center">Canal</th>
+                                <th class="p-3 text-center">Canal / Liquidez</th>
                                 <th class="p-3 text-right">Saldo Pendiente</th>
+                                <th class="p-3 text-center">Fecha Emisión</th>
+                                <th class="p-3 text-center">Plazo Real</th>
                                 <th class="p-3 text-center">Fecha Probable Pago</th>
-                                <th class="p-3 text-center">Estado / Ventana</th>
+                                <th class="p-3 text-center">Ventana Proyectada</th>
                             </tr>
                         </thead>
                         <tbody id="tbody-predictions" class="divide-y divide-slate-100 font-medium"></tbody>
@@ -392,18 +422,22 @@
         </section>
     </main>
 
-    <!-- Modal de Plazos Pactados -->
+    <!-- Modal de Plazos Pactados y Sincerados -->
     <div id="modal-terms" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-2xl mx-4 overflow-hidden">
             <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
-                <h3 class="text-sm font-bold">Maestro de Plazos Pactados por Cliente</h3>
+                <div>
+                    <h3 class="text-sm font-bold">Maestro de Plazos Pactados & Sincerados Operativos</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Sobrescribe el plazo ERP cuando en la práctica se opere a otro plazo comercial.</p>
+                </div>
                 <button onclick="closeTermsModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
             </div>
             <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <input type="text" id="manual-term-client" placeholder="Nombre cliente..." class="text-xs border rounded-lg px-3 py-2">
-                    <input type="number" id="manual-term-days" placeholder="Días pactados" class="text-xs border rounded-lg px-3 py-2">
-                    <button onclick="addManualTerm()" class="px-3 py-2 bg-indigo-600 text-white text-xs font-bold rounded-lg">Guardar</button>
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <input type="text" id="manual-term-client" placeholder="Cliente o Reparto..." class="text-xs border rounded-lg px-3 py-2 col-span-1 sm:col-span-1">
+                    <input type="number" id="manual-term-pactado" placeholder="Pactado ERP (días)" class="text-xs border rounded-lg px-2.5 py-2">
+                    <input type="number" id="manual-term-sincerado" placeholder="Sincerado Operativo (días)" class="text-xs border rounded-lg px-2.5 py-2">
+                    <button onclick="addManualTerm()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow transition">Guardar</button>
                 </div>
                 <div id="tbody-master-terms" class="mt-4 space-y-2 text-xs"></div>
             </div>
@@ -431,14 +465,10 @@
         // Extraer RTO XX analizando Vendedor primero, luego Documento/Doc-nro int
         function extractRepartoCodeFromObject(row) {
             if (!row) return 'General';
-            
-            // Si ya viene seteado en el objeto
             if (row.vendedor && row.vendedor !== 'General') {
                 const match = String(row.vendedor).match(/RTO\s*[-_]?\s*\d+/i);
                 if (match) return match[0].toUpperCase().replace(/-\s*/, ' ').replace(/\s+/, ' ');
             }
-
-            // Buscar en el texto raw de la fila
             const rowStr = JSON.stringify(row);
             const match = rowStr.match(/RTO\s*[-_]?\s*\d+/i);
             if (match) {
@@ -544,7 +574,7 @@
                     fechaCobro: parseExcelDate(findRowValue(r, ['fecha', 'fecha comprobante', 'fecha cobro'])),
                     importeCobrado: Math.abs(parseFloat(findRowValue(r, ['t. cta. cte.', 'total', 'importe ppal', 'importe']) || 0)),
                     recibo: findRowValue(r, ['número comprobante', 'comprobante', 'recibo']) || 'REC-000',
-                    vendedor: 'General', // Dejar en General para forzar Match por Cliente
+                    vendedor: 'General',
                     empresa: findRowValue(r, ['empresa']) || 'Ganadera'
                 }));
                 showToast(`Se leyeron ${window.rawReal.length} recibos.`, 'success');
@@ -624,6 +654,18 @@
             runReconciliation();
         }
 
+        function getClientTermsConfig(clientNorm) {
+            const termObj = window.clientMasterTerms[clientNorm];
+            if (typeof termObj === 'object' && termObj !== null) {
+                return {
+                    pactado: termObj.pactado || 30,
+                    sincerado: termObj.sincerado || termObj.pactado || 30
+                };
+            }
+            const val = parseInt(termObj) || 30;
+            return { pactado: val, sincerado: val };
+        }
+
         function runReconciliation() {
             let activeSales = [];
             let activeReal = [];
@@ -646,7 +688,6 @@
                 activeReal = activeReal.filter(r => isCapacitacionCompany(r.empresa, r.vendedor, r.recibo));
             }
 
-            // Mapa para hacer MATCH de recibos a vendedores por cliente
             const clientSellerMap = {};
             activeSales.forEach(s => {
                 const norm = normalizeClientName(s.cliente);
@@ -656,13 +697,11 @@
                 }
             });
 
-            // Reasignación estricta de cobranzas al reparto de la venta del cliente
             activeReal.forEach(r => {
                 const norm = normalizeClientName(r.cliente);
                 r.vendedor = clientSellerMap[norm] || 'General';
             });
 
-            // Agrupación y Cálculo de Plazos Reales
             const clientMap = {};
             activeSales.forEach(s => {
                 const norm = normalizeClientName(s.cliente);
@@ -678,7 +717,7 @@
             const clientSummaries = [];
             Object.keys(clientMap).forEach(norm => {
                 const grp = clientMap[norm];
-                const agreed = window.clientMasterTerms[norm] || 30;
+                const termsCfg = getClientTermsConfig(norm);
                 const totSales = grp.sales.reduce((sum, s) => sum + s.importe, 0);
                 const totReal = grp.real.reduce((sum, r) => sum + r.importeCobrado, 0);
 
@@ -690,17 +729,19 @@
                     });
                 });
 
-                const avgReal = count > 0 ? Math.round(daysSum / count) : agreed;
+                const avgReal = count > 0 ? Math.round(daysSum / count) : termsCfg.sincerado;
                 const compliance = totSales > 0 ? Math.min(100, Math.round((totReal / totSales) * 100)) : 100;
+                const validAvg = isNaN(avgReal) ? termsCfg.sincerado : avgReal;
 
-                const validAvg = isNaN(avgReal) ? agreed : avgReal;
                 clientSummaries.push({
                     cliente: grp.cliente,
+                    normName: norm,
                     proyectado: totSales,
                     cobrado: totReal,
-                    plazoPactado: agreed,
+                    plazoPactado: termsCfg.pactado,
+                    plazoSincerado: termsCfg.sincerado,
                     plazoPromedioReal: validAvg,
-                    desvioDias: validAvg - agreed,
+                    desvioDias: validAvg - termsCfg.sincerado,
                     cumplimientoPct: compliance
                 });
             });
@@ -710,7 +751,6 @@
             const liveDebt = (window.rawLiveDebt && window.rawLiveDebt.length > 0) ? window.rawLiveDebt : activeSales;
             const totalPendiente = liveDebt.reduce((sum, i) => sum + (i.saldo || i.importe || 0), 0);
 
-            // DSO Corregido según período activo
             const numMonths = (window.activePeriod === 'ALL') ? Math.max(1, Object.keys(window.historicalBatches).length) : 1;
             const totalDaysInPeriod = numMonths * 30;
             const dailyAvg = totalFacturado > 0 ? (totalFacturado / totalDaysInPeriod) : 1;
@@ -920,14 +960,20 @@
                 if (invoices.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Sin comprobantes pendientes para este reparto.</td></tr>`;
                 } else {
+                    const today = new Date();
                     invoices.forEach(i => {
+                        const norm = normalizeClientName(i.cliente);
+                        const summary = (window.reconciliationResult.clientSummaries || []).find(c => c.normName === norm);
+                        const daysAdd = summary ? summary.plazoPromedioReal : 15;
+                        const probDate = new Date(i.dEmision.getTime() + (daysAdd * 86400 * 1000));
+                        
                         const tr = document.createElement('tr');
                         tr.className = 'hover:bg-slate-50';
                         tr.innerHTML = `
                             <td class="p-2.5 font-bold text-slate-800">${i.cliente}</td>
                             <td class="p-2.5 font-mono text-brand-600">${i.factura}</td>
                             <td class="p-2.5 text-right font-bold text-rose-600">${formatMoney(i.saldo||i.importe)}</td>
-                            <td class="p-2.5 text-center font-bold text-emerald-600">15/09/2026</td>
+                            <td class="p-2.5 text-center font-bold text-emerald-600">${probDate.toLocaleDateString('es-AR')}</td>
                             <td class="p-2.5 text-center"><span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-bold text-[10px]">Pendiente</span></td>
                         `;
                         tbody.appendChild(tr);
@@ -936,7 +982,7 @@
             }
         }
 
-        // Pestaña 4: Plazos Reales vs Pactados
+        // Pestaña 4: Plazos Reales vs Pactados / Sincerados
         function renderTermsTable() {
             const tbody = document.getElementById('tbody-client-terms');
             if (tbody && window.reconciliationResult) {
@@ -946,7 +992,17 @@
                     const isDebtOverdue = c.desvioDias > 0;
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-slate-50';
-                    tr.innerHTML = `<td class="p-3 font-bold text-slate-800">${c.cliente}</td><td class="p-3 text-right">${formatMoney(c.proyectado)}</td><td class="p-3 text-right font-bold text-emerald-600">${formatMoney(c.cobrado)}</td><td class="p-3 text-center text-indigo-600 font-semibold">${c.plazoPactado} días</td><td class="p-3 text-center font-bold">${c.plazoPromedioReal} días</td><td class="p-3 text-center font-bold ${c.desvioDias > 0 ? 'text-rose-600' : 'text-emerald-600'}">${c.desvioDias > 0 ? '+' : ''}${c.desvioDias}d</td><td class="p-3 text-center font-bold">${c.cumplimientoPct}%</td><td class="p-3 text-center"><span class="px-2 py-0.5 rounded font-bold text-[10px] ${isDebtOverdue ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'}">${isDebtOverdue ? 'Atrasado' : 'En Plazo'}</span></td>`;
+                    tr.innerHTML = `
+                        <td class="p-3 font-bold text-slate-800">${c.cliente}</td>
+                        <td class="p-3 text-right">${formatMoney(c.proyectado)}</td>
+                        <td class="p-3 text-right font-bold text-emerald-600">${formatMoney(c.cobrado)}</td>
+                        <td class="p-3 text-center text-slate-500 font-medium">${c.plazoPactado} días</td>
+                        <td class="p-3 text-center text-indigo-600 font-bold">${c.plazoSincerado} días</td>
+                        <td class="p-3 text-center font-bold">${c.plazoPromedioReal} días</td>
+                        <td class="p-3 text-center font-bold ${c.desvioDias > 0 ? 'text-rose-600' : 'text-emerald-600'}">${c.desvioDias > 0 ? '+' : ''}${c.desvioDias}d</td>
+                        <td class="p-3 text-center font-bold">${c.cumplimientoPct}%</td>
+                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded font-bold text-[10px] ${isDebtOverdue ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'}">${isDebtOverdue ? 'Atrasado' : 'En Plazo'}</span></td>
+                    `;
                     tbody.appendChild(tr);
                 });
             }
@@ -968,25 +1024,99 @@
             }
         }
 
-        // Pestaña 6: Alertas & Rankings
+        // Pestaña 6: Alertas Separadas & Rankings (REQUERIMIENTOS 3 Y 4)
         function renderAlertsAndRanking() {
-            const container = document.getElementById('alerts-container');
+            const lockContainer = document.getElementById('alerts-lock-container');
+            const amountContainer = document.getElementById('alerts-amount-container');
+            const daysContainer = document.getElementById('alerts-days-container');
             const topDiv = document.getElementById('ranking-top');
             const worstDiv = document.getElementById('ranking-worst');
 
             if (!window.reconciliationResult) return;
+            const liveDebt = window.reconciliationResult.invoiceDetails || [];
             const summaries = window.reconciliationResult.clientSummaries || [];
 
-            if (container) {
-                container.innerHTML = '';
-                summaries.filter(c => c.desvioDias > 7 || c.proyectado > 1000000).slice(0, 8).forEach(c => {
-                    const div = document.createElement('div');
-                    div.className = 'p-3 bg-rose-50 border-l-4 border-rose-500 rounded-r text-xs';
-                    div.innerHTML = `<div class="flex justify-between font-bold text-rose-900"><span>${c.cliente}</span><span>+${c.desvioDias}d mora</span></div><p class="text-rose-800 mt-1">Saldo o proyectado: ${formatMoney(c.proyectado)} (${c.plazoPromedioReal}d real vs ${c.plazoPactado}d pactado)</p>`;
-                    container.appendChild(div);
-                });
+            // Agrupar deuda viva y conteo de facturas abiertas por cliente
+            const debtByClient = {};
+            liveDebt.forEach(i => {
+                const norm = normalizeClientName(i.cliente);
+                if (!debtByClient[norm]) {
+                    debtByClient[norm] = { cliente: i.cliente, count: 0, totalSaldo: 0 };
+                }
+                debtByClient[norm].count++;
+                debtByClient[norm].totalSaldo += (i.saldo || i.importe || 0);
+            });
+
+            // 1. Bloqueo Comercial (Regla >= 2 Facturas impagas)
+            if (lockContainer) {
+                lockContainer.innerHTML = '';
+                const lockClients = Object.values(debtByClient).filter(c => c.count >= 2).sort((a,b) => b.count - a.count);
+                if (lockClients.length === 0) {
+                    lockContainer.innerHTML = `<p class="text-xs text-slate-400 italic p-2">Sin clientes con bloqueo de despachos.</p>`;
+                } else {
+                    lockClients.forEach(c => {
+                        const div = document.createElement('div');
+                        div.className = 'p-3 bg-rose-50 border-l-4 border-rose-600 rounded-r text-xs shadow-sm';
+                        div.innerHTML = `
+                            <div class="flex justify-between items-center font-bold text-rose-950">
+                                <span class="truncate max-w-[150px]">${c.cliente}</span>
+                                <span class="px-2 py-0.5 bg-rose-600 text-white rounded font-extrabold text-[10px] uppercase">${c.count} Facturas Impagas</span>
+                            </div>
+                            <div class="flex justify-between items-center text-rose-800 mt-1.5 font-medium">
+                                <span>Deuda acumulada:</span>
+                                <span class="font-bold text-rose-900">${formatMoney(c.totalSaldo)}</span>
+                            </div>
+                        `;
+                        lockContainer.appendChild(div);
+                    });
+                }
             }
 
+            // 2. Alertas por Monto Elevado (> $1.000.000)
+            if (amountContainer) {
+                amountContainer.innerHTML = '';
+                const amountClients = Object.values(debtByClient).filter(c => c.totalSaldo > 1000000).sort((a,b) => b.totalSaldo - a.totalSaldo);
+                if (amountClients.length === 0) {
+                    amountContainer.innerHTML = `<p class="text-xs text-slate-400 italic p-2">Sin deuda superior a $1.000.000.</p>`;
+                } else {
+                    amountClients.forEach(c => {
+                        const div = document.createElement('div');
+                        div.className = 'p-3 bg-amber-50 border-l-4 border-amber-500 rounded-r text-xs shadow-sm';
+                        div.innerHTML = `
+                            <div class="flex justify-between items-center font-bold text-amber-950">
+                                <span class="truncate max-w-[150px]">${c.cliente}</span>
+                                <span class="text-amber-900 font-black">${formatMoney(c.totalSaldo)}</span>
+                            </div>
+                            <p class="text-amber-800 mt-1 text-[11px] font-normal">${c.count} comprobante(s) abiertos en calle</p>
+                        `;
+                        amountContainer.appendChild(div);
+                    });
+                }
+            }
+
+            // 3. Alertas por Desvío Crítico de Días (> +7 Días sobre sincerado)
+            if (daysContainer) {
+                daysContainer.innerHTML = '';
+                const daysClients = summaries.filter(c => c.desvioDias > 7).sort((a,b) => b.desvioDias - a.desvioDias);
+                if (daysClients.length === 0) {
+                    daysContainer.innerHTML = `<p class="text-xs text-slate-400 italic p-2">Sin clientes con desvío crítico > 7 días.</p>`;
+                } else {
+                    daysClients.forEach(c => {
+                        const div = document.createElement('div');
+                        div.className = 'p-3 bg-indigo-50 border-l-4 border-indigo-600 rounded-r text-xs shadow-sm';
+                        div.innerHTML = `
+                            <div class="flex justify-between items-center font-bold text-indigo-950">
+                                <span class="truncate max-w-[150px]">${c.cliente}</span>
+                                <span class="px-2 py-0.5 bg-indigo-600 text-white rounded font-extrabold text-[10px]">+${c.desvioDias} Días Mora</span>
+                            </div>
+                            <p class="text-indigo-800 mt-1 text-[11px]">Real: ${c.plazoPromedioReal}d vs Sincerado: ${c.plazoSincerado}d</p>
+                        `;
+                        daysContainer.appendChild(div);
+                    });
+                }
+            }
+
+            // Rankings Top & Worst
             const topPayers = [...summaries].sort((a, b) => a.desvioDias - b.desvioDias).slice(0, 10);
             const worstPayers = [...summaries].sort((a, b) => b.desvioDias - a.desvioDias).slice(0, 10);
 
@@ -1009,38 +1139,110 @@
             }
         }
 
-        // Pestaña 7: Predicción & Cash Flow
+        // Pestaña 7: Predicción Dinámica de Cash Flow (REQUERIMIENTO 1)
         function renderPredictionModule() {
             const container = document.getElementById('tbody-predictions');
             if (!window.reconciliationResult) return;
 
             const invoices = window.reconciliationResult.invoiceDetails || [];
+            const summaries = window.reconciliationResult.clientSummaries || [];
+            const summariesMap = {};
+            summaries.forEach(s => { summariesMap[s.normName] = s; });
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
             let sumThisWeek = 0, sumNextWeek = 0, sumLater = 0;
             let cashThis = 0, bankThis = 0;
+            let cashNext = 0, bankNext = 0;
+            let cashLater = 0, bankLater = 0;
 
-            invoices.forEach(i => {
+            const predictedInvoices = invoices.map(i => {
+                const norm = normalizeClientName(i.cliente);
+                const clientSum = summariesMap[norm];
+                const termsCfg = getClientTermsConfig(norm);
+                
+                // Plazo real promedio empírico o Plazo Sincerado/Pactado
+                const daysReal = clientSum ? clientSum.plazoPromedioReal : termsCfg.sincerado;
+                
+                // Fecha Probable de Cobro Dinámica = Fecha Emision + Plazo Real
+                const dateEmision = i.dEmision ? new Date(i.dEmision) : new Date();
+                const probDate = new Date(dateEmision.getTime() + (daysReal * 86400 * 1000));
+                probDate.setHours(0, 0, 0, 0);
+
+                const diffDays = Math.round((probDate - today) / (86400 * 1000));
                 const amt = i.saldo || i.importe || 0;
-                sumThisWeek += amt * 0.6;
-                sumNextWeek += amt * 0.25;
-                sumLater += amt * 0.15;
-                if (isCapacitacionCompany(i.empresa, i.vendedor, i.factura)) cashThis += amt * 0.6;
-                else bankThis += amt * 0.6;
+                const isEfectivo = isCapacitacionCompany(i.empresa, i.vendedor, i.factura);
+
+                let windowCategory = 'esta_semana';
+                if (diffDays <= 7) {
+                    windowCategory = 'esta_semana';
+                    sumThisWeek += amt;
+                    if (isEfectivo) cashThis += amt; else bankThis += amt;
+                } else if (diffDays <= 14) {
+                    windowCategory = 'proxima_semana';
+                    sumNextWeek += amt;
+                    if (isEfectivo) cashNext += amt; else bankNext += amt;
+                } else {
+                    windowCategory = 'posteriores';
+                    sumLater += amt;
+                    if (isEfectivo) cashLater += amt; else bankLater += amt;
+                }
+
+                return {
+                    ...i,
+                    daysReal,
+                    probDate,
+                    diffDays,
+                    windowCategory,
+                    isEfectivo
+                };
             });
 
+            // Actualizar Tarjetas KPI
             document.getElementById('pred-this-week-amount').textContent = formatMoney(sumThisWeek);
-            document.getElementById('pred-next-week-amount').textContent = formatMoney(sumNextWeek);
-            document.getElementById('pred-later-amount').textContent = formatMoney(sumLater);
             document.getElementById('pred-this-week-breakdown').textContent = `💵 Efectivo: ${formatMoney(cashThis)} | 🏦 Bancos: ${formatMoney(bankThis)}`;
+
+            document.getElementById('pred-next-week-amount').textContent = formatMoney(sumNextWeek);
+            document.getElementById('pred-next-week-breakdown').textContent = `💵 Efectivo: ${formatMoney(cashNext)} | 🏦 Bancos: ${formatMoney(bankNext)}`;
+
+            document.getElementById('pred-later-amount').textContent = formatMoney(sumLater);
+            document.getElementById('pred-later-breakdown').textContent = `💵 Efectivo: ${formatMoney(cashLater)} | 🏦 Bancos: ${formatMoney(bankLater)}`;
+
+            // Ordenar agenda por Fecha Probable más cercana
+            predictedInvoices.sort((a, b) => a.probDate - b.probDate);
 
             if (container) {
                 container.innerHTML = '';
-                invoices.slice(0, 15).forEach(i => {
-                    const isCap = isCapacitacionCompany(i.empresa, i.vendedor, i.factura);
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-50 border-b';
-                    tr.innerHTML = `<td class="p-3 font-bold">${i.cliente}</td><td class="p-3 font-mono text-brand-600">${i.factura}</td><td class="p-3 text-center"><span class="px-2 py-0.5 ${isCap?'bg-emerald-100 text-emerald-800':'bg-blue-100 text-blue-800'} rounded font-bold text-[10px]">${isCap?'💵 Efectivo':'🏦 Banco'}</span></td><td class="p-3 text-right font-bold text-rose-600">${formatMoney(i.saldo||i.importe)}</td><td class="p-3 text-center font-bold text-emerald-600">15/09/2026</td><td class="p-3 text-center"><span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded font-bold text-[10px]">Esta Semana</span></td>`;
-                    container.appendChild(tr);
-                });
+                if (predictedInvoices.length === 0) {
+                    container.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400">Sin comprobantes pendientes para proyectar.</td></tr>`;
+                } else {
+                    predictedInvoices.forEach(item => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-slate-50 border-b';
+
+                        let badgeHtml = '';
+                        if (item.windowCategory === 'esta_semana') {
+                            badgeHtml = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">Esta Semana</span>`;
+                        } else if (item.windowCategory === 'proxima_semana') {
+                            badgeHtml = `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-bold text-[10px]">Próxima Semana</span>`;
+                        } else {
+                            badgeHtml = `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-bold text-[10px]">Posteriores</span>`;
+                        }
+
+                        tr.innerHTML = `
+                            <td class="p-3 font-bold text-slate-800">${item.cliente}</td>
+                            <td class="p-3 font-mono text-brand-600">${item.factura}</td>
+                            <td class="p-3 text-center"><span class="px-2 py-0.5 ${item.isEfectivo?'bg-emerald-100 text-emerald-800':'bg-blue-100 text-blue-800'} rounded font-bold text-[10px]">${item.isEfectivo?'💵 Efectivo':'🏦 Banco'}</span></td>
+                            <td class="p-3 text-right font-bold text-rose-600">${formatMoney(item.saldo||item.importe)}</td>
+                            <td class="p-3 text-center text-slate-500">${item.dEmision ? item.dEmision.toLocaleDateString('es-AR') : '-'}</td>
+                            <td class="p-3 text-center font-bold text-slate-700">${item.daysReal} días</td>
+                            <td class="p-3 text-center font-bold text-emerald-600">${item.probDate.toLocaleDateString('es-AR')}</td>
+                            <td class="p-3 text-center">${badgeHtml}</td>
+                        `;
+                        container.appendChild(tr);
+                    });
+                }
             }
         }
 
@@ -1075,11 +1277,11 @@
             setTimeout(() => div.remove(), 3000);
         }
 
-        // Exportación de Copia de Seguridad JSON
+        // Exportación de Copia de Seguridad JSON con Plazos Sincerados
         function exportBackupJSON() {
             try {
                 const backupData = {
-                    version: "1.0",
+                    version: "2.0",
                     exportDate: new Date().toISOString(),
                     clientMasterTerms: window.clientMasterTerms,
                     historicalBatches: window.historicalBatches,
@@ -1117,7 +1319,7 @@
                     updatePeriodSelectors('ALL');
                     window.activePeriod = 'ALL';
                     runReconciliation();
-                    showToast('Copia de Seguridad restaurada con éxito.', 'success');
+                    showToast('Copia de Seguridad restaurada al 100%.', 'success');
                 } catch (err) {
                     showToast('Error al leer el archivo JSON de copia de seguridad.', 'error');
                 }
@@ -1125,12 +1327,56 @@
             reader.readAsText(file);
         }
 
-        function openTermsModal() { document.getElementById('modal-terms').classList.remove('hidden'); }
-        function closeTermsModal() { document.getElementById('modal-terms').classList.add('hidden'); }
+        function openTermsModal() { 
+            renderMasterTermsList();
+            document.getElementById('modal-terms').classList.remove('hidden'); 
+        }
+        
+        function closeTermsModal() { 
+            document.getElementById('modal-terms').classList.add('hidden'); 
+        }
+
         function addManualTerm() {
             const c = document.getElementById('manual-term-client').value;
-            const d = parseInt(document.getElementById('manual-term-days').value) || 30;
-            if (c) { window.clientMasterTerms[normalizeClientName(c)] = d; showToast('Cliente guardado.', 'success'); }
+            const pactado = parseInt(document.getElementById('manual-term-pactado').value) || 30;
+            const sincerado = parseInt(document.getElementById('manual-term-sincerado').value) || pactado;
+            
+            if (c) {
+                const norm = normalizeClientName(c);
+                window.clientMasterTerms[norm] = {
+                    pactado,
+                    sincerado
+                };
+                renderMasterTermsList();
+                runReconciliation();
+                showToast('Plazo sincerado guardado con éxito.', 'success');
+            }
+        }
+
+        function renderMasterTermsList() {
+            const container = document.getElementById('tbody-master-terms');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            const keys = Object.keys(window.clientMasterTerms);
+            if (keys.length === 0) {
+                container.innerHTML = `<p class="text-slate-400 italic">Sin plazos personalizados cargados.</p>`;
+                return;
+            }
+
+            keys.forEach(k => {
+                const cfg = getClientTermsConfig(k);
+                const div = document.createElement('div');
+                div.className = 'p-2 bg-slate-50 border rounded flex justify-between items-center';
+                div.innerHTML = `
+                    <span class="font-bold text-slate-800 uppercase">${k}</span>
+                    <div class="text-right">
+                        <span class="text-slate-500">Pactado: ${cfg.pactado}d</span> | 
+                        <span class="text-indigo-600 font-bold">Sincerado: ${cfg.sincerado}d</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
         }
 
         function clearAllBatches() { window.historicalBatches = {}; window.rawSales = []; window.rawReal = []; updatePeriodSelectors('ALL'); runReconciliation(); }
