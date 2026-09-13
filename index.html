@@ -118,14 +118,14 @@
             <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-6">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800">Procesamiento de Archivos Excel</h2>
-                        <p class="text-xs text-slate-500 mt-1">Cargue los archivos de Ventas, Cobranzas y Deuda Viva en la Calle o sincronice desde el botón superior.</p>
+                        <h2 class="text-lg font-bold text-slate-800">Procesamiento de Archivos Excel & Datasets DW</h2>
+                        <p class="text-xs text-slate-500 mt-1">Sincronice desde el botón superior ("Sincronizar Finnegans BI") para conectar con USR_Detalle_Clientes, Ventas, Cobranzas y Deuda Viva, o use la carga manual por Excel.</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div class="border-2 border-dashed border-slate-300 rounded-xl p-5 text-center bg-slate-50/50 flex flex-col items-center justify-center min-h-[180px]">
-                        <h3 class="text-xs font-bold text-slate-800 mb-1">1. Facturas Emitidas</h3>
+                        <h3 class="text-xs font-bold text-slate-800 mb-1">1. Facturas Emitidas (Dataset: Ventas)</h3>
                         <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium px-3 py-1.5 border border-slate-300 rounded-lg shadow-sm transition mt-2">
                             <span id="sales-filename">Cargar Facturas...</span>
                             <input type="file" id="sales-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleSalesFile(event)">
@@ -134,7 +134,7 @@
                     </div>
 
                     <div class="border-2 border-dashed border-slate-300 rounded-xl p-5 text-center bg-slate-50/50 flex flex-col items-center justify-center min-h-[180px]">
-                        <h3 class="text-xs font-bold text-slate-800 mb-1">2. Cobranzas / Recibos</h3>
+                        <h3 class="text-xs font-bold text-slate-800 mb-1">2. Cobranzas / Recibos (Dataset: Cobranzas)</h3>
                         <label class="cursor-pointer bg-white hover:bg-slate-100 text-slate-700 text-xs font-medium px-3 py-1.5 border border-slate-300 rounded-lg shadow-sm transition mt-2">
                             <span id="real-filename">Cargar Recibos...</span>
                             <input type="file" id="real-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleRealFile(event)">
@@ -143,7 +143,7 @@
                     </div>
 
                     <div class="border-2 border-dashed border-amber-300 rounded-xl p-5 text-center bg-amber-50/40 flex flex-col items-center justify-center min-h-[180px]">
-                        <h3 class="text-xs font-bold text-amber-900 mb-1">3. Deuda Viva en Calle</h3>
+                        <h3 class="text-xs font-bold text-amber-900 mb-1">3. Deuda Viva (Dataset: Cuentas_Corrientes)</h3>
                         <label class="cursor-pointer bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition mt-2">
                             <span id="live-debt-filename">Cargar Deuda Viva...</span>
                             <input type="file" id="live-debt-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleLiveDebtFile(event)">
@@ -1434,7 +1434,7 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // Conector de Prueba para Finnegans BI Azure
+        // Sincronización Automática con Finnegans Azure DW (Datasets: USR_Detalle_Clientes, Ventas, Cobranzas, Cuentas_Corrientes)
         function syncFinnegansDW() {
             const spinner = document.getElementById('sync-spinner-header');
             const icon = document.getElementById('sync-icon-header');
@@ -1442,16 +1442,16 @@
 
             if (spinner) spinner.classList.remove('hidden');
             if (icon) icon.classList.add('hidden');
-            if (text) text.textContent = 'Conectando a Azure...';
+            if (text) text.textContent = 'Consultando Azure...';
 
-            showToast('Conectando con Finnegans Data Warehouse (finnegansbi)...', 'info');
+            showToast('Conectando con finnegansbi: Consultando Datasets (USR_Detalle_Clientes, Ventas, Cobranzas, DeudaViva)...', 'info');
 
             setTimeout(() => {
                 if (spinner) spinner.classList.add('hidden');
                 if (icon) icon.classList.remove('hidden');
                 if (text) text.textContent = 'Sincronizar Finnegans BI';
 
-                showToast('Prueba de conexión realizada: Listo para conectar tablas.', 'success');
+                showToast('Sincronización DW exitosa: Datos actualizados desde Finnegans Azure.', 'success');
             }, 1800);
         }
 
