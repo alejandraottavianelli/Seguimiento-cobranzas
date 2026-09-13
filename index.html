@@ -57,7 +57,7 @@
 
                 <!-- Controls -->
                 <div class="flex items-center space-x-2">
-                    <!-- Botón Sincronizar Finnegans DW en la barra superior -->
+                    <!-- Botón Sincronizar Finnegans BI en la barra superior -->
                     <button onclick="syncFinnegansDW()" id="btn-sync-dw-header" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1.5">
                         <svg class="w-4 h-4 animate-spin hidden" id="sync-spinner-header" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         <svg class="w-4 h-4" id="sync-icon-header" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
@@ -1451,7 +1451,13 @@
                 if (icon) icon.classList.remove('hidden');
                 if (text) text.textContent = 'Sincronizar Finnegans BI';
 
-                showToast('Sincronización DW exitosa: Datos actualizados desde Finnegans Azure.', 'success');
+                // Si existen datos cargados, reconciliar para poblar vistas
+                if (window.rawSales.length > 0 || window.rawLiveDebt.length > 0) {
+                    runReconciliation();
+                    showToast('Sincronización DW exitosa: Datos actualizados.', 'success');
+                } else {
+                    showToast('Prueba de conexión exitosa: Lista la consulta de tablas.', 'success');
+                }
             }, 1800);
         }
 
