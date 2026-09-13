@@ -319,10 +319,10 @@
             </div>
         </section>
 
-        <!-- 6. Alertas & Ranking (AMPLIADO A 50 CLIENTES) -->
+        <!-- 6. Alertas & Ranking -->
         <section id="tab-alerts" class="space-y-6 hidden">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Columna 1: Bloqueo Comercial (Regla >= 2 Facturas impagas) -->
+                <!-- Columna 1: Bloqueo Comercial -->
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                     <h3 class="text-sm font-bold text-rose-700 mb-1 flex items-center gap-1.5">
                         <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
@@ -332,7 +332,7 @@
                     <div id="alerts-lock-container" class="space-y-2.5 max-h-[420px] overflow-y-auto custom-scrollbar pr-1"></div>
                 </div>
 
-                <!-- Columna 2: Alerta por Monto Elevado (> $1.000.000) -->
+                <!-- Columna 2: Alerta por Monto Elevado -->
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                     <h3 class="text-sm font-bold text-amber-700 mb-1 flex items-center gap-1.5">
                         <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -342,7 +342,7 @@
                     <div id="alerts-amount-container" class="space-y-2.5 max-h-[420px] overflow-y-auto custom-scrollbar pr-1"></div>
                 </div>
 
-                <!-- Columna 3: Alerta por Desvío Crítico de Días (> +7 Días) -->
+                <!-- Columna 3: Alerta por Desvío Crítico -->
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                     <h3 class="text-sm font-bold text-indigo-700 mb-1 flex items-center gap-1.5">
                         <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -433,12 +433,27 @@
                 <button onclick="closeTermsModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
             </div>
             <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <!-- Carga Masiva desde Excel -->
+                <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <h4 class="text-xs font-bold text-indigo-900">📂 Carga Masiva desde Excel</h4>
+                        <p class="text-[11px] text-indigo-700">Importe el archivo <i>'Plazo de pago de clientes.xlsx'</i> para importar plazos automáticamente.</p>
+                    </div>
+                    <label class="cursor-pointer px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        <span>Cargar Excel de Plazos</span>
+                        <input type="file" id="import-terms-excel-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="importClientTermsExcel(event)">
+                    </label>
+                </div>
+
+                <!-- Carga Manual Individual -->
                 <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
                     <input type="text" id="manual-term-client" placeholder="Cliente o Reparto..." class="text-xs border rounded-lg px-3 py-2 col-span-1 sm:col-span-1">
                     <input type="number" id="manual-term-pactado" placeholder="Pactado ERP (días)" class="text-xs border rounded-lg px-2.5 py-2">
                     <input type="number" id="manual-term-sincerado" placeholder="Sincerado Operativo (días)" class="text-xs border rounded-lg px-2.5 py-2">
-                    <button onclick="addManualTerm()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow transition">Guardar</button>
+                    <button onclick="addManualTerm()" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg shadow transition">Guardar</button>
                 </div>
+
                 <div id="tbody-master-terms" class="mt-4 space-y-2 text-xs"></div>
             </div>
             <div class="p-4 bg-slate-50 border-t flex justify-end">
@@ -462,7 +477,6 @@
             return normalized.includes('capacitacion') || normalized.includes('x-99999') || normalized.includes('cap-');
         }
 
-        // Extraer RTO XX del objeto
         function extractRepartoCodeFromObject(row) {
             if (!row) return 'General';
             if (row.vendedor && row.vendedor !== 'General') {
@@ -510,7 +524,6 @@
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
         }
 
-        // Búsqueda Ultra-Robusta de Cliente / Razón Social
         function findRowValue(row, terms) {
             if (!row) return '';
             const keys = Object.keys(row);
@@ -906,28 +919,12 @@
             }
         }
 
+        // Selección limpia de reparto re-renderizando la lista
         function selectRouteReparto(repartoName) {
             window.selectedReparto = repartoName;
-            
-            const list = document.getElementById('route-repartos-list');
-            if (list) {
-                const children = list.children;
-                for (let div of children) {
-                    const rName = div.querySelector('span')?.textContent;
-                    if (rName === repartoName) {
-                        div.className = 'p-3 rounded-xl border text-xs cursor-pointer transition flex justify-between items-center bg-amber-600 border-amber-700 text-white shadow-md font-bold';
-                        const textElems = div.querySelectorAll('p, span');
-                        textElems.forEach(el => {
-                            if (el.classList.contains('text-slate-900') || el.classList.contains('text-rose-600')) el.className = el.className.replace('text-slate-900', 'text-white').replace('text-rose-600', 'text-white');
-                        });
-                    } else {
-                        div.className = 'p-3 rounded-xl border text-xs cursor-pointer transition flex justify-between items-center bg-white border-slate-200 hover:bg-slate-100 text-slate-800';
-                    }
-                }
+            if (window.currentRepartosMap) {
+                renderRouteModule();
             }
-
-            const rData = window.currentRepartosMap ? window.currentRepartosMap[repartoName] : null;
-            updateRouteDetails(repartoName, rData);
         }
 
         function updateRouteDetails(repartoName, repartoData) {
@@ -964,12 +961,12 @@
                 if (invoices.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Sin comprobantes pendientes para este reparto.</td></tr>`;
                 } else {
-                    const today = new Date();
                     invoices.forEach(i => {
                         const norm = normalizeClientName(i.cliente);
                         const summary = (window.reconciliationResult.clientSummaries || []).find(c => c.normName === norm);
                         const daysAdd = summary ? summary.plazoPromedioReal : 15;
-                        const probDate = new Date(i.dEmision.getTime() + (daysAdd * 86400 * 1000));
+                        const dateEmision = i.dEmision ? new Date(i.dEmision) : new Date();
+                        const probDate = new Date(dateEmision.getTime() + (daysAdd * 86400 * 1000));
 
                         const tr = document.createElement('tr');
                         tr.className = 'hover:bg-slate-50';
@@ -1324,6 +1321,53 @@
                 }
             };
             reader.readAsText(file);
+        }
+
+        // Importación de Plazos desde 'Plazo de pago de clientes.xlsx'
+        function importClientTermsExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const json = parseExcelSheet(workbook.Sheets[workbook.SheetNames[0]]);
+                    
+                    let importedCount = 0;
+                    json.forEach(row => {
+                        const clientRaw = findRowValue(row, ['cliente', 'razonsocial', 'razon social', 'nombre']);
+                        const condPago = findRowValue(row, ['condicionpago', 'condicion pago', 'condicion', 'pago', 'plazo']);
+                        
+                        if (clientRaw) {
+                            const norm = normalizeClientName(clientRaw);
+                            let days = 30; // valor base por defecto
+                            
+                            if (condPago) {
+                                const match = String(condPago).match(/\d+/);
+                                if (match) {
+                                    days = parseInt(match[0]);
+                                } else if (cleanStr(condPago).includes('contado')) {
+                                    days = 0;
+                                }
+                            }
+
+                            window.clientMasterTerms[norm] = {
+                                pactado: days,
+                                sincerado: days
+                            };
+                            importedCount++;
+                        }
+                    });
+
+                    renderMasterTermsList();
+                    runReconciliation();
+                    showToast(`Se importaron plazos para ${importedCount} clientes desde Excel.`, 'success');
+                } catch (err) {
+                    showToast('Error al leer el archivo Excel de plazos.', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
         }
 
         function openTermsModal() { 
