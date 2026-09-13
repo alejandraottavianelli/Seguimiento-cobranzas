@@ -319,10 +319,10 @@
             </div>
         </section>
 
-        <!-- 6. Alertas & Ranking (REESTRUCTURADA SEGÚN REQUERIMIENTOS 3 Y 4) -->
+        <!-- 6. Alertas & Ranking (AMPLIADO A 50 CLIENTES) -->
         <section id="tab-alerts" class="space-y-6 hidden">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Columna 1: Bloqueo Comercial (Regla >= 2 Facturas) -->
+                <!-- Columna 1: Bloqueo Comercial (Regla >= 2 Facturas impagas) -->
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                     <h3 class="text-sm font-bold text-rose-700 mb-1 flex items-center gap-1.5">
                         <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
@@ -353,23 +353,23 @@
                 </div>
             </div>
 
-            <!-- Seccion de Rankings -->
+            <!-- Seccion de Rankings (Top 50) -->
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <h3 class="text-sm font-bold text-slate-800 mb-4">Rankings de Cumplimiento Comercial</h3>
+                <h3 class="text-sm font-bold text-slate-800 mb-4">Rankings de Cumplimiento Comercial (Top 50)</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <h4 class="text-xs font-bold text-emerald-700 uppercase mb-2">Mejores 10 Pagadores (Menor desvío)</h4>
-                        <div id="ranking-top" class="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar"></div>
+                        <h4 class="text-xs font-bold text-emerald-700 uppercase mb-2">Mejores Pagadores (Menor desvío)</h4>
+                        <div id="ranking-top" class="space-y-1.5 max-h-80 overflow-y-auto custom-scrollbar pr-1"></div>
                     </div>
                     <div>
-                        <h4 class="text-xs font-bold text-rose-700 uppercase mb-2">10 Clientes con Mayor Demora Habitual (Peores Pagadores)</h4>
-                        <div id="ranking-worst" class="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar"></div>
+                        <h4 class="text-xs font-bold text-rose-700 uppercase mb-2">Clientes con Mayor Demora Habitual (Peores Pagadores)</h4>
+                        <div id="ranking-worst" class="space-y-1.5 max-h-80 overflow-y-auto custom-scrollbar pr-1"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- 7. Predicción & Cash Flow (RESTRUCTURADA Y DINÁMICA) -->
+        <!-- 7. Predicción & Cash Flow -->
         <section id="tab-forecast" class="space-y-6 hidden">
             <div class="bg-indigo-900 text-white p-5 rounded-xl shadow border border-indigo-800">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-indigo-800 pb-3">
@@ -377,7 +377,7 @@
                         <h3 class="text-base font-bold">Pronóstico Predictivo de Cash Flow (Efectivo & Bancos)</h3>
                         <p class="text-xs text-indigo-200 mt-0.5">Calculado dinámicamente: <b>Fecha Emisión + Plazo Real Promedio del Cliente</b>.</p>
                     </div>
-                    <span class="px-2.5 py-1 bg-emerald-500 text-white text-[10px] font-black rounded-md uppercase tracking-wider">Fecha Actual: Hoy</span>
+                    <span class="px-2.5 py-1 bg-emerald-500 text-white text-[10px] font-black rounded-md uppercase tracking-wider">Fecha Sistema: Dinámica</span>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
@@ -401,7 +401,7 @@
 
             <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                 <h3 class="text-sm font-bold text-slate-800 mb-4">Agenda Dinámica de Cobranzas Proyectadas</h3>
-                <div class="overflow-x-auto custom-scrollbar">
+                <div class="overflow-x-auto custom-scrollbar max-h-96">
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr class="bg-slate-50 border-b font-semibold text-slate-600 uppercase">
@@ -462,7 +462,7 @@
             return normalized.includes('capacitacion') || normalized.includes('x-99999') || normalized.includes('cap-');
         }
 
-        // Extraer RTO XX analizando Vendedor primero, luego Documento/Doc-nro int
+        // Extraer RTO XX del objeto
         function extractRepartoCodeFromObject(row) {
             if (!row) return 'General';
             if (row.vendedor && row.vendedor !== 'General') {
@@ -510,6 +510,7 @@
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
         }
 
+        // Búsqueda Ultra-Robusta de Cliente / Razón Social
         function findRowValue(row, terms) {
             if (!row) return '';
             const keys = Object.keys(row);
@@ -546,9 +547,10 @@
                 const json = parseExcelSheet(workbook.Sheets[workbook.SheetNames[0]]);
                 window.rawSales = json.map(r => {
                     const code = extractRepartoCodeFromObject(r);
+                    const clientName = findRowValue(r, ['cliente', 'razonsocial', 'razon social', 'razon', 'nombre']) || 'CLIENTE S/D';
                     return {
-                        cliente: findRowValue(r, ['cliente', 'razon social', 'razon']) || 'CLIENTE S/D',
-                        factura: findRowValue(r, ['nro comp', 'comprobante', 'factura']) || 'F-000',
+                        cliente: clientName,
+                        factura: findRowValue(r, ['nro comp', 'comprobante', 'factura', 'numero']) || 'F-000',
                         dEmision: parseExcelDate(findRowValue(r, ['fecha', 'fecha comprobante', 'fecha emision'])),
                         dVto: parseExcelDate(findRowValue(r, ['fecha vto', 'vencimiento'])),
                         importe: parseFloat(findRowValue(r, ['total', 'importe ppal', 'bruto', 'importe']) || 0),
@@ -570,7 +572,7 @@
                 const workbook = XLSX.read(data, { type: 'array' });
                 const json = parseExcelSheet(workbook.Sheets[workbook.SheetNames[0]]);
                 window.rawReal = json.map(r => ({
-                    cliente: findRowValue(r, ['cliente', 'razon social', 'razon']) || 'CLIENTE S/D',
+                    cliente: findRowValue(r, ['cliente', 'razonsocial', 'razon social', 'razon', 'nombre']) || 'CLIENTE S/D',
                     fechaCobro: parseExcelDate(findRowValue(r, ['fecha', 'fecha comprobante', 'fecha cobro'])),
                     importeCobrado: Math.abs(parseFloat(findRowValue(r, ['t. cta. cte.', 'total', 'importe ppal', 'importe']) || 0)),
                     recibo: findRowValue(r, ['número comprobante', 'comprobante', 'recibo']) || 'REC-000',
@@ -592,12 +594,14 @@
                 const json = parseExcelSheet(workbook.Sheets[workbook.SheetNames[0]]);
                 window.rawLiveDebt = json.map(r => {
                     const code = extractRepartoCodeFromObject(r);
+                    const clientName = findRowValue(r, ['cliente', 'razonsocial', 'razon social', 'razon', 'nombre']) || 'CLIENTE S/D';
+                    const saldoVal = parseFloat(findRowValue(r, ['saldo', 'importe ppal', 'total', 'monto']) || 0);
                     return {
-                        cliente: findRowValue(r, ['cliente', 'razon social', 'razon']) || 'CLIENTE S/D',
-                        factura: findRowValue(r, ['comprobante', 'factura', 'nro comp']) || 'F-000',
+                        cliente: clientName,
+                        factura: findRowValue(r, ['comprobante', 'factura', 'nro comp', 'numero']) || 'F-000',
                         dEmision: parseExcelDate(findRowValue(r, ['fecha comprobante', 'fecha'])),
                         dVto: parseExcelDate(findRowValue(r, ['fecha vto', 'vencimiento'])),
-                        saldo: parseFloat(findRowValue(r, ['importe ppal', 'saldo', 'total']) || 0),
+                        saldo: saldoVal,
                         vendedor: code,
                         empresa: findRowValue(r, ['empresa']) || 'Ganadera'
                     };
@@ -966,7 +970,7 @@
                         const summary = (window.reconciliationResult.clientSummaries || []).find(c => c.normName === norm);
                         const daysAdd = summary ? summary.plazoPromedioReal : 15;
                         const probDate = new Date(i.dEmision.getTime() + (daysAdd * 86400 * 1000));
-                        
+
                         const tr = document.createElement('tr');
                         tr.className = 'hover:bg-slate-50';
                         tr.innerHTML = `
@@ -1024,7 +1028,7 @@
             }
         }
 
-        // Pestaña 6: Alertas Separadas & Rankings (REQUERIMIENTOS 3 Y 4)
+        // Pestaña 6: Alertas Separadas & Rankings (TOP 50)
         function renderAlertsAndRanking() {
             const lockContainer = document.getElementById('alerts-lock-container');
             const amountContainer = document.getElementById('alerts-amount-container');
@@ -1036,7 +1040,6 @@
             const liveDebt = window.reconciliationResult.invoiceDetails || [];
             const summaries = window.reconciliationResult.clientSummaries || [];
 
-            // Agrupar deuda viva y conteo de facturas abiertas por cliente
             const debtByClient = {};
             liveDebt.forEach(i => {
                 const norm = normalizeClientName(i.cliente);
@@ -1116,9 +1119,9 @@
                 }
             }
 
-            // Rankings Top & Worst
-            const topPayers = [...summaries].sort((a, b) => a.desvioDias - b.desvioDias).slice(0, 10);
-            const worstPayers = [...summaries].sort((a, b) => b.desvioDias - a.desvioDias).slice(0, 10);
+            // Rankings Top 50
+            const topPayers = [...summaries].sort((a, b) => a.desvioDias - b.desvioDias).slice(0, 50);
+            const worstPayers = [...summaries].sort((a, b) => b.desvioDias - a.desvioDias).slice(0, 50);
 
             if (topDiv) {
                 topDiv.innerHTML = topPayers.map((c, idx) => `
@@ -1139,7 +1142,7 @@
             }
         }
 
-        // Pestaña 7: Predicción Dinámica de Cash Flow (REQUERIMIENTO 1)
+        // Pestaña 7: Predicción Dinámica de Cash Flow
         function renderPredictionModule() {
             const container = document.getElementById('tbody-predictions');
             if (!window.reconciliationResult) return;
@@ -1162,10 +1165,8 @@
                 const clientSum = summariesMap[norm];
                 const termsCfg = getClientTermsConfig(norm);
                 
-                // Plazo real promedio empírico o Plazo Sincerado/Pactado
                 const daysReal = clientSum ? clientSum.plazoPromedioReal : termsCfg.sincerado;
                 
-                // Fecha Probable de Cobro Dinámica = Fecha Emision + Plazo Real
                 const dateEmision = i.dEmision ? new Date(i.dEmision) : new Date();
                 const probDate = new Date(dateEmision.getTime() + (daysReal * 86400 * 1000));
                 probDate.setHours(0, 0, 0, 0);
@@ -1199,7 +1200,6 @@
                 };
             });
 
-            // Actualizar Tarjetas KPI
             document.getElementById('pred-this-week-amount').textContent = formatMoney(sumThisWeek);
             document.getElementById('pred-this-week-breakdown').textContent = `💵 Efectivo: ${formatMoney(cashThis)} | 🏦 Bancos: ${formatMoney(bankThis)}`;
 
@@ -1209,7 +1209,6 @@
             document.getElementById('pred-later-amount').textContent = formatMoney(sumLater);
             document.getElementById('pred-later-breakdown').textContent = `💵 Efectivo: ${formatMoney(cashLater)} | 🏦 Bancos: ${formatMoney(bankLater)}`;
 
-            // Ordenar agenda por Fecha Probable más cercana
             predictedInvoices.sort((a, b) => a.probDate - b.probDate);
 
             if (container) {
