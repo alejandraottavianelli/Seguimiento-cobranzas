@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Módulo Multiempresa de Conciliación, Plazos Reales, DSO & Cash Flow</title>
+    <title>Módulo Multiempresa de Conciliación, Plazos Reales & Cash Flow</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -731,14 +731,30 @@
                 clientMap[norm].real.push(r);
             });
 
+            const liveDebt = (window.rawLiveDebt && window.rawLiveDebt.length > 0) ? window.rawLiveDebt : activeSales;
+            const liveDebtClientMap = {};
+            liveDebt.forEach(i => {
+                const norm = normalizeClientName(i.cliente);
+                if (!liveDebtClientMap[norm]) liveDebtClientMap[norm] = [];
+                liveDebtClientMap[norm].push(i);
+            });
+
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
             const clientSummaries = [];
-            Object.keys(clientMap).forEach(norm => {
-                const grp = clientMap[norm];
+            // Evaluar clientes de ventas + clientes con deuda viva
+            const allClientNorms = new Set([...Object.keys(clientMap), ...Object.keys(liveDebtClientMap)]);
+
+            allClientNorms.forEach(norm => {
+                const grp = clientMap[norm] || { cliente: (liveDebtClientMap[norm] ? liveDebtClientMap[norm][0].cliente : norm), sales: [], real: [] };
                 const termsCfg = getClientTermsConfig(norm);
                 const totSales = grp.sales.reduce((sum, s) => sum + s.importe, 0);
                 const totReal = grp.real.reduce((sum, r) => sum + r.importeCobrado, 0);
 
                 let daysSum = 0, count = 0;
+                
+                // 1. Evaluar cobritos históricos de este cliente
                 grp.real.forEach(r => {
                     grp.sales.forEach(s => {
                         const diff = Math.round((r.fechaCobro - s.dEmision) / (86400 * 1000));
@@ -746,8 +762,20 @@
                     });
                 });
 
+                // 2. Evaluar facturas impagas vivas (Demora efectiva transcurrida hoy)
+                const openInvoices = liveDebtClientMap[norm] || [];
+                openInvoices.forEach(inv => {
+                    const emision = inv.dEmision ? new Date(inv.dEmision) : today;
+                    const elapsed = Math.max(0, Math.round((today - emision) / (86400 * 1000)));
+                    if (elapsed > termsCfg.sincerado) {
+                        daysSum += elapsed;
+                        count++;
+                    }
+                });
+
+                // Si no hay cobros ni antigüedad mayor, usa el plazo sincerado
                 const avgReal = count > 0 ? Math.round(daysSum / count) : termsCfg.sincerado;
-                const compliance = totSales > 0 ? Math.min(100, Math.round((totReal / totSales) * 100)) : 100;
+                const compliance = totSales > 0 ? Math.min(100, Math.round((totReal / totSales) * 100)) : (openInvoices.length > 0 ? 0 : 100);
                 const validAvg = isNaN(avgReal) ? termsCfg.sincerado : avgReal;
 
                 clientSummaries.push({
@@ -765,7 +793,6 @@
 
             const totalFacturado = activeSales.reduce((sum, s) => sum + (s.importe || 0), 0);
             const totalCobrado = activeReal.reduce((sum, r) => sum + (r.importeCobrado || 0), 0);
-            const liveDebt = (window.rawLiveDebt && window.rawLiveDebt.length > 0) ? window.rawLiveDebt : activeSales;
             const totalPendiente = liveDebt.reduce((sum, i) => sum + (i.saldo || i.importe || 0), 0);
 
             const numMonths = (window.activePeriod === 'ALL') ? Math.max(1, Object.keys(window.historicalBatches).length) : 1;
@@ -919,7 +946,6 @@
             }
         }
 
-        // Selección limpia de reparto re-renderizando la lista
         function selectRouteReparto(repartoName) {
             window.selectedReparto = repartoName;
             if (window.currentRepartosMap) {
@@ -1341,7 +1367,7 @@
                         
                         if (clientRaw) {
                             const norm = normalizeClientName(clientRaw);
-                            let days = 30; // valor base por defecto
+                            let days = 30;
                             
                             if (condPago) {
                                 const match = String(condPago).match(/\d+/);
