@@ -382,20 +382,26 @@
                     <span class="px-2.5 py-1 bg-emerald-500 text-white text-[10px] font-black rounded-md uppercase tracking-wider">Fecha Sistema: Dinámica</span>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                <!-- 4 Tarjetas de Cash Flow Ajustadas -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                    <div class="bg-rose-950/80 p-3.5 rounded-lg border border-rose-800 shadow-inner">
+                        <span class="text-xs text-rose-200 uppercase font-bold tracking-wider">Mora Atrasada / Vencida</span>
+                        <h4 id="pred-mora-amount" class="text-xl font-black mt-1 text-rose-300">$ 0</h4>
+                        <p id="pred-mora-breakdown" class="text-[11px] text-rose-200 mt-2 border-t border-rose-800/80 pt-1.5">💵 Efectivo: $0 | 🏦 Bancos: $0</p>
+                    </div>
                     <div class="bg-indigo-800/80 p-3.5 rounded-lg border border-indigo-700 shadow-inner">
                         <span class="text-xs text-indigo-200 uppercase font-bold tracking-wider">Esta Semana (0 a 7 días)</span>
-                        <h4 id="pred-this-week-amount" class="text-2xl font-black mt-1 text-emerald-300">$ 0</h4>
+                        <h4 id="pred-this-week-amount" class="text-xl font-black mt-1 text-emerald-300">$ 0</h4>
                         <p id="pred-this-week-breakdown" class="text-[11px] text-indigo-200 mt-2 border-t border-indigo-700/80 pt-1.5">💵 Efectivo: $0 | 🏦 Bancos: $0</p>
                     </div>
                     <div class="bg-indigo-800/80 p-3.5 rounded-lg border border-indigo-700 shadow-inner">
                         <span class="text-xs text-indigo-200 uppercase font-bold tracking-wider">Próxima Semana (8 a 14 días)</span>
-                        <h4 id="pred-next-week-amount" class="text-2xl font-black mt-1 text-blue-300">$ 0</h4>
+                        <h4 id="pred-next-week-amount" class="text-xl font-black mt-1 text-blue-300">$ 0</h4>
                         <p id="pred-next-week-breakdown" class="text-[11px] text-indigo-200 mt-2 border-t border-indigo-700/80 pt-1.5">💵 Efectivo: $0 | 🏦 Bancos: $0</p>
                     </div>
                     <div class="bg-indigo-800/80 p-3.5 rounded-lg border border-indigo-700 shadow-inner">
                         <span class="text-xs text-indigo-200 uppercase font-bold tracking-wider">Posteriores (> 14 días)</span>
-                        <h4 id="pred-later-amount" class="text-2xl font-black mt-1 text-amber-300">$ 0</h4>
+                        <h4 id="pred-later-amount" class="text-xl font-black mt-1 text-amber-300">$ 0</h4>
                         <p id="pred-later-breakdown" class="text-[11px] text-indigo-200 mt-2 border-t border-indigo-700/80 pt-1.5">💵 Efectivo: $0 | 🏦 Bancos: $0</p>
                     </div>
                 </div>
@@ -1196,7 +1202,7 @@
             }
         }
 
-        // Pestaña 7: Predicción Dinámica de Cash Flow
+        // Pestaña 7: Predicción Dinámica de Cash Flow (Refaccionada para evitar distorsión)
         function renderPredictionModule() {
             const container = document.getElementById('tbody-predictions');
             if (!window.reconciliationResult) return;
@@ -1209,7 +1215,8 @@
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            let sumThisWeek = 0, sumNextWeek = 0, sumLater = 0;
+            let sumMora = 0, sumThisWeek = 0, sumNextWeek = 0, sumLater = 0;
+            let cashMora = 0, bankMora = 0;
             let cashThis = 0, bankThis = 0;
             let cashNext = 0, bankNext = 0;
             let cashLater = 0, bankLater = 0;
@@ -1230,7 +1237,11 @@
                 const isEfectivo = isCapacitacionCompany(i.empresa, i.vendedor, i.factura);
 
                 let windowCategory = 'esta_semana';
-                if (diffDays <= 7) {
+                if (probDate < today) {
+                    windowCategory = 'vencido_mora';
+                    sumMora += amt;
+                    if (isEfectivo) cashMora += amt; else bankMora += amt;
+                } else if (diffDays <= 7) {
                     windowCategory = 'esta_semana';
                     sumThisWeek += amt;
                     if (isEfectivo) cashThis += amt; else bankThis += amt;
@@ -1254,6 +1265,12 @@
                 };
             });
 
+            // Actualizar Tarjetas Superiores
+            const elemMoraAmt = document.getElementById('pred-mora-amount');
+            if (elemMoraAmt) elemMoraAmt.textContent = formatMoney(sumMora);
+            const elemMoraBk = document.getElementById('pred-mora-breakdown');
+            if (elemMoraBk) elemMoraBk.textContent = `💵 Efectivo: ${formatMoney(cashMora)} | 🏦 Bancos: ${formatMoney(bankMora)}`;
+
             document.getElementById('pred-this-week-amount').textContent = formatMoney(sumThisWeek);
             document.getElementById('pred-this-week-breakdown').textContent = `💵 Efectivo: ${formatMoney(cashThis)} | 🏦 Bancos: ${formatMoney(bankThis)}`;
 
@@ -1275,7 +1292,9 @@
                         tr.className = 'hover:bg-slate-50 border-b';
 
                         let badgeHtml = '';
-                        if (item.windowCategory === 'esta_semana') {
+                        if (item.windowCategory === 'vencido_mora') {
+                            badgeHtml = `<span class="px-2 py-0.5 bg-rose-100 text-rose-800 rounded font-bold text-[10px]">Mora Atrasada</span>`;
+                        } else if (item.windowCategory === 'esta_semana') {
                             badgeHtml = `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">Esta Semana</span>`;
                         } else if (item.windowCategory === 'proxima_semana') {
                             badgeHtml = `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-bold text-[10px]">Próxima Semana</span>`;
@@ -1473,7 +1492,6 @@
             
             const searchVal = (document.getElementById('search-master-terms')?.value || '').toLowerCase();
             
-            // SI ESTÁ VACÍO Y HAY CLIENTES PROCESADOS, POBLAR AUTOMÁTICAMENTE
             if (Object.keys(window.clientMasterTerms).length === 0 && window.reconciliationResult && window.reconciliationResult.clientSummaries) {
                 window.reconciliationResult.clientSummaries.forEach(c => {
                     window.clientMasterTerms[c.normName] = { pactado: c.plazoPactado, sincerado: c.plazoSincerado };
