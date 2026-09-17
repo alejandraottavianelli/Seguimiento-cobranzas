@@ -1434,118 +1434,93 @@
         }
 
         // Sincronización Automática con Paginación e Histórico Completo 2026
-        async function syncFinnegansDW() {
-            const spinner = document.getElementById('sync-spinner-header');
-            const icon = document.getElementById('sync-icon-header');
-            const text = document.getElementById('sync-btn-text-header');
+    async function syncFinnegansDW() {
+    const statusEl = document.getElementById('sync-status');
+    const syncBtn = document.getElementById('btn-sync-dw');
+    
+    // Listas de control para filtrado
+    const REPARTOS_PERMITIDOS = [41, 42, 44, 45, 46, 48, 49, 52, 53, 54, 55, 56, 57, 62];
+    const CLIENTES_EXCLUIDOS = [
+        "RIVAS IGNACIO JOAQUIN",
+        "RIVAS SERGIO MARCELO",
+        "CARNES INDUSTRIALIZADAS NEUQUINAS SAS",
+        "CARNES INDUSTRIALIZADAS NEUQUINAS",
+        "GANADERA NORTE NEUQUINO",
+        "GANADERA NORTE NEUQUINO SA"
+    ];
 
-            if (spinner) spinner.classList.remove('hidden');
-            if (icon) icon.classList.add('hidden');
-            if (text) text.textContent = 'Iniciando Paginación...';
+    if (syncBtn) syncBtn.disabled = true;
+    if (statusEl) statusEl.textContent = "Sincronizando con Orquestador Muflow...";
 
-            showToast('Conectando con la API del Orquestador...', 'info');
+    try {
+        // 1. Sincronizar Facturas / Ventas
+        let page = 1;
+        let totalPages = 1;
+        let allInvoices = [];
 
-            try {
-                // Step 1: Login
-                const loginRes = await fetch('https://orquestador.senderosderaza.com.ar/api/v1/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'username=alejandra&password=vV7apCBlD0O0p3pAXs8y'
-                });
+        while (page <= totalPages) {
+            if (statusEl) statusEl.textContent = `Descargando ventas (Página ${page}...)...`;
+            const res = await fetch(`https://orquestador-muflow.azurewebsites.net/api/finnegans/ventas?page=${page}&limit=1000`);
+            if (!res.ok) throw new Error(`Error en Ventas API (HTTP ${res.status})`);
+            
+            const data = await res.json();
+            const items = data.items || data.data || [];
+            totalPages = data.totalPages || data.pages || 1;
 
-                if (!loginRes.ok) throw new Error('Falló la autenticación en el Orquestador');
-                const authData = await loginRes.json();
-                const token = authData.access_token;
+            // Filtrado estricto
+            items.forEach(inv => {
+                // Filtro 1: Cliente
+                const nombreCliente = (inv.clientenombre || inv.cliente || "").toUpperCase();
+                const esClienteExcluido = CLIENTES_EXCLUIDOS.some(ex => nombreCliente.includes(ex));
+                if (esClienteExcluido) return;
 
-                // Step 2: Fetch Facturas con Paginación Completa desde 2026-01-01
-                let allFacturas = [];
-                let skipFacturas = 0;
-                let fetchMoreFacturas = true;
-
-                while (fetchMoreFacturas) {
-                    if (text) text.textContent = `Facturas (${allFacturas.length})...`;
-                    const facturasRes = await fetch(`https://orquestador.senderosderaza.com.ar/api/v1/facturas?limit=1000&skip=${skipFacturas}&fecha_desde=2026-01-01&incluir_empresas=4`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-
-                    if (!facturasRes.ok) throw new Error('Error al consultar facturas');
-                    const batch = await facturasRes.json();
-
-                    if (batch.length === 0) {
-                        fetchMoreFacturas = false;
-                    } else {
-                        allFacturas = allFacturas.concat(batch);
-                        skipFacturas += 1000;
-                        if (batch.length < 1000) fetchMoreFacturas = false;
-                    }
+                // Filtro 2: Reparto
+                const textoReparto = (inv.vendedornombre || inv.centrodecostonombre || inv.documentotiponombre || "").toUpperCase();
+                const matchRto = textoReparto.match(/(?:RTO|REPARTO)\s*[-:]?\s*(\d+)/i);
+                
+                if (matchRto) {
+                    const numReparto = parseInt(matchRto[1], 10);
+                    if (!REPARTOS_PERMITIDOS.includes(numReparto)) return; // Ignora RTO no listados (ej. 70)
                 }
 
-                // Step 3: Mapear Facturas e Identificar Deuda Viva
-                window.rawSales = allFacturas.map(f => ({
-                    cliente: f.cliente || 'CLIENTE S/D',
-                    factura: f.comprobante || 'F-000',
-                    dEmision: parseExcelDate(f.fecha_comprobante),
-                    dVto: parseExcelDate(f.fecha_vencimiento),
-                    importe: parseFloat(f.total || 0),
-                    vendedor: extractRepartoCode(f.vendedor),
-                    empresa: f.empresa || 'Ganadera'
-                }));
+                allInvoices.push(inv);
+            });
 
-                window.rawLiveDebt = allFacturas.filter(f => (f.balance || 0) > 0).map(f => ({
-                    cliente: f.cliente || 'CLIENTE S/D',
-                    factura: f.comprobante || 'F-000',
-                    dEmision: parseExcelDate(f.fecha_comprobante),
-                    dVto: parseExcelDate(f.fecha_vencimiento),
-                    saldo: parseFloat(f.balance || 0),
-                    vendedor: extractRepartoCode(f.vendedor),
-                    empresa: f.empresa || 'Ganadera'
-                }));
-
-                // Step 4: Fetch Movimientos Interbanking (Cobranzas) con Paginación Completa desde 2026-01-01
-                let allMovimientos = [];
-                let skipMov = 0;
-                let fetchMoreMov = true;
-
-                while (fetchMoreMov) {
-                    if (text) text.textContent = `Cobranzas (${allMovimientos.length})...`;
-                    const movRes = await fetch(`https://orquestador.senderosderaza.com.ar/api/v1/interbanking/movimientos?limit=1000&skip=${skipMov}&fecha_desde=2026-01-01&debit_credit_type=C`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-
-                    if (!movRes.ok) throw new Error('Error al consultar cobranzas');
-                    const batchMov = await movRes.json();
-
-                    if (batchMov.length === 0) {
-                        fetchMoreMov = false;
-                    } else {
-                        allMovimientos = allMovimientos.concat(batchMov);
-                        skipMov += 1000;
-                        if (batchMov.length < 1000) fetchMoreMov = false;
-                    }
-                }
-
-                window.rawReal = allMovimientos.map(m => ({
-                    cliente: m.depositor_description || 'CLIENTE S/D',
-                    fechaCobro: parseExcelDate(m.movement_date),
-                    importeCobrado: parseFloat(m.amount || 0),
-                    recibo: m.voucher_number || 'REC-000',
-                    vendedor: 'General',
-                    empresa: 'Ganadera'
-                }));
-
-                // Step 5: Agrupar por Meses y Ejecutar Conciliación Completa
-                processAndSavePeriod();
-                showToast(`¡Sincronizado completo! ${allFacturas.length} Facturas y ${allMovimientos.length} Cobranzas.`, 'success');
-
-            } catch (err) {
-                console.error(err);
-                showToast('Error de conexión con la API: ' + err.message, 'error');
-            } finally {
-                if (spinner) spinner.classList.add('hidden');
-                if (icon) icon.classList.remove('hidden');
-                if (text) text.textContent = 'Sincronizar Finnegans BI';
-            }
+            page++;
         }
+
+        // 2. Sincronizar Cobranzas (Interbanking)
+        if (statusEl) statusEl.textContent = "Descargando cobranzas Muflow...";
+        const cobRes = await fetch(`https://orquestador-muflow.azurewebsites.net/api/finnegans/cobranzas`);
+        let allCobranzas = [];
+        
+        if (cobRes.ok) {
+            const cobData = await cobRes.json();
+            const rawCob = cobData.items || cobData.data || [];
+            
+            allCobranzas = rawCob.filter(cob => {
+                const nombreTercero = (cob.tercero || cob.clientenombre || "").toUpperCase();
+                return !CLIENTES_EXCLUIDOS.some(ex => nombreTercero.includes(ex));
+            });
+        }
+
+        // 3. Guardar en la estructura global del tablero y procesar
+        window.rawInvoicesData = allInvoices;
+        window.rawCobranzasData = allCobranzas;
+
+        if (typeof processInvoicesAndRender === "function") {
+            processInvoicesAndRender();
+        }
+
+        if (statusEl) statusEl.textContent = `✅ Sincronizado: ${allInvoices.length} facturas filtradas.`;
+
+    } catch (err) {
+        console.error("Error en sincronización DW:", err);
+        if (statusEl) statusEl.textContent = `❌ Error: ${err.message}`;
+    } finally {
+        if (syncBtn) syncBtn.disabled = false;
+    }
+}
 
         function openTermsModal() { 
             renderMasterTermsList();
