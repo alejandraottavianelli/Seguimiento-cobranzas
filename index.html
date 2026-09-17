@@ -57,6 +57,7 @@
 
                 <!-- Controls -->
                 <div class="flex items-center space-x-2">
+                    <!-- Botón Sincronizar Conectado a la API del Orquestador -->
                     <button onclick="syncFinnegansDW()" id="btn-sync-dw-header" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1.5">
                         <svg class="w-4 h-4 animate-spin hidden" id="sync-spinner-header" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         <svg class="w-4 h-4" id="sync-icon-header" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
@@ -186,8 +187,9 @@
                     <p id="kpi-recupero-pct" class="text-[11px] font-bold text-slate-600 mt-1">Recuperación: 0%</p>
                 </div>
                 <div class="bg-indigo-900 text-white rounded-xl p-4 shadow-sm border border-indigo-800">
-                    <p class="text-[10px] font-extrabold uppercase tracking-wider text-amber-300">DSO Total</p>
+                    <p class="text-[10px] font-extrabold uppercase tracking-wider text-amber-300">DSO Total / Plazo Promedio</p>
                     <h3 id="kpi-dso-total" class="text-xl font-black text-white mt-1">0 Días</h3>
+                    <p id="kpi-desvio-promedio" class="text-[10px] text-indigo-200 mt-1">Plazo Promedio Real Estimado: -- días</p>
                 </div>
             </div>
 
@@ -810,8 +812,9 @@
 
             document.getElementById('kpi-dso-total').textContent = `${dso} Días`;
             
-            const desvioElem = document.getElementById('kpi-desvio-promedio');
-            if (desvioElem) desvioElem.remove();
+            const validSummaries = clientSummaries.filter(c => !isNaN(c.plazoPromedioReal));
+            const avgPlazoGlobal = validSummaries.length > 0 ? Math.round(validSummaries.reduce((s, c) => s + c.plazoPromedioReal, 0) / validSummaries.length) : dso;
+            document.getElementById('kpi-desvio-promedio').textContent = `Plazo Promedio Real Estimado: ${isNaN(avgPlazoGlobal) ? dso : avgPlazoGlobal} días`;
 
             window.reconciliationResult = { invoiceDetails: liveDebt, invoiceDetailsHistory: activeSales, clientSummaries };
             
@@ -1436,21 +1439,11 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // Sincronización Directa a la API del Orquestador de Senderos (con Paginación Bucle y Filtros)
+        // Sincronización Directa a la API del Orquestador de Senderos
         async function syncFinnegansDW() {
             const spinner = document.getElementById('sync-spinner-header');
             const icon = document.getElementById('sync-icon-header');
             const text = document.getElementById('sync-btn-text-header');
-
-            const REPARTOS_PERMITIDOS = [41, 42, 44, 45, 46, 48, 49, 52, 53, 54, 55, 56, 57, 62];
-            const CLIENTES_EXCLUIDOS = [
-                "RIVAS IGNACIO JOAQUIN",
-                "RIVAS SERGIO MARCELO",
-                "CARNES INDUSTRIALIZADAS NEUQUINAS SAS",
-                "CARNES INDUSTRIALIZADAS NEUQUINAS",
-                "GANADERA NORTE NEUQUINO",
-                "GANADERA NORTE NEUQUINO SA"
-            ];
 
             if (spinner) spinner.classList.remove('hidden');
             if (icon) icon.classList.add('hidden');
@@ -1470,48 +1463,18 @@
                 const authData = await loginRes.json();
                 const token = authData.access_token;
 
-                showToast('Descargando historial completo de Facturas y Deuda Viva...', 'info');
+                showToast('Consultando Facturas y Deuda Viva (Ganadera & Capacitación)...', 'info');
 
-                // Step 2: Fetch Facturas con Bucle de Paginación Completo
-                let page = 1;
-                let hasMorePages = true;
-                let rawFacturasList = [];
-
-                while (hasMorePages) {
-                    if (text) text.textContent = `Descargando pág. ${page}...`;
-                    const facturasRes = await fetch(`https://orquestador.senderosderaza.com.ar/api/v1/facturas?page=${page}&limit=1000&incluir_empresas=4`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-
-                    if (!facturasRes.ok) throw new Error(`Error al consultar facturas en página ${page}`);
-                    const pageData = await facturasRes.json();
-                    
-                    const items = Array.isArray(pageData) ? pageData : (pageData.items || pageData.data || []);
-                    rawFacturasList = rawFacturasList.concat(items);
-
-                    // Si la página devolvió menos del límite (1000) o vino vacía, terminamos la paginación
-                    if (items.length < 1000) {
-                        hasMorePages = false;
-                    } else {
-                        page++;
-                    }
-                }
-
-                // Step 3: Mapear y aplicar filtros de Cliente y Reparto
-                const filteredFacturas = rawFacturasList.filter(f => {
-                    const nombreCliente = (f.cliente || '').toUpperCase();
-                    if (CLIENTES_EXCLUIDOS.some(ex => nombreCliente.includes(ex))) return false;
-
-                    const textoReparto = (f.vendedor || '').toUpperCase();
-                    const matchRto = textoReparto.match(/(?:RTO|REPARTO)\s*[-:]?\s*(\d+)/i);
-                    if (matchRto) {
-                        const numReparto = parseInt(matchRto[1], 10);
-                        if (!REPARTOS_PERMITIDOS.includes(numReparto)) return false;
-                    }
-                    return true;
+                // Step 2: Fetch Facturas (incluir_empresas=4 para Capacitacion)
+                const facturasRes = await fetch('https://orquestador.senderosderaza.com.ar/api/v1/facturas?limit=1000&incluir_empresas=4', {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                window.rawSales = filteredFacturas.map(f => ({
+                if (!facturasRes.ok) throw new Error('Error al consultar facturas');
+                const facturasData = await facturasRes.json();
+
+                // Step 3: Mapear a formato interno de la App
+                window.rawSales = facturasData.map(f => ({
                     cliente: f.cliente || 'CLIENTE S/D',
                     factura: f.comprobante || 'F-000',
                     dEmision: parseExcelDate(f.fecha_comprobante),
@@ -1521,7 +1484,7 @@
                     empresa: f.empresa || 'Ganadera'
                 }));
 
-                window.rawLiveDebt = filteredFacturas.filter(f => (f.balance || 0) > 0).map(f => ({
+                window.rawLiveDebt = facturasData.filter(f => (f.balance || 0) > 0).map(f => ({
                     cliente: f.cliente || 'CLIENTE S/D',
                     factura: f.comprobante || 'F-000',
                     dEmision: parseExcelDate(f.fecha_comprobante),
@@ -1538,25 +1501,19 @@
 
                 if (movRes.ok) {
                     const movData = await movRes.json();
-                    const rawMovs = Array.isArray(movData) ? movData : (movData.items || movData.data || []);
-                    window.rawReal = rawMovs
-                        .filter(m => {
-                            const nombreTercero = (m.depositor_description || '').toUpperCase();
-                            return !CLIENTES_EXCLUIDOS.some(ex => nombreTercero.includes(ex));
-                        })
-                        .map(m => ({
-                            cliente: m.depositor_description || 'CLIENTE S/D',
-                            fechaCobro: parseExcelDate(m.movement_date),
-                            importeCobrado: parseFloat(m.amount || 0),
-                            recibo: m.voucher_number || 'REC-000',
-                            vendedor: 'General',
-                            empresa: 'Ganadera'
-                        }));
+                    window.rawReal = movData.map(m => ({
+                        cliente: m.depositor_description || 'CLIENTE S/D',
+                        fechaCobro: parseExcelDate(m.movement_date),
+                        importeCobrado: parseFloat(m.amount || 0),
+                        recibo: m.voucher_number || 'REC-000',
+                        vendedor: 'General',
+                        empresa: 'Ganadera'
+                    }));
                 }
 
                 // Step 5: Agrupar por mes y Conciliar
                 processAndSavePeriod();
-                showToast(`¡Sincronización completada! ${window.rawSales.length} facturas totales cargadas.`, 'success');
+                showToast('¡Sincronización en vivo con el Orquestador completada!', 'success');
 
             } catch (err) {
                 console.error(err);
