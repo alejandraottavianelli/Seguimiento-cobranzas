@@ -186,7 +186,7 @@
                     <p id="kpi-recupero-pct" class="text-[11px] font-bold text-slate-600 mt-1">Recuperación: 0%</p>
                 </div>
                 <div class="bg-indigo-900 text-white rounded-xl p-4 shadow-sm border border-indigo-800">
-                    <p class="text-[10px] font-extrabold uppercase tracking-wider text-amber-300">DSO Total / Plazo Promedio</p>
+                    <p class="text-[10px] font-extrabold uppercase tracking-wider text-amber-300">DSO Total</p>
                     <h3 id="kpi-dso-total" class="text-xl font-black text-white mt-1">0 Días</h3>
                 </div>
             </div>
@@ -1433,94 +1433,113 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // Sincronización Automática con Paginación e Histórico Completo 2026
-    async function syncFinnegansDW() {
-    const statusEl = document.getElementById('sync-status');
-    const syncBtn = document.getElementById('btn-sync-dw');
-    
-    // Listas de control para filtrado
-    const REPARTOS_PERMITIDOS = [41, 42, 44, 45, 46, 48, 49, 52, 53, 54, 55, 56, 57, 62];
-    const CLIENTES_EXCLUIDOS = [
-        "RIVAS IGNACIO JOAQUIN",
-        "RIVAS SERGIO MARCELO",
-        "CARNES INDUSTRIALIZADAS NEUQUINAS SAS",
-        "CARNES INDUSTRIALIZADAS NEUQUINAS",
-        "GANADERA NORTE NEUQUINO",
-        "GANADERA NORTE NEUQUINO SA"
-    ];
-
-    if (syncBtn) syncBtn.disabled = true;
-    if (statusEl) statusEl.textContent = "Sincronizando con Orquestador Muflow...";
-
-    try {
-        // 1. Sincronizar Facturas / Ventas
-        let page = 1;
-        let totalPages = 1;
-        let allInvoices = [];
-
-        while (page <= totalPages) {
-            if (statusEl) statusEl.textContent = `Descargando ventas (Página ${page}...)...`;
-            const res = await fetch(`https://orquestador-muflow.azurewebsites.net/api/finnegans/ventas?page=${page}&limit=1000`);
-            if (!res.ok) throw new Error(`Error en Ventas API (HTTP ${res.status})`);
+        // Sincronización Automática con Paginación, Filtrado e Histórico Completo
+        async function syncFinnegansDW() {
+            const syncBtn = document.getElementById('btn-sync-dw-header');
+            const syncText = document.getElementById('sync-btn-text-header');
+            const syncSpinner = document.getElementById('sync-spinner-header');
+            const syncIcon = document.getElementById('sync-icon-header');
             
-            const data = await res.json();
-            const items = data.items || data.data || [];
-            totalPages = data.totalPages || data.pages || 1;
+            // Listas de control para filtrado
+            const REPARTOS_PERMITIDOS = [41, 42, 44, 45, 46, 48, 49, 52, 53, 54, 55, 56, 57, 62];
+            const CLIENTES_EXCLUIDOS = [
+                "RIVAS IGNACIO JOAQUIN",
+                "RIVAS SERGIO MARCELO",
+                "CARNES INDUSTRIALIZADAS NEUQUINAS SAS",
+                "CARNES INDUSTRIALIZADAS NEUQUINAS",
+                "GANADERA NORTE NEUQUINO",
+                "GANADERA NORTE NEUQUINO SA"
+            ];
 
-            // Filtrado estricto
-            items.forEach(inv => {
-                // Filtro 1: Cliente
-                const nombreCliente = (inv.clientenombre || inv.cliente || "").toUpperCase();
-                const esClienteExcluido = CLIENTES_EXCLUIDOS.some(ex => nombreCliente.includes(ex));
-                if (esClienteExcluido) return;
+            if (syncBtn) syncBtn.disabled = true;
+            if (syncText) syncText.textContent = "Sincronizando...";
+            if (syncSpinner) syncSpinner.classList.remove('hidden');
+            if (syncIcon) syncIcon.classList.add('hidden');
+            showToast("Iniciando sincronización con Orquestador Muflow...", "info");
 
-                // Filtro 2: Reparto
-                const textoReparto = (inv.vendedornombre || inv.centrodecostonombre || inv.documentotiponombre || "").toUpperCase();
-                const matchRto = textoReparto.match(/(?:RTO|REPARTO)\s*[-:]?\s*(\d+)/i);
-                
-                if (matchRto) {
-                    const numReparto = parseInt(matchRto[1], 10);
-                    if (!REPARTOS_PERMITIDOS.includes(numReparto)) return; // Ignora RTO no listados (ej. 70)
+            try {
+                // 1. Sincronizar Facturas / Ventas
+                let page = 1;
+                let totalPages = 1;
+                let allInvoices = [];
+
+                while (page <= totalPages) {
+                    const res = await fetch(`https://orquestador-muflow.azurewebsites.net/api/finnegans/ventas?page=${page}&limit=1000`);
+                    if (!res.ok) throw new Error(`Error en Ventas API (HTTP ${res.status})`);
+                    
+                    const data = await res.json();
+                    const items = data.items || data.data || [];
+                    totalPages = data.totalPages || data.pages || 1;
+
+                    items.forEach(inv => {
+                        // Filtro 1: Cliente
+                        const nombreCliente = (inv.clientenombre || inv.cliente || "").toUpperCase();
+                        const esClienteExcluido = CLIENTES_EXCLUIDOS.some(ex => nombreCliente.includes(ex));
+                        if (esClienteExcluido) return;
+
+                        // Filtro 2: Reparto
+                        const textoReparto = (inv.vendedornombre || inv.centrodecostonombre || inv.documentotiponombre || "").toUpperCase();
+                        const matchRto = textoReparto.match(/(?:RTO|REPARTO)\s*[-:]?\s*(\d+)/i);
+                        
+                        if (matchRto) {
+                            const numReparto = parseInt(matchRto[1], 10);
+                            if (!REPARTOS_PERMITIDOS.includes(numReparto)) return; // Ignora RTO no listados
+                        }
+
+                        allInvoices.push({
+                            cliente: inv.clientenombre || inv.cliente || 'CLIENTE S/D',
+                            factura: inv.documentotiponombre ? `${inv.documentotiponombre} ${inv.numero||''}` : (inv.numero || 'F-000'),
+                            dEmision: parseExcelDate(inv.fecha),
+                            dVto: parseExcelDate(inv.fechavencimiento || inv.fecha),
+                            importe: parseFloat(inv.importe || inv.total || 0),
+                            vendedor: extractRepartoCodeFromObject(inv),
+                            empresa: inv.empresa || 'Ganadera'
+                        });
+                    });
+
+                    page++;
                 }
 
-                allInvoices.push(inv);
-            });
+                // 2. Sincronizar Cobranzas (Interbanking)
+                const cobRes = await fetch(`https://orquestador-muflow.azurewebsites.net/api/finnegans/cobranzas`);
+                let allCobranzas = [];
+                
+                if (cobRes.ok) {
+                    const cobData = await cobRes.json();
+                    const rawCob = cobData.items || cobData.data || [];
+                    
+                    rawCob.forEach(cob => {
+                        const nombreTercero = (cob.tercero || cob.clientenombre || "").toUpperCase();
+                        if (CLIENTES_EXCLUIDOS.some(ex => nombreTercero.includes(ex))) return;
 
-            page++;
+                        allCobranzas.push({
+                            cliente: cob.tercero || cob.clientenombre || 'CLIENTE S/D',
+                            fechaCobro: parseExcelDate(cob.fecha),
+                            importeCobrado: Math.abs(parseFloat(cob.importe || 0)),
+                            recibo: cob.documento || cob.recibo || 'REC-000',
+                            vendedor: 'General',
+                            empresa: cob.empresa || 'Ganadera'
+                        });
+                    });
+                }
+
+                // 3. Cargar en memoria y ejecutar conciliación general
+                window.rawSales = allInvoices;
+                window.rawReal = allCobranzas;
+                
+                processAndSavePeriod();
+                showToast(`✅ Sincronizado: ${allInvoices.length} facturas y ${allCobranzas.length} cobranzas.`, 'success');
+
+            } catch (err) {
+                console.error("Error en sincronización DW:", err);
+                showToast(`❌ Error de conexión: ${err.message}`, 'error');
+            } finally {
+                if (syncBtn) syncBtn.disabled = false;
+                if (syncText) syncText.textContent = "Sincronizar Finnegans BI";
+                if (syncSpinner) syncSpinner.classList.add('hidden');
+                if (syncIcon) syncIcon.classList.remove('hidden');
+            }
         }
-
-        // 2. Sincronizar Cobranzas (Interbanking)
-        if (statusEl) statusEl.textContent = "Descargando cobranzas Muflow...";
-        const cobRes = await fetch(`https://orquestador-muflow.azurewebsites.net/api/finnegans/cobranzas`);
-        let allCobranzas = [];
-        
-        if (cobRes.ok) {
-            const cobData = await cobRes.json();
-            const rawCob = cobData.items || cobData.data || [];
-            
-            allCobranzas = rawCob.filter(cob => {
-                const nombreTercero = (cob.tercero || cob.clientenombre || "").toUpperCase();
-                return !CLIENTES_EXCLUIDOS.some(ex => nombreTercero.includes(ex));
-            });
-        }
-
-        // 3. Guardar en la estructura global del tablero y procesar
-        window.rawInvoicesData = allInvoices;
-        window.rawCobranzasData = allCobranzas;
-
-        if (typeof processInvoicesAndRender === "function") {
-            processInvoicesAndRender();
-        }
-
-        if (statusEl) statusEl.textContent = `✅ Sincronizado: ${allInvoices.length} facturas filtradas.`;
-
-    } catch (err) {
-        console.error("Error en sincronización DW:", err);
-        if (statusEl) statusEl.textContent = `❌ Error: ${err.message}`;
-    } finally {
-        if (syncBtn) syncBtn.disabled = false;
-    }
-}
 
         function openTermsModal() { 
             renderMasterTermsList();
