@@ -1433,7 +1433,7 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // Sincronización Automática con Protección de Red
+        // Sincronización Automática con Paginación, Filtrado e Histórico Completo
         async function syncFinnegansDW() {
             const syncBtn = document.getElementById('btn-sync-dw-header');
             const syncText = document.getElementById('sync-btn-text-header');
@@ -1452,9 +1452,10 @@
             ];
 
             if (syncBtn) syncBtn.disabled = true;
-            if (syncText) syncText.textContent = "Conectando...";
+            if (syncText) syncText.textContent = "Sincronizando...";
             if (syncSpinner) syncSpinner.classList.remove('hidden');
             if (syncIcon) syncIcon.classList.add('hidden');
+            showToast("Iniciando sincronización con Orquestador Muflow...", "info");
 
             try {
                 // 1. Sincronizar Facturas / Ventas
@@ -1463,26 +1464,26 @@
                 let allInvoices = [];
 
                 while (page <= totalPages) {
-                    const res = await fetch(`https://orquestador-muflow.azurewebsites.net/api/finnegans/ventas?page=${page}&limit=1000`).catch(() => null);
-                    
-                    if (!res || !res.ok) {
-                        throw new Error("El Orquestador de Muflow no responde desde la web (bloqueo CORS)");
-                    }
+                    const res = await fetch(`https://orquestador-muflow.azurewebsites.net/api/finnegans/ventas?page=${page}&limit=1000`);
+                    if (!res.ok) throw new Error(`Error en Ventas API (HTTP ${res.status})`);
                     
                     const data = await res.json();
                     const items = data.items || data.data || [];
                     totalPages = data.totalPages || data.pages || 1;
 
                     items.forEach(inv => {
+                        // Filtro 1: Cliente
                         const nombreCliente = (inv.clientenombre || inv.cliente || "").toUpperCase();
-                        if (CLIENTES_EXCLUIDOS.some(ex => nombreCliente.includes(ex))) return;
+                        const esClienteExcluido = CLIENTES_EXCLUIDOS.some(ex => nombreCliente.includes(ex));
+                        if (esClienteExcluido) return;
 
+                        // Filtro 2: Reparto
                         const textoReparto = (inv.vendedornombre || inv.centrodecostonombre || inv.documentotiponombre || "").toUpperCase();
                         const matchRto = textoReparto.match(/(?:RTO|REPARTO)\s*[-:]?\s*(\d+)/i);
                         
                         if (matchRto) {
                             const numReparto = parseInt(matchRto[1], 10);
-                            if (!REPARTOS_PERMITIDOS.includes(numReparto)) return;
+                            if (!REPARTOS_PERMITIDOS.includes(numReparto)) return; // Ignora RTO no listados
                         }
 
                         allInvoices.push({
@@ -1499,11 +1500,11 @@
                     page++;
                 }
 
-                // 2. Sincronizar Cobranzas
-                const cobRes = await fetch(`https://orquestador-muflow.azurewebsites.net/api/finnegans/cobranzas`).catch(() => null);
+                // 2. Sincronizar Cobranzas (Interbanking)
+                const cobRes = await fetch(`https://orquestador-muflow.azurewebsites.net/api/finnegans/cobranzas`);
                 let allCobranzas = [];
                 
-                if (cobRes && cobRes.ok) {
+                if (cobRes.ok) {
                     const cobData = await cobRes.json();
                     const rawCob = cobData.items || cobData.data || [];
                     
@@ -1522,15 +1523,16 @@
                     });
                 }
 
+                // 3. Cargar en memoria y ejecutar conciliación general
                 window.rawSales = allInvoices;
                 window.rawReal = allCobranzas;
                 
                 processAndSavePeriod();
-                showToast(`✅ Sincronizado: ${allInvoices.length} facturas filtradas.`, 'success');
+                showToast(`✅ Sincronizado: ${allInvoices.length} facturas y ${allCobranzas.length} cobranzas.`, 'success');
 
             } catch (err) {
-                console.error("Error al sincronizar:", err);
-                showToast(`⚠️ Servidor no disponible: ${err.message}`, 'error');
+                console.error("Error en sincronización DW:", err);
+                showToast(`❌ Error de conexión: ${err.message}`, 'error');
             } finally {
                 if (syncBtn) syncBtn.disabled = false;
                 if (syncText) syncText.textContent = "Sincronizar Finnegans BI";
