@@ -810,10 +810,6 @@
 
             document.getElementById('kpi-dso-total').textContent = `${dso} Días`;
             
-            const validSummaries = clientSummaries.filter(c => !isNaN(c.plazoPromedioReal));
-            const avgPlazoGlobal = validSummaries.length > 0 ? Math.round(validSummaries.reduce((s, c) => s + c.plazoPromedioReal, 0) / validSummaries.length) : dso;
-            document.getElementById('kpi-desvio-promedio').textContent = `Plazo Promedio Real Estimado: ${isNaN(avgPlazoGlobal) ? dso : avgPlazoGlobal} días`;
-
             window.reconciliationResult = { invoiceDetails: liveDebt, invoiceDetailsHistory: activeSales, clientSummaries };
             
             renderCharts(activeSales, activeReal, totalCobrado, totalPendiente);
