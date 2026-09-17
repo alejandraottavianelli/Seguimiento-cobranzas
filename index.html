@@ -57,13 +57,6 @@
 
                 <!-- Controls -->
                 <div class="flex items-center space-x-2">
-                    <!-- Botón Sincronizar Conectado a la API del Orquestador -->
-                    <button onclick="syncFinnegansDW()" id="btn-sync-dw-header" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1.5">
-                        <svg class="w-4 h-4 animate-spin hidden" id="sync-spinner-header" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        <svg class="w-4 h-4" id="sync-icon-header" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        <span id="sync-btn-text-header">Sincronizar Finnegans BI</span>
-                    </button>
-
                     <button onclick="exportBackupJSON()" title="Descargar Copia de Seguridad" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 rounded-lg text-xs font-semibold shadow transition flex items-center">
                         <svg class="w-4 h-4 mr-1 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         Exportar Copia
@@ -118,8 +111,8 @@
             <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-6">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800">Procesamiento de Archivos Excel & Conexión BI</h2>
-                        <p class="text-xs text-slate-500 mt-1">Sincronice automáticamente desde la API de Senderos o cargue manualmente sus planillas Excel.</p>
+                        <h2 class="text-lg font-bold text-slate-800">Procesamiento de Archivos Excel</h2>
+                        <p class="text-xs text-slate-500 mt-1">Cargue los archivos de Ventas, Cobranzas y Deuda Viva en la Calle.</p>
                     </div>
                 </div>
 
@@ -217,6 +210,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Columna Izquierda -->
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-xs font-bold text-slate-600 uppercase">Repartos / Vendedores</h3>
@@ -225,6 +219,7 @@
                         <div id="route-repartos-list" class="space-y-2.5 max-h-[500px] overflow-y-auto custom-scrollbar pr-1"></div>
                     </div>
 
+                    <!-- Columna Derecha -->
                     <div class="lg:col-span-2 space-y-4">
                         <div class="bg-slate-900 text-white p-5 rounded-xl border border-slate-800 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
@@ -329,6 +324,7 @@
         <!-- 6. Alertas & Ranking -->
         <section id="tab-alerts" class="space-y-6 hidden">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Columna 1: Bloqueo Comercial -->
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                     <h3 class="text-sm font-bold text-rose-700 mb-1 flex items-center gap-1.5">
                         <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
@@ -338,6 +334,7 @@
                     <div id="alerts-lock-container" class="space-y-2.5 max-h-[420px] overflow-y-auto custom-scrollbar pr-1"></div>
                 </div>
 
+                <!-- Columna 2: Alerta por Monto Elevado -->
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                     <h3 class="text-sm font-bold text-amber-700 mb-1 flex items-center gap-1.5">
                         <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -347,6 +344,7 @@
                     <div id="alerts-amount-container" class="space-y-2.5 max-h-[420px] overflow-y-auto custom-scrollbar pr-1"></div>
                 </div>
 
+                <!-- Columna 3: Alerta por Desvío Crítico -->
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                     <h3 class="text-sm font-bold text-indigo-700 mb-1 flex items-center gap-1.5">
                         <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -357,6 +355,7 @@
                 </div>
             </div>
 
+            <!-- Seccion de Rankings (Top 50) -->
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                 <h3 class="text-sm font-bold text-slate-800 mb-4">Rankings de Cumplimiento Comercial (Top 50)</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -383,6 +382,7 @@
                     <span class="px-2.5 py-1 bg-emerald-500 text-white text-[10px] font-black rounded-md uppercase tracking-wider">Fecha Sistema: Dinámica</span>
                 </div>
 
+                <!-- 4 Tarjetas de Cash Flow Ajustadas -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
                     <div class="bg-rose-950/80 p-3.5 rounded-lg border border-rose-800 shadow-inner">
                         <span class="text-xs text-rose-200 uppercase font-bold tracking-wider">Mora Atrasada / Vencida</span>
@@ -441,6 +441,7 @@
                 <button onclick="closeTermsModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
             </div>
             <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                <!-- Carga Masiva desde Excel -->
                 <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                         <h4 class="text-xs font-bold text-indigo-900">📂 Carga Masiva desde Excel</h4>
@@ -453,6 +454,7 @@
                     </label>
                 </div>
 
+                <!-- Buscador de Clientes en el Maestro -->
                 <div class="flex items-center justify-between gap-4 pt-2">
                     <input type="text" id="search-master-terms" oninput="renderMasterTermsList()" placeholder="🔍 Buscar cliente en el maestro de plazos..." class="text-xs border border-slate-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-brand-500">
                 </div>
@@ -1108,6 +1110,7 @@
                 debtByClient[norm].totalSaldo += (i.saldo || i.importe || 0);
             });
 
+            // 1. Bloqueo Comercial (Regla >= 2 Facturas impagas)
             if (lockContainer) {
                 lockContainer.innerHTML = '';
                 const lockClients = Object.values(debtByClient).filter(c => c.count >= 2).sort((a,b) => b.count - a.count);
@@ -1132,6 +1135,7 @@
                 }
             }
 
+            // 2. Alertas por Monto Elevado (> $1.000.000)
             if (amountContainer) {
                 amountContainer.innerHTML = '';
                 const amountClients = Object.values(debtByClient).filter(c => c.totalSaldo > 1000000).sort((a,b) => b.totalSaldo - a.totalSaldo);
@@ -1153,6 +1157,7 @@
                 }
             }
 
+            // 3. Alertas por Desvío Crítico de Días (> +7 Días sobre sincerado)
             if (daysContainer) {
                 daysContainer.innerHTML = '';
                 const daysClients = summaries.filter(c => c.desvioDias > 7).sort((a,b) => b.desvioDias - a.desvioDias);
@@ -1174,6 +1179,7 @@
                 }
             }
 
+            // Rankings Top 50
             const topPayers = [...summaries].sort((a, b) => a.desvioDias - b.desvioDias).slice(0, 50);
             const worstPayers = [...summaries].sort((a, b) => b.desvioDias - a.desvioDias).slice(0, 50);
 
@@ -1196,7 +1202,7 @@
             }
         }
 
-        // Pestaña 7: Predicción Dinámica de Cash Flow
+        // Pestaña 7: Predicción Dinámica de Cash Flow (Refaccionada para evitar distorsión)
         function renderPredictionModule() {
             const container = document.getElementById('tbody-predictions');
             if (!window.reconciliationResult) return;
@@ -1259,6 +1265,7 @@
                 };
             });
 
+            // Actualizar Tarjetas Superiores
             const elemMoraAmt = document.getElementById('pred-mora-amount');
             if (elemMoraAmt) elemMoraAmt.textContent = formatMoney(sumMora);
             const elemMoraBk = document.getElementById('pred-mora-breakdown');
@@ -1342,7 +1349,7 @@
             setTimeout(() => div.remove(), 3000);
         }
 
-        // Exportación de Copia de Seguridad JSON
+        // Exportación de Copia de Seguridad JSON con Plazos Sincerados
         function exportBackupJSON() {
             try {
                 const backupData = {
@@ -1437,92 +1444,6 @@
                 }
             };
             reader.readAsArrayBuffer(file);
-        }
-
-        // Sincronización Directa a la API del Orquestador de Senderos
-        async function syncFinnegansDW() {
-            const spinner = document.getElementById('sync-spinner-header');
-            const icon = document.getElementById('sync-icon-header');
-            const text = document.getElementById('sync-btn-text-header');
-
-            if (spinner) spinner.classList.remove('hidden');
-            if (icon) icon.classList.add('hidden');
-            if (text) text.textContent = 'Conectando Orquestador...';
-
-            showToast('Iniciando sesión en la API del Orquestador...', 'info');
-
-            try {
-                // Step 1: Login
-                const loginRes = await fetch('https://orquestador.senderosderaza.com.ar/api/v1/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'username=alejandra&password=vV7apCBlD0O0p3pAXs8y'
-                });
-
-                if (!loginRes.ok) throw new Error('Falló la autenticación en el Orquestador');
-                const authData = await loginRes.json();
-                const token = authData.access_token;
-
-                showToast('Consultando Facturas y Deuda Viva (Ganadera & Capacitación)...', 'info');
-
-                // Step 2: Fetch Facturas (incluir_empresas=4 para Capacitacion)
-                const facturasRes = await fetch('https://orquestador.senderosderaza.com.ar/api/v1/facturas?limit=1000&incluir_empresas=4', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (!facturasRes.ok) throw new Error('Error al consultar facturas');
-                const facturasData = await facturasRes.json();
-
-                // Step 3: Mapear a formato interno de la App
-                window.rawSales = facturasData.map(f => ({
-                    cliente: f.cliente || 'CLIENTE S/D',
-                    factura: f.comprobante || 'F-000',
-                    dEmision: parseExcelDate(f.fecha_comprobante),
-                    dVto: parseExcelDate(f.fecha_vencimiento),
-                    importe: parseFloat(f.total || 0),
-                    vendedor: extractRepartoCode(f.vendedor),
-                    empresa: f.empresa || 'Ganadera'
-                }));
-
-                window.rawLiveDebt = facturasData.filter(f => (f.balance || 0) > 0).map(f => ({
-                    cliente: f.cliente || 'CLIENTE S/D',
-                    factura: f.comprobante || 'F-000',
-                    dEmision: parseExcelDate(f.fecha_comprobante),
-                    dVto: parseExcelDate(f.fecha_vencimiento),
-                    saldo: parseFloat(f.balance || 0),
-                    vendedor: extractRepartoCode(f.vendedor),
-                    empresa: f.empresa || 'Ganadera'
-                }));
-
-                // Step 4: Fetch Movimientos Interbanking / Recibos
-                const movRes = await fetch('https://orquestador.senderosderaza.com.ar/api/v1/interbanking/movimientos?limit=1000&debit_credit_type=C', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (movRes.ok) {
-                    const movData = await movRes.json();
-                    window.rawReal = movData.map(m => ({
-                        cliente: m.depositor_description || 'CLIENTE S/D',
-                        fechaCobro: parseExcelDate(m.movement_date),
-                        importeCobrado: parseFloat(m.amount || 0),
-                        recibo: m.voucher_number || 'REC-000',
-                        vendedor: 'General',
-                        empresa: 'Ganadera'
-                    }));
-                }
-
-                // Step 5: Agrupar por mes y Conciliar
-                processAndSavePeriod();
-                showToast('¡Sincronización en vivo con el Orquestador completada!', 'success');
-
-            } catch (err) {
-                console.error(err);
-                showToast('Error de conexión con la API: ' + err.message, 'error');
-            } finally {
-                if (spinner) spinner.classList.add('hidden');
-                if (icon) icon.classList.remove('hidden');
-                if (text) text.textContent = 'Sincronizar Finnegans BI';
-            }
         }
 
         function openTermsModal() { 
