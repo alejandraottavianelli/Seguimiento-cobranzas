@@ -357,7 +357,12 @@
             </div>
 
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <h3 class="text-sm font-bold text-slate-800 mb-4">Rankings de Cumplimiento Comercial (Top 50)</h3>
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-bold text-slate-800">Rankings de Cumplimiento Comercial (Top 50)</h3>
+        <button onclick="exportAlertsExcel()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1.5">
+            📊 Exportar Alertas a Excel
+        </button>
+    </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <h4 class="text-xs font-bold text-emerald-700 uppercase mb-2">Mejores Pagadores (Menor desvío)</h4>
@@ -406,8 +411,13 @@
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <h3 class="text-sm font-bold text-slate-800 mb-4">Agenda Dinámica de Cobranzas Proyectadas</h3>
+           <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-bold text-slate-800">Agenda Dinámica de Cobranzas Proyectadas</h3>
+        <button onclick="exportForecastExcel()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1.5">
+            📊 Exportar Cash Flow a Excel
+        </button>
+    </div>
                 <div class="overflow-x-auto custom-scrollbar max-h-96">
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
@@ -1633,6 +1643,85 @@
         }
 
         function clearAllBatches() { window.historicalBatches = {}; window.rawSales = []; window.rawReal = []; updatePeriodSelectors('ALL'); runReconciliation(); }
+  // Exportar Pestaña 6 (Alertas y Rankings) a Excel
+function exportAlertsExcel() {
+    if (!window.reconciliationResult) {
+        showToast('No hay datos para exportar.', 'error');
+        return;
+    }
+
+    const summaries = window.reconciliationResult.clientSummaries || [];
+    const data = summaries.map(c => ({
+        "Cliente": c.cliente,
+        "Monto Proyectado": c.proyectado,
+        "Monto Cobrado": c.cobrado,
+        "Plazo Pactado (Días)": c.plazoPactado,
+        "Plazo Sincerado (Días)": c.plazoSincerado,
+        "Plazo Real Promedio (Días)": c.plazoPromedioReal,
+        "Desvío (Días)": c.desvioDias,
+        "Cumplimiento %": c.cumplimientoPct + '%',
+        "Estado": c.desvioDias > 0 ? 'Atrasado' : 'En Plazo'
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Alertas_Rankings");
+    XLSX.writeFile(wb, `Alertas_y_Rankings_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    showToast('Planilla de Alertas exportada con éxito.', 'success');
+}
+
+// Exportar Pestaña 7 (Agenda de Cash Flow) a Excel
+function exportForecastExcel() {
+    if (!window.reconciliationResult) {
+        showToast('No hay datos para exportar.', 'error');
+        return;
+    }
+
+    const invoices = window.reconciliationResult.invoiceDetails || [];
+    const summaries = window.reconciliationResult.clientSummaries || [];
+    const summariesMap = {};
+    summaries.forEach(s => { summariesMap[s.normName] = s; });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const data = invoices.map(i => {
+        const norm = normalizeClientName(i.cliente);
+        const clientSum = summariesMap[norm];
+        const termsCfg = getClientTermsConfig(norm);
+        const daysReal = clientSum ? clientSum.plazoPromedioReal : termsCfg.sincerado;
+        
+        const dateEmision = i.dEmision ? new Date(i.dEmision) : new Date();
+        const probDate = new Date(dateEmision.getTime() + (daysReal * 86400 * 1000));
+        probDate.setHours(0, 0, 0, 0);
+
+        const diffDays = Math.round((probDate - today) / (86400 * 1000));
+        const isEfectivo = isCapacitacionCompany(i.empresa, i.vendedor, i.factura);
+
+        let ventana = 'Esta Semana';
+        if (probDate < today) ventana = 'Mora Atrasada';
+        else if (diffDays <= 7) ventana = 'Esta Semana';
+        else if (diffDays <= 14) ventana = 'Próxima Semana';
+        else ventana = 'Posteriores';
+
+        return {
+            "Cliente": i.cliente,
+            "Comprobante": i.factura,
+            "Canal / Liquidez": isEfectivo ? 'Efectivo' : 'Banco',
+            "Saldo Pendiente": i.saldo || i.importe || 0,
+            "Fecha Emisión": i.dEmision ? i.dEmision.toLocaleDateString('es-AR') : '-',
+            "Plazo Real (Días)": daysReal,
+            "Fecha Probable Pago": probDate.toLocaleDateString('es-AR'),
+            "Ventana Proyectada": ventana
+        };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Cash_Flow_Proyectado");
+    XLSX.writeFile(wb, `Proyeccion_Cash_Flow_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    showToast('Planilla de Cash Flow exportada con éxito.', 'success');
+}
     </script>
 </body>
 </html>
