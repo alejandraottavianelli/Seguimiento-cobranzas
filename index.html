@@ -272,7 +272,12 @@
                         <h3 class="text-base font-bold text-slate-800">Comportamiento por Cliente: Plazo Real vs Pactado / Sincerado</h3>
                         <p class="text-xs text-slate-500">Mide si los clientes abonan en el plazo contractual acordado o en su plazo operativo sincerado. Haga clic en los encabezados para ordenar.</p>
                     </div>
-                    <input type="text" id="search-client-terms" oninput="renderTermsTable()" placeholder="Buscar cliente..." class="text-xs border border-slate-300 rounded-lg px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <div class="flex items-center gap-2">
+    <input type="text" id="search-client-terms" oninput="renderTermsTable()" placeholder="Buscar cliente..." class="text-xs border border-slate-300 rounded-lg px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-brand-500">
+    <button onclick="exportTermsExcel()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1.5 whitespace-nowrap">
+        📊 Descargar Excel
+    </button>
+</div>
                 </div>
                 <div class="overflow-x-auto custom-scrollbar">
                     <table class="w-full text-xs text-left border-collapse">
@@ -327,8 +332,14 @@
 
         <!-- 6. Alertas & Ranking -->
         <section id="tab-alerts" class="space-y-6 hidden">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+           <div class="flex justify-between items-center mb-4">
+    <h2 class="text-base font-bold text-slate-800">Alertas Comerciales y Rankings</h2>
+    <button onclick="exportAlertsExcel()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow transition flex items-center gap-1.5">
+        📊 Descargar Alertas en Excel
+    </button>
+</div>
+ <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                     <h3 class="text-sm font-bold text-rose-700 mb-1 flex items-center gap-1.5">
                         <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
                         Riesgo de Bloqueo Comercial
@@ -1721,6 +1732,88 @@ function exportForecastExcel() {
     XLSX.utils.book_append_sheet(wb, ws, "Cash_Flow_Proyectado");
     XLSX.writeFile(wb, `Proyeccion_Cash_Flow_${new Date().toISOString().slice(0, 10)}.xlsx`);
     showToast('Planilla de Cash Flow exportada con éxito.', 'success');
+}
+// Función para exportar la Pestaña 4: Plazos Reales vs Pactados
+function exportTermsExcel() {
+    if (!window.reconciliationResult || !window.reconciliationResult.clientSummaries) {
+        showToast('No hay datos disponibles para exportar.', 'error');
+        return;
+    }
+
+    const search = (document.getElementById('search-client-terms')?.value || '').toLowerCase();
+    const list = window.reconciliationResult.clientSummaries.filter(c => c.cliente.toLowerCase().includes(search));
+
+    const data = list.map(c => ({
+        "Cliente": c.cliente,
+        "Proyectado": c.proyectado,
+        "Cobrado": c.cobrado,
+        "Pactado ERP (Días)": c.plazoPactado,
+        "Plazo Sincerado (Días)": c.plazoSincerado,
+        "Plazo Real Promedio (Días)": c.plazoPromedioReal,
+        "Desvío (Días)": c.desvioDias,
+        "Cumplimiento %": c.cumplimientoPct + '%',
+        "Estado": c.desvioDias > 0 ? 'Atrasado' : 'En Plazo'
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Plazos_Vs_Pactados");
+    XLSX.writeFile(wb, `Plazos_Reales_vs_Pactados_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    showToast('Pestaña de Plazos exportada con éxito.', 'success');
+}
+
+// Función para exportar la Pestaña 6: Alertas & Rankings
+function exportAlertsExcel() {
+    if (!window.reconciliationResult) {
+        showToast('No hay datos disponibles para exportar.', 'error');
+        return;
+    }
+
+    const liveDebt = window.reconciliationResult.invoiceDetails || [];
+    const summaries = window.reconciliationResult.clientSummaries || [];
+
+    // Agrupar deuda por cliente
+    const debtByClient = {};
+    liveDebt.forEach(i => {
+        const norm = normalizeClientName(i.cliente);
+        if (!debtByClient[norm]) {
+            debtByClient[norm] = { cliente: i.cliente, count: 0, totalSaldo: 0 };
+        }
+        debtByClient[norm].count++;
+        debtByClient[norm].totalSaldo += (i.saldo || i.importe || 0);
+    });
+
+    // 1. Hoja de Bloqueo Commercial (2+ impagas)
+    const lockClients = Object.values(debtByClient).filter(c => c.count >= 2).map(c => ({
+        "Cliente": c.cliente,
+        "Facturas Impagas": c.count,
+        "Deuda Acumulada": c.totalSaldo,
+        "Sugerencia": "Suspender Despachos"
+    }));
+
+    // 2. Hoja por Monto Elevado (> $1.000.000)
+    const amountClients = Object.values(debtByClient).filter(c => c.totalSaldo > 1000000).map(c => ({
+        "Cliente": c.cliente,
+        "Comprobantes Abiertos": c.count,
+        "Monto Expuesto": c.totalSaldo
+    }));
+
+    // 3. Hoja por Desvío Crítico (> 7 Días)
+    const daysClients = summaries.filter(c => c.desvioDias > 7).map(c => ({
+        "Cliente": c.cliente,
+        "Días de Mora": c.desvioDias,
+        "Plazo Real Promed": c.plazoPromedioReal,
+        "Plazo Sincerado": c.plazoSincerado
+    }));
+
+    const wb = XLSX.utils.book_new();
+
+    if (lockClients.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(lockClients), "Riesgo_Bloqueo");
+    if (amountClients.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(amountClients), "Monto_Elevado");
+    if (daysClients.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(daysClients), "Desvio_Critico");
+
+    XLSX.writeFile(wb, `Reporte_Alertas_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    showToast('Reporte completo de Alertas exportado a Excel.', 'success');
 }
     </script>
 </body>
